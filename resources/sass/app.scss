@@ -6,3 +6,19 @@
 
 // Bootstrap
 @import 'bootstrap/scss/bootstrap';
+
+
+//  CSS code
+
+header {
+    padding-top: 9.5rem;
+    padding-bottom: 6rem;
+}
+
+// Search-btn
+
+$search_color:#FF8809;
+
+.btn-search {
+    @include button-variant($search_color, darken($search_color, 7.5%), darken($search_color, 10%), lighten($search_color,5%), lighten($search_color, 10%), darken($search_color,30%));
+}
