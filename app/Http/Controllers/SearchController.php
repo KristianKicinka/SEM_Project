@@ -20,13 +20,23 @@ class SearchController extends Controller
 
     private function getPackageName(Request $request){
 
-        $process = new Process(['python3', '../scripts/Search.py', $request->input('name')]);
-        $process->run();
+        $python_process = new Process(['python3', '../scripts/Search.py', $request->input('name')]);
+        $python_process->run();
 
-        if (!$process->isSuccessful()) {
+        if (!$python_process->isSuccessful()) {
             return "Python Error!";
         }
+
+        $package_name = $python_process->getOutput();
+
+       /* $adb_process = new Process(['sh','../scripts/adbRun.sh',$package_name]);
+        $adb_process->run();
+
+        if (!$adb_process->isSuccessful()) {
+            return "ADB Error!";
+        }
+        */
         
-        return $process->getOutput();
+        return $package_name;
     }
 }
