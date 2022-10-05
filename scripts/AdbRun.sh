@@ -31,6 +31,9 @@ adb shell am force-stop com.android.vending
 
 sleep 3
 
+# Get application version name
+#adb shell dumpsys package "$PACKAGE_NAME" | grep versionName
+
 #Uninstall application
 adb uninstall "$PACKAGE_NAME";
 

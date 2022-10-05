@@ -36,7 +36,7 @@ const SearchBox = () => {
     return (
         <header className='bg-primary bg-gradient text-white'>
             <div className='container px-4 text-center'>
-                <h1 className='fw-bolder'>Zadajte názov aplikácie</h1>
+                <h1 className='fw-bolder'>Enter the name of application</h1>
                 <div className='container w-50 py-4'>
                     <Form noValidate onSubmit={get_package_name}>
                         <InputGroup className='mb-3'>
@@ -46,6 +46,7 @@ const SearchBox = () => {
                     </Form>
                 </div>
             </div>
+            
         </header>
     );
 }
