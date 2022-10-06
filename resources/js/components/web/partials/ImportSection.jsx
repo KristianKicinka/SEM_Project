@@ -1,10 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import ApkInput from './ApkInput';
+import AppNamesInput from './AppNamesInput';
 
 const ImportSection = () => {
     return (
-        <div className='container-fluid px-4 text-center'>
-            <div className="row gx-5">
+        <div className="row">
+            <div className='col bg-light rounded-4 mx-2'>
+                <ApkInput/>
+            </div>
+            <div className='col bg-light rounded-4 mx-2'>
+                <AppNamesInput/>
             </div>
         </div>
     );

@@ -7,6 +7,7 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 import axios from 'axios';
 import { lowerCase } from 'lodash';
+import ImportSection from './ImportSection';
 
 const SearchBox = () => {
 
@@ -46,7 +47,9 @@ const SearchBox = () => {
                     </Form>
                 </div>
             </div>
-            
+            <div className='container text-center px-4'>
+                <ImportSection/>
+            </div>
         </header>
     );
 }
