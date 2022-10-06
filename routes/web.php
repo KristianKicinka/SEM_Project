@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FileController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,3 +21,5 @@ Route::view('/{any}', 'app')->where('any', '.*');
 // Post routes
 
 Route::post('search', [SearchController::class, 'index']);
+Route::post('saveApkFile', [FileController::class, 'saveApkFile']);
+Route::post('saveNamesListFile', [FileController::class, 'saveNamesListFile']);
