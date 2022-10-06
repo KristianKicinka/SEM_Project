@@ -5,11 +5,11 @@ import AppNamesInput from './AppNamesInput';
 
 const ImportSection = () => {
     return (
-        <div className="row">
-            <div className='col bg-light rounded-4 mx-2'>
+        <div className="row g-5 px-4">
+            <div className='col-sm-12 col-md-6'>
                 <ApkInput/>
             </div>
-            <div className='col bg-light rounded-4 mx-2'>
+            <div className='col-sm-12 col-md-6'>
                 <AppNamesInput/>
             </div>
         </div>

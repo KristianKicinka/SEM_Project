@@ -38,16 +38,22 @@ const SearchBox = () => {
         <header className='bg-primary bg-gradient text-white'>
             <div className='container px-4 text-center'>
                 <h1 className='fw-bolder'>Enter the name of application</h1>
-                <div className='container w-50 py-4'>
-                    <Form noValidate onSubmit={get_package_name}>
-                        <InputGroup className='mb-3'>
-                            <Form.Control placeholder='Application name' aria-label='Application name' aria-describedby='search_btn' onChange={e=>setAppName(e.target.value)} />
-                            <Button id="search_btn" type='submit'  className='btn-search text-light'><i className='fa-solid fa-magnifying-glass'></i></Button>
-                        </InputGroup>
-                    </Form>
+                <div className='container py-4'>
+                    <div className="row">
+                        <div className="col-sm-0 col-md-3"></div>
+                        <div className="col-sm-12 col-md-6">
+                            <Form noValidate onSubmit={get_package_name}>
+                                <InputGroup className='mb-3'>
+                                    <Form.Control placeholder='Application name' aria-label='Application name' aria-describedby='search_btn' onChange={e=>setAppName(e.target.value)} />
+                                    <Button id="search_btn" type='submit'  className='btn-search text-light'><i className='fa-solid fa-magnifying-glass'></i></Button>
+                                </InputGroup>
+                            </Form>
+                        </div>
+                        <div className="col-sm-0 col-md-3"></div>
+                    </div>
                 </div>
             </div>
-            <div className='container text-center px-4'>
+            <div className='container text-center py-4'>
                 <ImportSection/>
             </div>
         </header>
