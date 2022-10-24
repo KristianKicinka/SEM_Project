@@ -8,55 +8,59 @@ import Button from 'react-bootstrap/Button';
 import axios from 'axios';
 import { lowerCase } from 'lodash';
 import ImportSection from './ImportSection';
+import ContentBox from './ContentBox';
+//import fetch from 'cross-fetch';
+
 
 const SearchBox = () => {
 
     const [appName, setAppName] = useState();
+    const [appItems, setAppItems] = useState();
+    const [appItemsLoaded, setAppItemsLoaded] = useState(false);
 
-    const get_package_name = (event) =>{
+    const get_app_items = (event) =>{
         event.preventDefault();
+        appName.toLowerCase();
 
         axios.post('/search', {
-            name : appName,
+            app_name : appName,
           })
           .then((response) => {
-            console.log(response.data);
+            setAppItems(response.data.organic_results[0].items);
+            setAppItemsLoaded(true);
+            console.log(response.data.organic_results[0].items);
           }, (error) => {
             console.log(error);
           });
-
-       /* fetch(`https://play.google.com/store/search?q=${name}&c=apps`, {
-            method: 'POST',
-        }).then(res => res.text())
-          .then(res => console.log(res))
-          .catch(err => console.error(err)); */
-        
-
+    
     }
 
     return (
-        <header className='bg-primary bg-gradient text-white'>
-            <div className='container px-4 text-center'>
-                <h1 className='fw-bolder'>Enter the name of application</h1>
-                <div className='container py-4'>
-                    <div className="row">
-                        <div className="col-sm-0 col-md-3"></div>
-                        <div className="col-sm-12 col-md-6">
-                            <Form noValidate onSubmit={get_package_name}>
-                                <InputGroup className='mb-3'>
-                                    <Form.Control placeholder='Application name' aria-label='Application name' aria-describedby='search_btn' onChange={e=>setAppName(e.target.value)} />
-                                    <Button id="search_btn" type='submit'  className='btn-search text-light'><i className='fa-solid fa-magnifying-glass'></i></Button>
-                                </InputGroup>
-                            </Form>
+        <div>
+            <header className='bg-primary bg-gradient text-white pb-0'>
+                <div className='container text-center py-2 pb-4'>
+                    <ImportSection/>
+                </div>
+                <div className='container px-4 text-center pt-5'>
+                    <h1 className='fw-bolder'>Enter the name of application</h1>
+                    <div className='container py-4'>
+                        <div className="row">
+                            <div className="col-sm-0 col-md-3"></div>
+                            <div className="col-sm-12 col-md-6">
+                                <Form noValidate onSubmit={get_app_items}>
+                                    <InputGroup className='mb-3'>
+                                        <Form.Control placeholder='Application name' aria-label='Application name' aria-describedby='search_btn' onChange={e=>setAppName(e.target.value)} />
+                                        <Button id="search_btn" type='submit'  className='btn-search text-light'><i className='fa-solid fa-magnifying-glass'></i></Button>
+                                    </InputGroup>
+                                </Form>
+                            </div>
+                            <div className="col-sm-0 col-md-3"></div>
                         </div>
-                        <div className="col-sm-0 col-md-3"></div>
                     </div>
                 </div>
-            </div>
-            <div className='container text-center py-4'>
-                <ImportSection/>
-            </div>
-        </header>
+            </header>
+            {appItemsLoaded ? <ContentBox items={appItems}/> : null}
+        </div>
     );
 }
 

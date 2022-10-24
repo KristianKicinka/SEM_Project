@@ -13,27 +13,27 @@ URL="market://details?id=$PACKAGE_NAME";
 #emulator -avd $EMULATOR_NAME;
 
 # Run play store and open target application page
-adb shell am start -a android.intent.action.VIEW -d "$URL";
+adb shell "am start -W -a android.intent.action.VIEW -d $URL && sleep 1 &&  input tap 700 800"; 
 
-sleep 15;
+#sleep 15;
 
 # Tap to install application
 
 # MAC OS
-adb shell input tap 700 800
+#adb shell input tap 700 800;
 # Windows
 #adb shell input tap 500 500
 
-sleep 60;
+#sleep 60;
 
 # Close play store
-adb shell am force-stop com.android.vending
+#adb shell am force-stop com.android.vending
 
-sleep 3
+#sleep 3
 
 # Get application version name
 #adb shell dumpsys package "$PACKAGE_NAME" | grep versionName
 
 #Uninstall application
-adb uninstall "$PACKAGE_NAME";
+#adb uninstall "$PACKAGE_NAME";
 

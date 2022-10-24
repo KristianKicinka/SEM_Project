@@ -6,27 +6,31 @@ import Button from 'react-bootstrap/Button';
 
 const ApkInput = () => {
 
-    const [file, setFile] = useState();
+    const [file, setFile] = useState(null);
 
-    const saveFiles = (event) => {
+    const handleChange = file => {
+        setFile(file[0]);
+    }
+
+    const saveFilesNames = (event) => {
         event.preventDefault();
-        axios.post('/saveNamesListFile',{file: file},{
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-        }).then(res=>{
+
+        const formDataNames = new FormData();
+        formDataNames.append("selectedFile", file);
+
+        axios.post('/saveNamesListFile', formDataNames).then(res=>{
             console.log(res.data);
         });
     }
 
     return (
         <div className='bg-light text-dark p-3 rounded-3'>
-            <Form onSubmit={saveFiles} className='container'>
+            <Form onSubmit={saveFilesNames} className='container' encType="multipart/form-data" >
                 <h3 className='pb-2'>Insert App name list</h3>
                 <Form.Group controlId="formFileNames" className="row">
-                    <Form.Control type="file" className='col'
-                        onChange={(e) => setFile(e.target.files)} accept='.txt' required />
-                    <Button id="submit_file_names_input" type='submit' className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
+                    <Form.Control type="file" className='col' accept='.txt'
+                        onChange={(e) => handleChange(e.target.files)} required />
+                    <Button id="submit_file_names_input" type='submit' onClick={saveFilesNames} className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
                 </Form.Group>
             </Form>
         </div>
