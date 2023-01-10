@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Http;
 
 class SearchController extends Controller
 {
-    
+
     public function index(Request $request){
-        
+
         $url = "https://serpapi.com/search.json";
         $api_key = "e694fba92d38dbfb77e6d4fe838fba1e7e259465ed7a1a519400cabf4453a593";
-        
+
         $query = [
             "engine" => "google_play",
             "store" => "apps",
@@ -31,7 +31,7 @@ class SearchController extends Controller
 
     private function getPackageName(Request $request){
 
-        $python_process = new Process(['python3', '../scripts/Search.py', $request->input('name')]);
+        $python_process = new Process(['python3', '../scripts/AnalyzePcapFile.py', $request->input('name')]);
         $python_process->run();
 
         if (!$python_process->isSuccessful()) {
@@ -47,7 +47,7 @@ class SearchController extends Controller
             return "ADB Error!";
         }
         */
-        
+
         return $package_name;
     }
 }

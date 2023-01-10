@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\File;
+use Illuminate\Support\Facades\Storage;
 
 class FileController extends Controller
 {
@@ -44,5 +45,16 @@ class FileController extends Controller
         }
 
         return response()->json('Upload error!');
+    }
+
+    public function downloadApkFile(Request $request){
+
+        $url = 'https://d.apkpure.com/b/APK/'.$request->package_name.'?version=latest';
+
+        $apk_file = file_get_contents($url);
+
+        Storage::disk('local')->put('uploads/apk/'.$request->package_name,$apk_file);
+
+        return response()->json('Download success!');
     }
 }
