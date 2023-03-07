@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FileController;
+use App\Http\Controllers\HashController;
 use App\Http\Controllers\SearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,3 +25,4 @@ Route::post('search', [SearchController::class, 'index']);
 Route::post('saveApkFile', [FileController::class, 'saveApkFile']);
 Route::post('saveNamesListFile', [FileController::class, 'saveNamesListFile']);
 Route::post('downloadApkFile', [FileController::class, 'downloadApkFile']);
+Route::post('createHashFromApkFile', [HashController::class, 'createHash']);

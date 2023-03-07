@@ -26,6 +26,9 @@ class HashController extends Controller {
     public function createHash(){
 
         $this->createPcapFile();
+        error_log("Filter created!");
+
+        return response()->json('Hash created!');
 
     }
 

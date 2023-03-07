@@ -10,21 +10,20 @@ class FileController extends Controller
 {
     public function saveApkFile(Request $request){
 
-        if ($request->get('file')) {
-            foreach ($request->get('file') as $file) {
+        $apk_file_names = [];
+
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
                 $fileName = $file->getClientOriginalName();
                 $finalName = date('his') .'_'. $fileName;
-                $path = $file->storeAs('uploads/apk',$finalName,'public');
+                $file->storeAs('uploads/apk',$finalName,'public');
 
-                File::create([
-                    'name'  =>  $finalName,
-                    'type'  =>  'apk',
-                    'path'  =>  $path,
-                ]);
+                $apk_file_names[] = $finalName;
             }
-            return response()->json('Upload success!');
+
+            return response()->json($apk_file_names);
         }
-        return response()->json($request);
+        return response()->json('Upload Error!');
     }
 
     public function saveNamesListFile(Request $request){
@@ -34,12 +33,6 @@ class FileController extends Controller
             $fileName = $file->getClientOriginalName();
             $finalName = date('his') .'_'. $fileName;
             $path = $request->file('selectedFile')->storeAs('uploads/lists',$finalName,'public');
-
-            File::create([
-                'name'  =>  $finalName,
-                'type'  =>  'list',
-                'path'  =>  $path,
-            ]);
 
             return response()->json('Upload success!');
         }
