@@ -1,8 +1,10 @@
 import sys
 
+import pyshark as pyshark
 from scapy.all import *
 from scapy.layers.tls.record import TLS
 import hashlib
+import os
 
 tls_supported_groups = []
 tls_ecf = []
@@ -59,7 +61,7 @@ def create_ja3_string(version, ciphers, extensions):
     return full_string
 
 
-def create_md5_hash(ja3_string):
+def create_ja3_hash(ja3_string):
     result = hashlib.md5(ja3_string.encode())
     return result.hexdigest()
 
@@ -80,19 +82,26 @@ def print_values(packet_id, version, ciphers, extensions, full_string, ja3_hash)
 
 if __name__ == '__main__':
     load_layer('tls')
+    #packets = pyshark.LiveCapture('eth0', bpf_filter='tcp port 80')
     scapy_cap = rdpcap(sys.argv[1])
     packet_count = 1
     for packet in scapy_cap:
-        #print(packet[TLS].show())
         version = process_version(packet[TLS].msg[0])
         ciphers = process_ciphers(packet[TLS].msg[0])
         extensions = process_extensions(packet[TLS].msg[0])
 
         full_string = create_ja3_string(version, ciphers, extensions)
-        ja3_hash = create_md5_hash(full_string)
+        ja3_hash = create_ja3_hash(full_string)
 
         JA3_strings.append(full_string)
         JA3_hashes.append(ja3_hash)
 
         print_values(packet_count, version, ciphers, extensions, full_string, ja3_hash)
         packet_count += 1
+
+    final_JA3_list = list(dict.fromkeys(JA3_hashes))
+
+    print()
+    print('JA3 hash list :')
+    print(final_JA3_list)
+    print()

@@ -70,7 +70,7 @@ class HashController extends Controller {
     }
 
     private function uninstallAppOnEmulator($package_name){
-        //TODO Create uninstall function
+        //TODO: Create uninstall function
     }
 
 
