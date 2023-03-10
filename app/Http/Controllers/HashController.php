@@ -33,9 +33,21 @@ class HashController extends Controller {
 
         $pcap_process->stop();
 
-        $print = $this->applyPcapFilter($pcap_out_path);
+        $this->applyPcapFilter($pcap_out_path);
 
-        return $print;
+        return $pcap_out_path;
+    }
+
+    private function parseAnalysisOutput($output){
+
+        $regex = '/\'[0-9a-zA-Z]*\'/m';
+        preg_match_all($regex, $output, $hashes, PREG_SET_ORDER, 0);
+
+        foreach($hashes as $key => $value) {
+            $hashes[$key] = str_replace('\'','',$value[0]);
+        }
+
+        return $hashes;
     }
 
     public function createHash(Request $request){
@@ -47,13 +59,19 @@ class HashController extends Controller {
         $version_name = trim($this->getAppVersionName($apk_path));
 
         $this->installAppOnEmulator($apk_path);
-
-        $print = $this->createPcapFile($file_name, $apk_path);
-
+        $pcap_file_path = $this->createPcapFile($file_name, $apk_path);
         $this->uninstallAppOnEmulator($package_name);
 
-    
-        return response()->json($print);
+        $process = new Process(['python3','../scripts/AnalyzePcapFile.py', $pcap_file_path]);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            return response()->json('Hash creation failed!');
+        }
+
+        $hash_array = $this->parseAnalysisOutput($process->getOutput()); 
+
+        return response()->json($hash_array);
 
     }
 

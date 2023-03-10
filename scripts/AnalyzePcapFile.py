@@ -96,12 +96,12 @@ if __name__ == '__main__':
         JA3_strings.append(full_string)
         JA3_hashes.append(ja3_hash)
 
-        print_values(packet_count, version, ciphers, extensions, full_string, ja3_hash)
+        #print_values(packet_count, version, ciphers, extensions, full_string, ja3_hash)
         packet_count += 1
 
     final_JA3_list = list(dict.fromkeys(JA3_hashes))
 
-    print()
-    print('JA3 hash list :')
+    #print()
+    #print('JA3 hash list :')
     print(final_JA3_list)
-    print()
+    #print()
