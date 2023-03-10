@@ -24,13 +24,13 @@ const ApkInput = () => {
 
         axios.post('/saveApkFile',formData ).then( res => {
             if(res.data !== 'Upload Error!')
-                createHash(res.data);
+                createHash(res.data[0]);
         });
     }
 
     const createHash = (fileName) => {
         console.log(fileName);
-        axios.post('/createHashFromApkFile').then( res => {
+        axios.post('/createHashFromApkFile', {'file_name':fileName}).then( res => {
             console.log(res.data);
         });
     }
