@@ -71,7 +71,14 @@ class HashController extends Controller {
 
         $hash_array = $this->parseAnalysisOutput($process->getOutput()); 
 
-        return response()->json($hash_array);
+        $results = [
+            'apk_name' => $file_name,
+            'package_name' => $package_name,
+            'version_name' => $version_name,
+            'hashes' => $hash_array,
+        ];
+
+        return response()->json($results);
 
     }
 
