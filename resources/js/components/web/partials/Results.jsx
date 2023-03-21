@@ -23,7 +23,7 @@ const Results = ({ show, handleClose, results }) => {
                             <b>Version name : </b> {results.version_name}
                         </li>
                         <li className="list-group-item">
-                            <b>Hashes : </b>
+                            <b>JA3 Hashes : </b>
                             <ul className="list-group list-group-flush">
                                 {results.hashes?.map((hash, id) => {
                                     return (

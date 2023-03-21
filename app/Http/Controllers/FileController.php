@@ -43,10 +43,37 @@ class FileController extends Controller
     public function downloadApkFile(Request $request){
 
         $url = 'https://d.apkpure.com/b/APK/'.$request->package_name.'?version=latest';
+        
+        $curl = curl_init();
 
-        $apk_file = file_get_contents($url);
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://d.apkpure.com/b/APK/com.facebook.orca?version=latest',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+        ));
 
-        Storage::disk('local')->put('uploads/apk/'.$request->package_name,$apk_file);
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+
+        return response()->json($response);
+        
+        $file = file_get_contents($url);
+
+        return response()->json($url);
+
+        $fileName = basename($url);
+
+        $finalName = date('his') .'_'. $fileName;
+
+        
+
+        Storage::disk('local')->put('uploads/apk/'.$finalName, $file);
 
         return response()->json('Download success!');
     }
