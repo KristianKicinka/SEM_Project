@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\File;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\Process;
 
 class FileController extends Controller
 {
@@ -43,35 +44,25 @@ class FileController extends Controller
     public function downloadApkFile(Request $request){
 
         $url = 'https://d.apkpure.com/b/APK/'.$request->package_name.'?version=latest';
+
+        Storage::put('file.txt', 'Your name');
+
+        $process = new Process(['python3', '../scripts/AnalyzePcapFile.py', $url]);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            return response()->json('Get download link failed!');
+        }
+
+        $download_url = $process->getOutput();
         
-        $curl = curl_init();
+        $file = file_get_contents($download_url);
 
-        curl_setopt_array($curl, array(
-            CURLOPT_URL => 'https://d.apkpure.com/b/APK/com.facebook.orca?version=latest',
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'GET',
-        ));
+        return response()->json($download_url);
 
-        $response = curl_exec($curl);
-
-        curl_close($curl);
-
-        return response()->json($response);
-        
-        $file = file_get_contents($url);
-
-        return response()->json($url);
-
-        $fileName = basename($url);
+        $fileName = basename($download_url);
 
         $finalName = date('his') .'_'. $fileName;
-
-        
 
         Storage::disk('local')->put('uploads/apk/'.$finalName, $file);
 
