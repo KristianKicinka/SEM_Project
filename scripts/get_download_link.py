@@ -1,9 +1,10 @@
 import requests
+import sys
 from bs4 import BeautifulSoup
  
 if __name__ == '__main__':
 
-    url = "https://d.apkpure.com/b/APK/com.facebook.orca?version=latest"
+    url = sys.argv[1]   ## First program argument (url)
 
     response = requests.get(
         url = 'https://proxy.scrapeops.io/v1/',
