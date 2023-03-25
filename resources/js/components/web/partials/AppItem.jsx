@@ -30,8 +30,11 @@ const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResult
 
         axios.post('/downloadApkFile', {'package_name': item.product_id}).then( res => {
             console.log(res.data);
-            if(res.data != 'APK download failed!')
+            if(res.data != 'APK download failed!'){
+                console.log('APK succesfully downloaded')
                 createHash(res.data);
+            }
+                
         });
     };
 
