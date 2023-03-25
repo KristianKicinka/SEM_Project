@@ -12,7 +12,7 @@ import ContentBox from './ContentBox';
 //import fetch from 'cross-fetch';
 
 
-const SearchBox = () => {
+const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults}) => {
 
     const [appName, setAppName] = useState();
     const [appItems, setAppItems] = useState();
@@ -39,7 +39,12 @@ const SearchBox = () => {
         <div>
             <header className='bg-primary bg-gradient text-white pb-0'>
                 <div className='container text-center py-2 pb-4'>
-                    <ImportSection/>
+                    <ImportSection  
+                        handleShowLoading={handleShowLoading} 
+                        handleCloseLoading={handleCloseLoading}
+                        handleShowResults={handleShowResults}
+                        setResults={setResults}
+                    />
                 </div>
                 <div className='container px-4 text-center pt-5'>
                     <h1 className='fw-bolder'>Enter the name of application</h1>
@@ -59,7 +64,13 @@ const SearchBox = () => {
                     </div>
                 </div>
             </header>
-            {appItemsLoaded ? <ContentBox items={appItems}/> : null}
+            {appItemsLoaded ? <ContentBox 
+                                items={appItems} 
+                                handleCloseLoading={handleCloseLoading}
+                                handleShowLoading={handleShowLoading}
+                                handleShowResults={handleShowResults}
+                                setResults={setResults}
+                                /> : null}
         </div>
     );
 }

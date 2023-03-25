@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Symfony\Component\Process\Process;
 
+const APK_INSERTED_DIR = './storage/uploads/apk_inserted/';
+const APK_DOWNLOADED_DIR = './storage/uploads/apk_downloaded/';
 
+const JA3_HASH_SCRIPT_PATH = '../scripts/AnalyzePcapFile.py';
 
 class HashController extends Controller {
 
@@ -53,8 +56,12 @@ class HashController extends Controller {
     public function createHash(Request $request){
 
         $file_name = $request->get('file_name');
-        $apk_path = "./storage/uploads/apk/".$file_name;
 
+        if($request->get('apk_type') == 'inserted')
+            $apk_path = APK_INSERTED_DIR.$file_name;
+        else if($request->get('apk_type') == 'downloaded')
+            $apk_path = APK_DOWNLOADED_DIR.$file_name;
+        
         $package_name = trim($this->getAppPackageName($apk_path));
         $version_name = trim($this->getAppVersionName($apk_path));
 
@@ -62,7 +69,9 @@ class HashController extends Controller {
         $pcap_file_path = $this->createPcapFile($file_name, $apk_path);
         $this->uninstallAppOnEmulator($package_name);
 
-        $process = new Process(['python3','../scripts/AnalyzePcapFile.py', $pcap_file_path]);
+        if($request->get('hash_type') == 'ja3')
+            $process = new Process(['python3', JA3_HASH_SCRIPT_PATH, $pcap_file_path]);
+
         $process->run();
 
         if (!$process->isSuccessful()) {

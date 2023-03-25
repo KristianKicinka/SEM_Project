@@ -2,16 +2,37 @@ import React from "react";
 import ReactDOM from "react-dom";
 import axios from "axios";
 
-const AppItem = ({ item }) => {
+const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResults, setResults}) => {
+
+
+    const createHash = (fileName) =>{
+        console.log(fileName);
+
+        let data = {
+            'file_name': fileName,
+            'apk_type': 'downloaded',
+            'hash_type': 'ja3'
+        }
+
+        axios.post('/createHashFromApkFile', data).then( res => {
+            console.log(res.data);
+            setResults(res.data);
+            handleCloseLoading();
+            handleShowResults();
+        });
+    } 
 
     const getApkFile = (e) => {
         e.preventDefault();
         console.log(item.product_id);
 
-        /*
+        handleShowLoading();
+
         axios.post('/downloadApkFile', {'package_name': item.product_id}).then( res => {
             console.log(res.data);
-        });*/
+            if(res.data != 'APK download failed!')
+                createHash(res.data);
+        });
     };
 
     return (

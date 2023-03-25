@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\File;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Log;
 
 class FileController extends Controller
 {
@@ -17,7 +18,7 @@ class FileController extends Controller
             foreach ($request->file('files') as $file) {
                 $fileName = $file->getClientOriginalName();
                 $finalName = date('his') .'_'. $fileName;
-                $file->storeAs('uploads/apk',$finalName,'public');
+                $file->storeAs('uploads/apk_inserted',$finalName,'public');
 
                 $apk_file_names[] = $finalName;
             }
@@ -45,27 +46,17 @@ class FileController extends Controller
 
         $url = 'https://d.apkpure.com/b/APK/'.$request->package_name.'?version=latest';
 
-        Storage::put('file.txt', 'Your name');
+        $file_prefix = date('his');
 
-        $process = new Process(['python3', '../scripts/AnalyzePcapFile.py', $url]);
+        $process = new Process(['python3', '../scripts/DownloadFile.py', $url, $file_prefix]);
         $process->run();
 
         if (!$process->isSuccessful()) {
-            return response()->json('Get download link failed!');
+            return response()->json('APK download failed!');
         }
 
-        $download_url = $process->getOutput();
-        
-        $file = file_get_contents($download_url);
+        $file_path = $process->getOutput();
 
-        return response()->json($download_url);
-
-        $fileName = basename($download_url);
-
-        $finalName = date('his') .'_'. $fileName;
-
-        Storage::disk('local')->put('uploads/apk/'.$finalName, $file);
-
-        return response()->json('Download success!');
+        return response()->json($file_path);
     }
 }

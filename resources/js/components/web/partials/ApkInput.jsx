@@ -6,24 +6,13 @@ import Button from 'react-bootstrap/Button';
 import http from '../../../http';
 import axios from 'axios';
 
-import Results from './Results';
-import LoadingModal from './LoadingModal';
 
 
 
-const ApkInput = () => {
+
+const ApkInput = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults}) => {
 
     const [files, setFiles] = useState([]);
-    const [results, setResults] = useState([]);
-
-    const [showResults, setShowResults] = useState(false);
-    const [showLoading, setShowLoading] = useState(false);
-
-    const handleCloseResults = () => setShowResults(false);
-    const handleShowResults = () => setShowResults(true);
-
-    const handleCloseLoading = () => setShowLoading(false);
-    const handleShowLoading = () => setShowLoading(true);
 
     const saveApkFiles = (event) => {
         event.preventDefault();
@@ -34,23 +23,7 @@ const ApkInput = () => {
         });
 
         console.log(formData.getAll('files[]'));
-
-        let results = {
-            apk_name : 'My app',
-            package_name : 'Package',
-            version_name : '1.0',
-            hashes: [
-                '66918128f1b9b03303d77c6f2eefd128',
-                '66918128f1b9b03303d77c6f2eefd128',
-                '66918128f1b9b03303d77c6f2eefd128',
-            ]
-        }
-
-        //setResults(results);
-
-        //handleShowResults();
     
-        
         axios.post('/saveApkFile',formData ).then( res => {
             if(res.data !== 'Upload Error!')
                 createHash(res.data[0]);
@@ -60,7 +33,14 @@ const ApkInput = () => {
 
     const createHash = (fileName) => {
         console.log(fileName);
-        axios.post('/createHashFromApkFile', {'file_name':fileName}).then( res => {
+
+        let data = {
+            'file_name': fileName,
+            'apk_type': 'inserted',
+            'hash_type': 'ja3'
+        }
+
+        axios.post('/createHashFromApkFile', data).then( res => {
             console.log(res.data);
             setResults(res.data);
             handleCloseLoading();
@@ -79,8 +59,7 @@ const ApkInput = () => {
                     <Button id="submit_apk_files" type='submit' onClick={saveApkFiles} className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
                 </Form.Group>
             </Form>
-            <LoadingModal show={showLoading} handleClose={handleCloseLoading} />
-            <Results show={showResults} handleClose={handleCloseResults} results={results} />
+            
         </div>
     );
 }
