@@ -14,7 +14,7 @@ const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResult
             'hash_type': 'ja3'
         }
 
-        axios.post('/createHashFromApkFile', data).then( res => {
+        axios.post('/createHash', data).then( res => {
             console.log(res.data);
             setResults(res.data);
             handleCloseLoading();
