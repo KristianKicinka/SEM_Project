@@ -29,10 +29,7 @@ const Results = ({ show, handleClose, results, hashTypes }) => {
                                     <ul className="list-group list-group-flush">
                                         {results.hashes?.[hashType].map((hash, id) => {
                                             return (
-                                                <li
-                                                    className="list-group-item"
-                                                    key={id}
-                                                >
+                                                <li className="list-group-item" key={id} >
                                                     {hash}
                                                 </li>
                                             );
