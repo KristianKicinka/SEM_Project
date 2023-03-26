@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Modal, Button } from "react-bootstrap";
 
-const Results = ({ show, handleClose, results }) => {
+const Results = ({ show, handleClose, results, hashTypes }) => {
     console.log(results.hashes);
 
     return (
@@ -22,18 +22,25 @@ const Results = ({ show, handleClose, results }) => {
                         <li className="list-group-item">
                             <b>Version name : </b> {results.version_name}
                         </li>
-                        <li className="list-group-item">
-                            <b>JA3 Hashes : </b>
-                            <ul className="list-group list-group-flush">
-                                {results.hashes?.map((hash, id) => {
-                                    return (
-                                        <li className="list-group-item" key={id} >
-                                            {hash}
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        </li>
+                        {hashTypes.map((hashType, key) => {
+                            return (
+                                <li className="list-group-item" key={key}>
+                                    <b>{hashType} Hashes : </b>
+                                    <ul className="list-group list-group-flush">
+                                        {results.hashes?.[hashType].map((hash, id) => {
+                                            return (
+                                                <li
+                                                    className="list-group-item"
+                                                    key={id}
+                                                >
+                                                    {hash}
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </li>
+                            );
+                        })}
                     </ul>
                 </Modal.Body>
             </Modal>

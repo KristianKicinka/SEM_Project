@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import axios from "axios";
 
-const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResults, setResults}) => {
+const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResults, setResults, hashTypes}) => {
 
 
     const createHash = (fileName) =>{
@@ -11,7 +11,7 @@ const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResult
         let data = {
             'file_name': fileName,
             'apk_type': 'downloaded',
-            'hash_type': 'ja3'
+            'hash_types': hashTypes
         }
 
         axios.post('/createHash', data).then( res => {
@@ -25,6 +25,11 @@ const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResult
     const getApkFile = (e) => {
         e.preventDefault();
         console.log(item.product_id);
+
+        if(hashTypes.length === 0){
+            console.log("Select hash type");
+            return;
+        }
 
         handleShowLoading();
 

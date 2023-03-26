@@ -10,12 +10,17 @@ import axios from 'axios';
 
 
 
-const ApkInput = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults}) => {
+const ApkInput = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults, hashTypes}) => {
 
     const [files, setFiles] = useState([]);
 
     const saveApkFiles = (event) => {
         event.preventDefault();
+
+        if(hashTypes.length === 0){
+            console.log("Select hash type");
+            return;
+        }
 
         const formData = new FormData();
         files.forEach((file) => {
@@ -37,7 +42,7 @@ const ApkInput = ({handleShowLoading, handleCloseLoading, handleShowResults, set
         let data = {
             'file_name': fileName,
             'apk_type': 'inserted',
-            'hash_type': 'ja3'
+            'hash_types': hashTypes
         }
 
         axios.post('/createHash', data).then( res => {

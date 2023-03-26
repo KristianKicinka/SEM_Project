@@ -12,12 +12,11 @@ import ContentBox from './ContentBox';
 import HashTypePicker from './HashTypePicker';
 
 
-const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults}) => {
+const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults, hashTypes, setHashTypes}) => {
 
     const [appName, setAppName] = useState();
     const [appItems, setAppItems] = useState();
     const [appItemsLoaded, setAppItemsLoaded] = useState(false);
-    const [hashTypes, setHashTypes] = useState(['ja3']);
 
     const get_app_items = (event) =>{
         event.preventDefault();
@@ -40,12 +39,13 @@ const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, se
         <div>
             <header className='bg-primary bg-gradient text-white pb-0'>
                 <div className='container text-center py-2 pb-4'>
-                    <HashTypePicker />
+                    <HashTypePicker hashTypes={hashTypes} setHashTypes={setHashTypes} />
                     <ImportSection  
                         handleShowLoading={handleShowLoading} 
                         handleCloseLoading={handleCloseLoading}
                         handleShowResults={handleShowResults}
                         setResults={setResults}
+                        hashTypes={hashTypes}
                     />
                 </div>
                 <div className='container px-4 text-center pt-5'>
@@ -72,6 +72,7 @@ const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, se
                                 handleShowLoading={handleShowLoading}
                                 handleShowResults={handleShowResults}
                                 setResults={setResults}
+                                hashTypes={hashTypes}
                                 /> : null}
         </div>
     );

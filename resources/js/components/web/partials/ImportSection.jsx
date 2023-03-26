@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import ApkInput from './ApkInput';
 import AppNamesInput from './AppNamesInput';
 
-const ImportSection = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults}) => {
+const ImportSection = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults, hashTypes}) => {
     return (
         <div className="row g-5 px-4">
             <div className='col-sm-12 col-md-6'>
@@ -12,6 +12,7 @@ const ImportSection = ({handleShowLoading, handleCloseLoading, handleShowResults
                     handleCloseLoading={handleCloseLoading}
                     handleShowResults={handleShowResults}
                     setResults={setResults}
+                    hashTypes={hashTypes}
                  />
             </div>
             <div className='col-sm-12 col-md-6'>

@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import AppItem from './AppItem';
 
-const ContentBox = ({items, handleShowLoading, handleCloseLoading, handleShowResults, setResults}) => {
+const ContentBox = ({items, handleShowLoading, handleCloseLoading, handleShowResults, setResults, hashTypes}) => {
     return (
         <div className='ContentBox pt-4'>
             <div className="container">
@@ -16,6 +16,7 @@ const ContentBox = ({items, handleShowLoading, handleCloseLoading, handleShowRes
                                     handleShowLoading={handleShowLoading}
                                     handleShowResults={handleShowResults}
                                     setResults={setResults}
+                                    hashTypes={hashTypes}
                                   />
                             </div>
                         )

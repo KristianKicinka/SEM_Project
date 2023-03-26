@@ -10,6 +10,7 @@ import LoadingModal from './partials/LoadingModal';
 const MainPage = () => {
 
     const [results, setResults] = useState([]);
+    const [hashTypes, setHashTypes] = useState([]);
 
     const [showResults, setShowResults] = useState(false);
     const [showLoading, setShowLoading] = useState(false);
@@ -28,9 +29,11 @@ const MainPage = () => {
                 handleCloseLoading={handleCloseLoading}
                 handleShowResults={handleShowResults}
                 setResults={setResults}
+                hashTypes={hashTypes}
+                setHashTypes={setHashTypes}
             />
             <LoadingModal show={showLoading} handleClose={handleCloseLoading} />
-            <Results show={showResults} handleClose={handleCloseResults} results={results} />
+            <Results show={showResults} handleClose={handleCloseResults} results={results} hashTypes={hashTypes} />
         </div>
     );
 }
