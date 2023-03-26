@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
-import { Link } from 'react-router-dom';
 
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
+
 import axios from 'axios';
-import { lowerCase } from 'lodash';
+
 import ImportSection from './ImportSection';
 import ContentBox from './ContentBox';
-//import fetch from 'cross-fetch';
+import HashTypePicker from './HashTypePicker';
 
 
 const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults}) => {
@@ -17,6 +17,7 @@ const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, se
     const [appName, setAppName] = useState();
     const [appItems, setAppItems] = useState();
     const [appItemsLoaded, setAppItemsLoaded] = useState(false);
+    const [hashTypes, setHashTypes] = useState(['ja3']);
 
     const get_app_items = (event) =>{
         event.preventDefault();
@@ -39,6 +40,7 @@ const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, se
         <div>
             <header className='bg-primary bg-gradient text-white pb-0'>
                 <div className='container text-center py-2 pb-4'>
+                    <HashTypePicker />
                     <ImportSection  
                         handleShowLoading={handleShowLoading} 
                         handleCloseLoading={handleCloseLoading}

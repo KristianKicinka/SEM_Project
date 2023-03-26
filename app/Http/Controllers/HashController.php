@@ -7,8 +7,9 @@ use Symfony\Component\Process\Process;
 
 const APK_INSERTED_DIR = './storage/uploads/apk_inserted/';
 const APK_DOWNLOADED_DIR = './storage/uploads/apk_downloaded/';
-
 const JA3_HASH_SCRIPT_PATH = '../scripts/AnalyzePcapFile.py';
+const PCAP_PATH = './storage/pcaps/';
+
 
 class HashController extends Controller {
 
@@ -25,7 +26,7 @@ class HashController extends Controller {
 
         $package_name = trim($this->getAppPackageName($apk_path));
         $file_name = str_replace('.apk', '.pcap', $apk_name);
-        $pcap_out_path = "./storage/pcaps/".$file_name;
+        $pcap_out_path = PCAP_PATH.$file_name;
 
         $pcap_process = new Process(['tshark','-i','en0','-F','pcap','-w',$pcap_out_path]);
         $pcap_process->start();
@@ -36,7 +37,7 @@ class HashController extends Controller {
 
         $pcap_process->stop();
 
-        $this->applyPcapFilter($pcap_out_path);
+        //$this->applyPcapFilter($pcap_out_path);
 
         return $pcap_out_path;
     }
@@ -51,6 +52,18 @@ class HashController extends Controller {
         }
 
         return $hashes;
+    }
+
+    private function createJA3hash($pcap_file_path){
+        $pcap_path = $this->applyPcapFilter($pcap_file_path, 'ja3');
+        $process = new Process(['python3', JA3_HASH_SCRIPT_PATH, $pcap_path]);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            return response()->json('Hash creation failed!');
+        }
+
+        return $this->parseAnalysisOutput($process->getOutput()); 
     }
 
     public function createHash(Request $request){
@@ -69,31 +82,29 @@ class HashController extends Controller {
         $pcap_file_path = $this->createPcapFile($file_name, $apk_path);
         $this->uninstallAppOnEmulator($package_name);
 
-        if($request->get('hash_type') == 'ja3')
-            $process = new Process(['python3', JA3_HASH_SCRIPT_PATH, $pcap_file_path]);
-
-        $process->run();
-
-        if (!$process->isSuccessful()) {
-            return response()->json('Hash creation failed!');
+        if(in_array('ja3', $request->get('hash_types'))){
+            $ja3_hashes = $this->createJA3hash($pcap_file_path);
+            $hashes['ja3'] = $ja3_hashes;
         }
-
-        $hash_array = $this->parseAnalysisOutput($process->getOutput()); 
 
         $results = [
             'apk_name' => $file_name,
             'package_name' => $package_name,
             'version_name' => $version_name,
-            'hashes' => $hash_array,
+            'hashes' => $hashes,
         ];
 
         return response()->json($results);
 
     }
 
-    private function createFilter(): string {
+    private function createFilter($type): string {
 
-        $filter = "tls.handshake.type==1 && tcp && !(";
+        if($type == 'ja3')
+            $filter = "tls.handshake.type==1 && tcp && !(";
+        else if($type == 'ja3s')
+            $filter = "tls.handshake.type==2 && tcp && !(";
+        
         $index = 0;
         foreach ($this->ip_black_list as $ip){
             $filter = $filter." ip.dst==".$ip;
@@ -105,9 +116,13 @@ class HashController extends Controller {
         return $filter.")";
     }
 
-    private function applyPcapFilter($file_path){
+    private function applyPcapFilter($file_path, $hash_type){
 
-        $filter = $this->createFilter();
+        if($hash_type == 'ja3'){
+            
+        }
+
+        $filter = $this->createFilter($hash_type);
         $command = 'tshark -r '.$file_path.' -Y "'.$filter.'" -w '.$file_path;
         $process = Process::fromShellCommandline($command);
         $process->run();
@@ -115,6 +130,8 @@ class HashController extends Controller {
         if (!$process->isSuccessful()) {
             return response()->json('Apply pcap filter failed!');
         }
+
+
 
     }
 
