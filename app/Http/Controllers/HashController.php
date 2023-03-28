@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Application;
+use App\Models\File;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\Process\Process;
@@ -256,6 +258,30 @@ class HashController extends Controller {
         }
 
         return $process->getOutput();
+    }
+
+    private function saveResultsToDatabase($results){
+
+        $file = File::create([
+            'name' => $results->file_name,
+            'type' => $results->file_type,
+            'path' => $results->file_path,
+        ]);
+
+        $file->save();
+
+        $application = Application::create([
+            'name' => $results->app_name,
+            'package_name' => $results->package_name,
+            'version' => $results->app_version,
+            'file_id' => $file->id
+        ]);
+
+        $application->save();
+
+        //TODO: Create saving hashes
+
+        
     }
 
 }

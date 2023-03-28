@@ -1,16 +1,59 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
 
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
     return (
-        <div className='navbar navbar-expand-lg navbar-dark bg-dark fixed-top'>
-            <div className='container px-4'>
-                <Link className='navbar-brand ps-3' to='#'>Hash App Generator</Link>
+        <div className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+            <div className="container px-4">
+                <Link className="navbar-brand ps-3" to="#">
+                    Mobile apps fingerprints generator
+                </Link>
+                <button
+                    className="navbar-toggler"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#mainNavigation"
+                    aria-controls="mainNavigation"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation"
+                >
+                    <span className="navbar-toggler-icon"></span>
+                </button>
+
+                <div className="collapse navbar-collapse float-end" id="mainNavigation">
+                    <ul className="navbar-nav ms-auto">
+                        <li className="nav-item">
+                            <Link className="nav-link active" aria-current="page" to="#" >
+                                About project
+                            </Link>
+                        </li>
+                        <li className="nav-item">
+                            <Link className="nav-link active" aria-current="page" to="#" >
+                                Fingerprints database
+                            </Link>
+                        </li>
+                        <li className="nav-item">
+                            <Link className="nav-link active" aria-current="page" to="#" >
+                                API
+                            </Link>
+                        </li>
+                        <li className="nav-item ps-4 pt-1">
+                            <Link className="btn btn-sm btn-outline-warning" aria-current="page" to="#" >
+                                Sign in
+                            </Link>
+                        </li>
+                        <li className="nav-item ps-2 pt-1">
+                            <Link className="btn btn-sm btn-warning" aria-current="page" to="#" >
+                                Sign up
+                            </Link>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     );
-}
+};
 
 export default Navbar;
