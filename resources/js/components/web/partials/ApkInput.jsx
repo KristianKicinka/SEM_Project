@@ -5,6 +5,7 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import http from '../../../http';
 import axios from 'axios';
+import HashTypeAlert from './HashTypeAlert';
 
 
 
@@ -13,12 +14,14 @@ import axios from 'axios';
 const ApkInput = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults, hashTypes}) => {
 
     const [files, setFiles] = useState([]);
+    const [showAlert, setShowAlert] = useState(false);
 
     const saveApkFiles = (event) => {
         event.preventDefault();
 
         if(hashTypes.length === 0){
             console.log("Select hash type");
+            setShowAlert(true);
             return;
         }
 
@@ -64,7 +67,7 @@ const ApkInput = ({handleShowLoading, handleCloseLoading, handleShowResults, set
                     <Button id="submit_apk_files" type='submit' onClick={saveApkFiles} className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
                 </Form.Group>
             </Form>
-            
+            <HashTypeAlert showAlert={showAlert} setShowAlert={setShowAlert} />
         </div>
     );
 }
