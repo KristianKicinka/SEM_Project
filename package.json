@@ -23,6 +23,7 @@
         "playwright": "^1.31.2",
         "react-bootstrap": "^2.5.0",
         "react-redux": "^8.0.5",
-        "react-router-dom": "^6.4.1"
+        "react-router-dom": "^6.4.1",
+        "redux": "^4.2.1"
     }
 }
