@@ -7,7 +7,7 @@ const Navbar = () => {
     return (
         <div className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
             <div className="container px-4">
-                <Link className="navbar-brand ps-3" to="#">
+                <Link className="navbar-brand ps-3" to="/">
                     Mobile apps fingerprints generator
                 </Link>
                 <button
@@ -25,17 +25,17 @@ const Navbar = () => {
                 <div className="collapse navbar-collapse float-end" id="mainNavigation">
                     <ul className="navbar-nav ms-auto">
                         <li className="nav-item">
-                            <Link className="nav-link active" aria-current="page" to="#" >
+                            <Link className="nav-link active" aria-current="page" to="/about" >
                                 About project
                             </Link>
                         </li>
                         <li className="nav-item">
-                            <Link className="nav-link active" aria-current="page" to="#" >
+                            <Link className="nav-link active" aria-current="page" to="/database" >
                                 Fingerprints database
                             </Link>
                         </li>
                         <li className="nav-item">
-                            <Link className="nav-link active" aria-current="page" to="#" >
+                            <Link className="nav-link active" aria-current="page" to="/api-info" >
                                 API
                             </Link>
                         </li>

@@ -20,10 +20,13 @@
     "dependencies": {
         "cors": "^2.8.5",
         "cross-fetch": "^3.1.5",
+        "localforage": "^1.10.0",
+        "match-sorter": "^6.3.1",
         "playwright": "^1.31.2",
         "react-bootstrap": "^2.5.0",
         "react-redux": "^8.0.5",
-        "react-router-dom": "^6.4.1",
-        "redux": "^4.2.1"
+        "react-router-dom": "^6.10.0",
+        "redux": "^4.2.1",
+        "sort-by": "^0.0.2"
     }
 }
