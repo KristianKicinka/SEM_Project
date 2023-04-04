@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Models\File;
+use App\Models\Hash;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\Process\Process;
 
 const APK_INSERTED_DIR = './storage/uploads/apk_inserted/';
 const APK_DOWNLOADED_DIR = './storage/uploads/apk_downloaded/';
-const JA3_HASH_SCRIPT_PATH = '../scripts/AnalyzePcapFile.py';
+const JA3_JA3S_HASH_SCRIPT_PATH = '../scripts/JA3_JA3S_hash_generator.py';
 const PCAP_PATH = './storage/pcaps/';
 
 
@@ -69,8 +70,25 @@ class HashController extends Controller {
      * @return array|JsonResponse
      */
     private function createJA3hash($pcap_file_path, $pcap_file_name) {
-        $ja3_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3');
-        $process = new Process(['python3', JA3_HASH_SCRIPT_PATH, $ja3_pcap_path]);
+        $JA3_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3');
+        $process = new Process(['python3', JA3_JA3S_HASH_SCRIPT_PATH, $JA3_pcap_path, 'JA3']);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            return response()->json('Hash creation failed!');
+        }
+
+        return $this->parseAnalysisOutput($process->getOutput());
+    }
+
+     /**
+     * @param $pcap_file_path
+     * @param $pcap_file_name
+     * @return array|JsonResponse
+     */
+    private function createJA3Shash($pcap_file_path, $pcap_file_name){
+        $JA3S_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3S');
+        $process = new Process(['python3', JA3_JA3S_HASH_SCRIPT_PATH, $JA3S_pcap_path, 'JA3S']);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -104,9 +122,14 @@ class HashController extends Controller {
         $this->uninstallAppOnEmulator($package_name);
 
 
-        if(in_array('JA3', $hash_types )){
-            $ja3_hashes = $this->createJA3hash($pcap_file_path, $pcap_file_name);
-            $hashes['JA3'] = $ja3_hashes;
+        if(in_array('JA3', $hash_types)){
+            $JA3_hashes = $this->createJA3hash($pcap_file_path, $pcap_file_name);
+            $hashes['JA3'] = $JA3_hashes;
+        }
+
+        if(in_array('JA3S', $hash_types)){
+            $JA3S_hashes = $this->createJA3hash($pcap_file_path, $pcap_file_name);
+            $hashes['JA3S'] = $JA3S_hashes;
         }
 
         $results = [
@@ -262,6 +285,9 @@ class HashController extends Controller {
 
     private function saveResultsToDatabase($results){
 
+        //TODO: Create saving file paths to database.
+
+        /*
         $file = File::create([
             'name' => $results->file_name,
             'type' => $results->file_type,
@@ -269,17 +295,27 @@ class HashController extends Controller {
         ]);
 
         $file->save();
+        */
 
         $application = Application::create([
             'name' => $results->app_name,
             'package_name' => $results->package_name,
             'version' => $results->app_version,
-            'file_id' => $file->id
+            //'file_id' => $file->id
         ]);
 
         $application->save();
 
-        //TODO: Create saving hashes
+        foreach($results->hashes as $hash_type => $hashes){
+            foreach($hashes as $hash){
+                $hash = Hash::create([
+                    'app_id' => $application->id,
+                    'hash_type' => $hash_type,
+                    'hash' => $hash,
+                ]);
+                $hash->save();
+            }
+        }
 
         
     }
