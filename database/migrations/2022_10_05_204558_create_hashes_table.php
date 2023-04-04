@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('app_id')->unsigned();
             $table->string('hash');
+            $table->string('hash_type');
             $table->timestamps();
             $table->foreign('app_id')->references('id')->on('applications'); 
         });
