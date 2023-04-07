@@ -14,7 +14,7 @@ const APIPage = () => {
                 <div className="row">
                     <div className="card bg-white text-dark p-3">
                         <div className="card-body">
-                            <h5 className="card-title">API overview</h5>
+                            <h3 className="card-title">API overview</h3>
                             <p className="card-text">
                                 Lorem ipsum dolor sit amet consectetur adipisicing elit.
                                 Iste inventore adipisci eligendi nulla necessitatibus delectus

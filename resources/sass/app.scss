@@ -22,3 +22,13 @@ $search_color:#FF8809;
 .btn-search {
     @include button-variant($search_color, darken($search_color, 7.5%), darken($search_color, 10%), lighten($search_color,5%), lighten($search_color, 10%), darken($search_color,30%));
 }
+
+.btn-search-outline {
+    border-color: $search_color;
+    color: $search_color;
+}
+  
+.btn-search-outline:hover {
+    background-color: $search_color;
+    color: white;
+}

@@ -128,7 +128,7 @@ class HashController extends Controller {
         }
 
         if(in_array('JA3S', $hash_types)){
-            $JA3S_hashes = $this->createJA3hash($pcap_file_path, $pcap_file_name);
+            $JA3S_hashes = $this->createJA3Shash($pcap_file_path, $pcap_file_name);
             $hashes['JA3S'] = $JA3S_hashes;
         }
 
