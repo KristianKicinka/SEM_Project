@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\HashController;
 use App\Http\Controllers\SearchController;
@@ -26,3 +27,5 @@ Route::post('saveApkFile', [FileController::class, 'saveApkFile']);
 Route::post('saveNamesListFile', [FileController::class, 'saveNamesListFile']);
 Route::post('downloadApkFile', [FileController::class, 'downloadApkFile']);
 Route::post('createHash', [HashController::class, 'createHash']);
+
+Route::post('getDatabaseData', [DatabaseController::class, 'getDatabaseData']);

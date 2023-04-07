@@ -50,7 +50,7 @@ const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResult
                     <div className="container">
                         <div className="row gx-2">
                             <div className="col-sm-4">
-                                <img src={item.thumbnail} alt="AppIcon" />
+                                <img className="w-100" src={item.thumbnail} alt="AppIcon" />
                             </div>
                             <div className="col-sm-8">
                                 <h6 className="card-title">{item.title}</h6>

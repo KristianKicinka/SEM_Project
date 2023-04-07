@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import Navbar from "./partials/Navbar";
@@ -12,40 +12,8 @@ import Pagination from "react-bootstrap/Pagination";
 import CopyClipboard from "./partials/CopyClipboard";
 
 const DatabasePage = () => {
-    let data = [
-        {
-            id: 0,
-            appName: "Messenger",
-            packageName: "com.facebook.orca",
-            version: "499,5",
-            hashType: "JA3",
-            hash: "sdjkgasjlghkjKDVBVUv",
-        },
-        {
-            id: 1,
-            appName: "Messenger",
-            packageName: "com.facebook.orca",
-            version: "499,8",
-            hashType: "JA3",
-            hash: "sdjkgaddadajlghkjKDVBVUv",
-        },
-        {
-            id: 2,
-            appName: "Spotify",
-            packageName: "com.spotify",
-            version: "444",
-            hashType: "JA3S",
-            hash: "sdjkgasjlgdadakjKDVBVUv",
-        },
-        {
-            id: 3,
-            appName: "Waze",
-            packageName: "com.waze",
-            version: "376",
-            hashType: "JA3S",
-            hash: "sdjkgasjlghkjgdgVBVUv",
-        },
-    ];
+
+    const [data, setData] = useState([]);
 
     let paginationItemActive = 1;
     let paginationItems = [];
@@ -57,6 +25,20 @@ const DatabasePage = () => {
             </Pagination.Item>
         );
     }
+
+    const getData = () => {
+        axios.post('/getDatabaseData')
+          .then((response) => {
+            console.log(response.data);
+            setData(response.data);
+          }, (error) => {
+            console.log(error);
+          });
+    }
+
+    useEffect(() => {
+        getData();
+    }, []);
 
     return (
         <div className="DatabasePage bg-primary bg-gradient pt-5 vh-100">
@@ -100,6 +82,7 @@ const DatabasePage = () => {
                                             <th>App name</th>
                                             <th>Package name</th>
                                             <th>Version</th>
+                                            <th>Created at</th>
                                             <th>Hash type</th>
                                             <th>Hash</th>
                                         </tr>
@@ -109,15 +92,17 @@ const DatabasePage = () => {
                                             return (
                                                 <tr key={key}>
                                                     <td>{item.id}</td>
-                                                    <td>{item.appName}</td>
-                                                    <td>{item.packageName}</td>
+                                                    <td>{item.name}</td>
+                                                    <td>{item.package_name}</td>
                                                     <td>{item.version}</td>
-                                                    <td>{item.hashType}</td>
+                                                    <td>{item.created_at}</td>
+                                                    <td>{item.hash_type}</td>
                                                     <td>
                                                         <CopyClipboard
                                                             text={item.hash}
                                                         />
                                                     </td>
+                                                    
                                                 </tr>
                                             );
                                         })}

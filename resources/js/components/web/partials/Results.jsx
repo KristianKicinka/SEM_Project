@@ -16,13 +16,13 @@ const Results = ({ show, handleClose, results, hashTypes }) => {
                 <Modal.Body>
                     <ul className="list-group">
                         <li className="list-group-item">
-                            <b>APK name : </b> {results.apk_name}
+                            <b>App name : </b> {results.app_name}
                         </li>
                         <li className="list-group-item">
                             <b>Package name : </b> {results.package_name}
                         </li>
                         <li className="list-group-item">
-                            <b>Version name : </b> {results.version_name}
+                            <b>Version name : </b> {results.app_version}
                         </li>
                         {hashTypes.map((hashType, key) => {
                             return (

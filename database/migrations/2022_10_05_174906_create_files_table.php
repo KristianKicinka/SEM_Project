@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('type');
             $table->string('path');
-            $table->bigInteger('app_id')->unsigned();
+            $table->bigInteger('app_id')->unsigned()->nullable();
             $table->timestamps();
             $table->foreign('app_id')->references('id')->on('applications'); 
         });

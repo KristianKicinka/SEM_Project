@@ -18,6 +18,7 @@ class File extends Model
         'name',
         'type',
         'path',
+        'app_id'
     ];
 
 }

@@ -8,6 +8,7 @@ use App\Models\Hash;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Log;
 
 const APK_INSERTED_DIR = './storage/uploads/apk_inserted/';
 const APK_DOWNLOADED_DIR = './storage/uploads/apk_downloaded/';
@@ -25,6 +26,18 @@ class HashController extends Controller {
 
     private string $app_package_name;
     private string $app_version_name;
+    private array $files = [];
+
+
+    private function addFileToFiles($name, $type, $path){
+        $file = [
+            'name' => $name,
+            'type' => $type,
+            'path' => $path,
+        ];
+
+        array_push($this->files, $file);
+    }
 
     /**
      * @param $pcap_file_name
@@ -35,6 +48,8 @@ class HashController extends Controller {
 
         $package_name = trim($this->getAppPackageName($apk_path));
         $pcap_out_path = PCAP_PATH.$pcap_file_name;
+
+        $this->addFileToFiles($pcap_file_name, 'PCAP', $pcap_out_path);
 
         $pcap_process = new Process(['tshark','-i','en0','-F','pcap','-w',$pcap_out_path]);
         $pcap_process->start();
@@ -114,8 +129,11 @@ class HashController extends Controller {
         else if($request->get('apk_type') == 'downloaded')
             $apk_path = APK_DOWNLOADED_DIR.$apk_file_name;
 
+        $this->addFileToFiles($apk_file_name, 'APK', $apk_path);
+
         $package_name = trim($this->getAppPackageName($apk_path));
         $version_name = trim($this->getAppVersionName($apk_path));
+        $application_name = trim($this->getAppName($apk_path));
 
         $this->installAppOnEmulator($apk_path);
         $pcap_file_path = $this->createPcapFile($pcap_file_name, $apk_path);
@@ -133,11 +151,13 @@ class HashController extends Controller {
         }
 
         $results = [
-            'apk_name' => $apk_file_name,
+            'app_name' => $application_name,
             'package_name' => $package_name,
-            'version_name' => $version_name,
+            'app_version' => $version_name,
             'hashes' => $hashes,
         ];
+
+        $this->saveResultsToDatabase($results);
 
         return response()->json($results);
     }
@@ -174,10 +194,14 @@ class HashController extends Controller {
     private function applyPcapFilter($pcap_file_path, $pcap_file_name, $hash_type) : string {
         $new_pcap_file_path = "";
 
-        if($hash_type == 'JA3')
+        if($hash_type == 'JA3'){
             $new_pcap_file_path = PCAP_PATH.'JA3_'.$pcap_file_name;
-        else if($hash_type == 'JA3S')
+            $this->addFileToFiles('JA3_'.$pcap_file_name, 'PCAP', $new_pcap_file_path);
+        }
+        else if($hash_type == 'JA3S'){
             $new_pcap_file_path = PCAP_PATH.'JA3S_'.$pcap_file_name;
+            $this->addFileToFiles('JA3S_'.$pcap_file_name, 'PCAP', $new_pcap_file_path);
+        }
 
         $filter = $this->createFilter($hash_type);
         $command = 'tshark -r '.$pcap_file_path.' -Y "'.$filter.'" -w '.$new_pcap_file_path;
@@ -283,30 +307,44 @@ class HashController extends Controller {
         return $process->getOutput();
     }
 
+    private function getAppName($apk_file_path){
+        $command = 'aapt dump badging '.$apk_file_path.' | sed -n "s/^application-label:\'\(.*\)\'/\1/p"';
+
+        $process = Process::fromShellCommandline($command);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            return response()->json('App name error!');
+        }
+
+        return $process->getOutput();
+    }
+
     private function saveResultsToDatabase($results){
 
-        //TODO: Create saving file paths to database.
-
-        /*
-        $file = File::create([
-            'name' => $results->file_name,
-            'type' => $results->file_type,
-            'path' => $results->file_path,
-        ]);
-
-        $file->save();
-        */
+        //Log::channel('devlog')->info('saving started');
 
         $application = Application::create([
-            'name' => $results->app_name,
-            'package_name' => $results->package_name,
-            'version' => $results->app_version,
-            //'file_id' => $file->id
+            'name' => $results['app_name'],
+            'package_name' => $results['package_name'],
+            'version' => $results['app_version'],
         ]);
 
         $application->save();
 
-        foreach($results->hashes as $hash_type => $hashes){
+        foreach($this->files as $file){
+           $db_file = File::create([
+                'name' => $file['name'],
+                'type' => $file['type'],
+                'path' => $file['path'],
+                'app_id' => $application->id,
+           ]);
+           $db_file->save();
+        }
+
+        Log::channel('devlog')->info('file db created');
+
+        foreach($results['hashes'] as $hash_type => $hashes){
             foreach($hashes as $hash){
                 $hash = Hash::create([
                     'app_id' => $application->id,
