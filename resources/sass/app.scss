@@ -32,3 +32,42 @@ $search_color:#FF8809;
     background-color: $search_color;
     color: white;
 }
+
+.bg-orange{
+    background-color: $search_color;
+}
+
+.text-orange{
+    color: $search_color;
+}
+
+//https://stackoverflow.com/questions/32355009/changing-pagination-colour-bootstrap
+
+.pagination > li > a
+{
+    background-color: white;
+    color: $search_color;
+}
+
+.pagination > li > a:focus,
+.pagination > li > a:hover,
+.pagination > li > span:focus,
+.pagination > li > span:hover
+{
+    color: $search_color;
+    background-color: #eee;
+    border-color: #ddd;
+}
+
+.pagination > .active > a
+{
+    color: white;
+    background-color: $search_color !Important;
+    border: solid 1px $search_color !Important;
+}
+
+.pagination > .active > a:hover
+{
+    background-color: $search_color !Important;
+    border: solid 1px $search_color;
+}

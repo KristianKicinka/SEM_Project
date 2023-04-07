@@ -7,7 +7,7 @@ import Table from "react-bootstrap/Table";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Button from "react-bootstrap/Button";
-import Pagination from "react-bootstrap/Pagination";
+import Pagination from "./partials/Pagination";
 
 import CopyClipboard from "./partials/CopyClipboard";
 
@@ -15,22 +15,18 @@ const DatabasePage = () => {
 
     const [data, setData] = useState([]);
     const [filter, setFilter] = useState('');
-
-    let filteredData = data;
-
     const columns = ['id','name','package_name','version','created_at','hash_type','hash'];
 
-    let paginationItemActive = 1;
-    let paginationItems = [];
+    const [currentPage, setCurrentPage] = useState(1);
+    const [recordsPerPage] = useState(8);
 
-    for (let number = 1; number <= 5; number++) {
-        paginationItems.push(
-            <Pagination.Item key={number} active={number === paginationItemActive}>
-                {number}
-            </Pagination.Item>
-        );
-    };
+    const indexOfLastRecord = currentPage * recordsPerPage;
+    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
 
+    const nPages = Math.ceil(data.length / recordsPerPage);
+
+    let filteredData = data.slice(indexOfFirstRecord, indexOfLastRecord);
+   
     filteredData = filteredData.filter((item) => {
         let result = false;
         columns.map((col) => {
@@ -126,11 +122,7 @@ const DatabasePage = () => {
                                 <div className="col"></div>
                                 <div className="col"></div>
                                 <div className="col">
-                                    <Pagination>
-                                        <Pagination.Prev />
-                                        {paginationItems}
-                                        <Pagination.Next />
-                                    </Pagination>
+                                {data && <Pagination nPages = { nPages } currentPage = { currentPage } setCurrentPage = { setCurrentPage } /> }
                                 </div>
                             </div>
                         </div>
