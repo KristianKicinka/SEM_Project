@@ -18,9 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('package_name');
             $table->string('version');
-            $table->bigInteger('file_id')->unsigned();
             $table->timestamps();
-            $table->foreign('file_id')->references('id')->on('files'); 
         });
     }
 
