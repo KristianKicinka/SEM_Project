@@ -14,7 +14,10 @@ hashes = []
 
 
 def process_ciphers(message):
-    return message.ciphers
+    if(hash_type == 'JA3'):
+        return message.ciphers
+    elif(hash_type == 'JA3S'):
+        return message.cipher
 
 
 def process_version(message):
@@ -62,7 +65,7 @@ def create_JA3_string(version, ciphers, extensions):
 
 def create_JA3S_string(version, ciphers, extensions):
     full_string = "" + str(version) + ","
-    full_string = add_to_string(full_string, ciphers) + ","
+    full_string = full_string + str(ciphers) + ","
     full_string = add_to_string(full_string, extensions)
     return full_string
 
