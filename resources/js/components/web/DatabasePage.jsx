@@ -14,6 +14,11 @@ import CopyClipboard from "./partials/CopyClipboard";
 const DatabasePage = () => {
 
     const [data, setData] = useState([]);
+    const [filter, setFilter] = useState('');
+
+    let filteredData = data;
+
+    const columns = ['id','name','package_name','version','created_at','hash_type','hash'];
 
     let paginationItemActive = 1;
     let paginationItems = [];
@@ -24,7 +29,17 @@ const DatabasePage = () => {
                 {number}
             </Pagination.Item>
         );
-    }
+    };
+
+    filteredData = filteredData.filter((item) => {
+        let result = false;
+        columns.map((col) => {
+            if(item[col].toString().toLowerCase().includes(filter.toLowerCase())){
+                result = true;
+            }
+        });
+        return result;
+    });
 
     const getData = () => {
         axios.post('/getDatabaseData')
@@ -34,14 +49,14 @@ const DatabasePage = () => {
           }, (error) => {
             console.log(error);
           });
-    }
+    };
 
     useEffect(() => {
         getData();
     }, []);
 
     return (
-        <div className="DatabasePage bg-primary bg-gradient pt-5 vh-100">
+        <div className="DatabasePage bg-primary bg-gradient pt-5 min-vh-100">
             <Navbar />
             <div className="container pt-5">
                 <div className="row">
@@ -60,9 +75,7 @@ const DatabasePage = () => {
                                             placeholder="Search"
                                             aria-label="Search"
                                             aria-describedby="search_btn"
-                                            onChange={(e) =>
-                                                setAppName(e.target.value)
-                                            }
+                                            onChange={e=>setFilter(e.target.value)}
                                         />
                                         <Button
                                             id="search_btn"
@@ -88,7 +101,7 @@ const DatabasePage = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {data.map((item, key) => {
+                                        {filteredData.map((item, key) => {
                                             return (
                                                 <tr key={key}>
                                                     <td>{item.id}</td>

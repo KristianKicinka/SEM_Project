@@ -28,6 +28,7 @@ if __name__ == '__main__':
 
     # https://stackoverflow.com/questions/31804799/how-to-get-pdf-filename-with-python-requests
     file_name = re.findall("filename=(.+)", file.headers['content-disposition'])[0][1:-1]
+    file_name = file_name.replace(" ", "_")
 
     file_path = directory+file_prefix+"_"+file_name
 

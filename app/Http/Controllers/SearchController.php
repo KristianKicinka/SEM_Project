@@ -28,26 +28,4 @@ class SearchController extends Controller
 
         return response()->json($response);
     }
-
-    private function getPackageName(Request $request){
-
-        $python_process = new Process(['python3', '../scripts/AnalyzePcapFile.py', $request->input('name')]);
-        $python_process->run();
-
-        if (!$python_process->isSuccessful()) {
-            return "Python Error!";
-        }
-
-        $package_name = $python_process->getOutput();
-
-       /* $adb_process = new Process(['sh','../scripts/adbRun.sh',$package_name]);
-        $adb_process->run();
-
-        if (!$adb_process->isSuccessful()) {
-            return "ADB Error!";
-        }
-        */
-
-        return $package_name;
-    }
 }
