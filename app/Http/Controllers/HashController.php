@@ -358,4 +358,13 @@ class HashController extends Controller {
         
     }
 
+    public function createHashAPI(Request $request){
+        $response = [
+            'app' => $request->input('app'),
+            'types' => $request->input('types'),
+        ];
+
+        return response()->json($response);
+    }
+
 }
