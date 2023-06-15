@@ -19,4 +19,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('create_fingerprints', [HashController::class, 'createHashAPI']);
+Route::post('get-app-hashes', [HashController::class, 'getAppHashAPI']);

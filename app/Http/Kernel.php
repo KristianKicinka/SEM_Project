@@ -39,9 +39,11 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
+            \App\Http\Middleware\JsonResponseAPI::class,
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            
         ],
     ];
 

@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
 
+use App\Http\Controllers\DatabaseController;
+
 const APK_INSERTED_DIR = './storage/uploads/apk_inserted/';
 const APK_DOWNLOADED_DIR = './storage/uploads/apk_downloaded/';
 const JA3_JA3S_HASH_SCRIPT_PATH = '../scripts/JA3_JA3S_hash_generator.py';
@@ -357,11 +359,12 @@ class HashController extends Controller {
         
     }
 
-    public function createHashAPI(Request $request){
-        $response = [
-            'app' => $request->input('app'),
-            'types' => $request->input('types'),
-        ];
+    public function getAppHashAPI(Request $request){
+
+        $app_name = $request->input('params')['app_name'];
+        $hash_types = $request->input('params')['hash_types'];
+
+        $response = (new DatabaseController)->getAppHashes($app_name, $hash_types);
 
         return response()->json($response);
     }
