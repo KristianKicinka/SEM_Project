@@ -14,15 +14,10 @@ const APK_INSERTED_DIR = './storage/uploads/apk_inserted/';
 const APK_DOWNLOADED_DIR = './storage/uploads/apk_downloaded/';
 const JA3_JA3S_HASH_SCRIPT_PATH = '../scripts/JA3_JA3S_hash_generator.py';
 const PCAP_PATH = './storage/pcaps/';
+const IP_BLACK_LIST_FILE = '../scripts/ip_black_list_ranges.txt';
 
 
 class HashController extends Controller {
-
-    private array $ip_black_list = [
-    "142.251.37.106",
-    "142.251.36.138",
-    "216.239.32.16",
-    ];
 
     private string $app_package_name;
     private string $app_version_name;
@@ -175,10 +170,14 @@ class HashController extends Controller {
             $filter = "tls.handshake.type==2 && tcp && !(";
 
         $index = 0;
-        foreach ($this->ip_black_list as $ip){
+
+        $ip_black_list_file = file_get_contents(IP_BLACK_LIST_FILE);
+        $ip_black_list = explode("\n",$ip_black_list_file);
+
+        foreach ($ip_black_list as $ip){
             $filter = $filter." ip.dst==".$ip;
             $index++;
-            if($index != count($this->ip_black_list))
+            if($index != count($ip_black_list))
                 $filter = $filter." or";
         }
 
