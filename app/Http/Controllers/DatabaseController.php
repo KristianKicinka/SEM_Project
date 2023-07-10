@@ -55,6 +55,5 @@ class DatabaseController extends Controller {
                     ->where('applications.version','=',$app_version)
                     ->pluck('hash');
     }
-
     
 }

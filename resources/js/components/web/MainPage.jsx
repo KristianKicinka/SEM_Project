@@ -24,6 +24,7 @@ const MainPage = () => {
     return (
         <div className='MainPage'>
             <Navbar/>
+            
             <SearchBox  
                 handleShowLoading={handleShowLoading} 
                 handleCloseLoading={handleCloseLoading}
@@ -32,6 +33,7 @@ const MainPage = () => {
                 hashTypes={hashTypes}
                 setHashTypes={setHashTypes}
             />
+            <div className="btn btn-danger" onClick={handleShowLoading}>Show modal</div>
             <LoadingModal show={showLoading} handleClose={handleCloseLoading} />
             <Results show={showResults} handleClose={handleCloseResults} results={results} hashTypes={hashTypes} />
         </div>
