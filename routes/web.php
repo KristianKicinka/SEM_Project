@@ -23,9 +23,6 @@ Route::view('/{any}', 'app')->where('any', '.*');
 // Post routes
 
 Route::post('search', [SearchController::class, 'index']);
-Route::post('saveApkFile', [FileController::class, 'saveApkFile']);
 Route::post('saveNamesListFile', [FileController::class, 'saveNamesListFile']);
 Route::post('downloadApkFile', [FileController::class, 'downloadApkFile']);
-Route::post('createHash', [HashController::class, 'createHash']);
-
 Route::post('getDatabaseData', [DatabaseController::class, 'getDatabaseData']);

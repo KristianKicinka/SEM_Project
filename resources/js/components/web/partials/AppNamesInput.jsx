@@ -26,7 +26,7 @@ const ApkInput = () => {
     return (
         <div className='bg-light text-dark p-3 rounded-3'>
             <Form onSubmit={saveFilesNames} className='container' encType="multipart/form-data" >
-                <h3 className='pb-2'>Insert App name list</h3>
+                <h3 className='pb-2'>Insert app package names list</h3>
                 <Form.Group controlId="formFileNames" className="row">
                     <Form.Control type="file" className='col' accept='.txt'
                         onChange={(e) => handleChange(e.target.files)} required />

@@ -12,7 +12,10 @@ import ContentBox from './ContentBox';
 import HashTypePicker from './HashTypePicker';
 
 
-const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, setResults, hashTypes, setHashTypes}) => {
+const SearchBox = ({
+    handleShowLoading, handleCloseLoading, handleShowResults, 
+    setResults, hashTypes, setHashTypes, handleShowAlert, setLoadingData
+}) => {
 
     const [appName, setAppName] = useState();
     const [appItems, setAppItems] = useState();
@@ -26,9 +29,9 @@ const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, se
             app_name : appName,
           })
           .then((response) => {
-            setAppItems(response.data.organic_results[0].items);
+            setAppItems(response.data);
             setAppItemsLoaded(true);
-            console.log(response.data.organic_results[0].items);
+            console.log(response.data);
           }, (error) => {
             console.log(error);
           });
@@ -44,12 +47,14 @@ const SearchBox = ({handleShowLoading, handleCloseLoading, handleShowResults, se
                         handleShowLoading={handleShowLoading} 
                         handleCloseLoading={handleCloseLoading}
                         handleShowResults={handleShowResults}
+                        handleShowAlert={handleShowAlert}
                         setResults={setResults}
                         hashTypes={hashTypes}
+                        setLoadingData={setLoadingData}
                     />
                 </div>
                 <div className='container px-4 text-center pt-5'>
-                    <h1 className='fw-bolder'>Enter the name of application</h1>
+                    <h1 className='fw-bolder'>Enter name of the application</h1>
                     <div className='container py-4'>
                         <div className="row">
                             <div className="col-sm-0 col-md-3"></div>

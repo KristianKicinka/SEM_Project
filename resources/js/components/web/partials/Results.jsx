@@ -7,6 +7,23 @@ import CopyClipboard from "./CopyClipboard";
 const Results = ({ show, handleClose, results, hashTypes }) => {
     console.log(results.hashes);
 
+    const hashItems = (hashType, hashes) => {
+        return (
+            <li className="list-group-item" key={hashType}>
+                <b>{hashType} Hashes : </b>
+                <ul className="list-group list-group-flush">
+                    {hashes?.map((hash, id) => {
+                        return (
+                            <li className="list-group-item" key={id} >
+                                <CopyClipboard text={hash}/>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </li>
+        );
+    }
+
     return (
         <div className="Results">
             <Modal show={show} onHide={handleClose}>
@@ -24,22 +41,9 @@ const Results = ({ show, handleClose, results, hashTypes }) => {
                         <li className="list-group-item">
                             <b>Version name : </b> {results.app_version}
                         </li>
-                        {hashTypes.map((hashType, key) => {
-                            return (
-                                <li className="list-group-item" key={key}>
-                                    <b>{hashType} Hashes : </b>
-                                    <ul className="list-group list-group-flush">
-                                        {results.hashes?.[hashType].map((hash, id) => {
-                                            return (
-                                                <li className="list-group-item" key={id} >
-                                                    <CopyClipboard text={hash}/>
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                </li>
-                            );
-                        })}
+                        {results.JA3_hashes?.length !== 0 && hashItems('JA3', results.JA3_hashes)}
+                        {results.JA3S_hashes?.length !== 0 && hashItems('JA3S', results.JA3S_hashes)}
+                        {results.FlowMon_hashes?.length !== 0 && hashItems('FlowMon', results.FlowMon_hashes)}
                     </ul>
                 </Modal.Body>
             </Modal>

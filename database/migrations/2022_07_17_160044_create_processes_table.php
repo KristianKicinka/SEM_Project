@@ -13,15 +13,14 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('hashes', function (Blueprint $table) {
+        Schema::create('processes', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('app_id')->unsigned();
-            $table->bigInteger('process_id')->unsigned();
-            $table->string('hash');
-            $table->string('hash_type');
+            $table->string('frontend_id')->nullable();
+            $table->string('ip_address')->nullable();
+            $table->string('status');
+            $table->integer('progress');
+            $table->string('message')->nullable();
             $table->timestamps();
-            $table->foreign('app_id')->references('id')->on('applications');
-            $table->foreign('process_id')->references('id')->on('processes'); 
         });
     }
 
@@ -32,6 +31,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('hashes');
+        Schema::dropIfExists('processes');
     }
 };

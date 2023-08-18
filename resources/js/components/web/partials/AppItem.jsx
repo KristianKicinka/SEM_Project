@@ -24,7 +24,7 @@ const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResult
 
     const getApkFile = (e) => {
         e.preventDefault();
-        console.log(item.product_id);
+        console.log(item.package_name);
 
         if(hashTypes.length === 0){
             console.log("Select hash type");
@@ -33,7 +33,7 @@ const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResult
 
         handleShowLoading();
 
-        axios.post('/downloadApkFile', {'package_name': item.product_id}).then( res => {
+        axios.post('/downloadApkFile', {'package_name': item.package_name}).then( res => {
             console.log(res.data);
             if(res.data != 'APK download failed!'){
                 console.log('APK succesfully downloaded')
@@ -44,7 +44,7 @@ const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResult
     };
 
     return (
-        <a href={item.title} onClick={getApkFile} className="text-decoration-none" >
+        <a href={item.app_name} onClick={getApkFile} className="text-decoration-none" >
             <div className="card">
                 <div className="card-body text-dark">
                     <div className="container">
@@ -53,9 +53,9 @@ const AppItem = ({ item, handleShowLoading, handleCloseLoading, handleShowResult
                                 <img className="w-100" src={item.thumbnail} alt="AppIcon" />
                             </div>
                             <div className="col-sm-8">
-                                <h6 className="card-title">{item.title}</h6>
+                                <h6 className="card-title">{item.app_name}</h6>
                                 <span className="card-text">
-                                    {item.product_id}
+                                    {item.package_name}
                                 </span>
                             </div>
                         </div>

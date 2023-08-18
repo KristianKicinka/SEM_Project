@@ -6,11 +6,21 @@ from scapy.layers.tls.record import TLS
 import hashlib
 import os
 
+BLACK_LIST_FILE = './scripts/domain_black_list.txt'
+
 tls_supported_groups = []
 tls_ecf = []
 
 hash_strings = []
 hashes = []
+
+def check_useless_domain_name(message):
+    # row from : https://github.com/hsouna/tls-servername/blob/main/get_servername_from_tls.py
+    domain_name = packet['TLS']['TLS_Ext_ServerName'].servernames[0].servername.decode("utf-8")
+
+    if domain_name in open(BLACK_LIST_FILE, 'r').read():
+        return True
+    return False
 
 
 def process_ciphers(message):
@@ -96,6 +106,10 @@ if __name__ == '__main__':
 
     packet_count = 1
     for packet in scapy_cap:
+
+        if check_useless_domain_name(packet[TLS].msg[0]):
+            continue
+        
         version = process_version(packet[TLS].msg[0])
         ciphers = process_ciphers(packet[TLS].msg[0])
         extensions = process_extensions(packet[TLS].msg[0])

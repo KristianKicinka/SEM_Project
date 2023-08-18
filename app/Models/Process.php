@@ -5,9 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Hash extends Model
+class Process extends Model
 {
     use HasFactory;
+
+     /**
+     * @var string $table
+     */
+    protected $table = 'processes';
 
      /**
      * The attributes that are mass assignable.
@@ -15,9 +20,11 @@ class Hash extends Model
      * @var array
      */
     protected $fillable = [
-        'app_id',
-        'process_id',
-        'hash',
-        'hash_type',
+        'frontend_id',
+        'ip_address',
+        'status',
+        'progress',
+        'message',
     ];
+
 }
