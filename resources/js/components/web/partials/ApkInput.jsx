@@ -14,11 +14,11 @@ const ApkInput = ({
     handleShowAlert, setResults, hashTypes, setLoadingData
 }) => {
 
-    const [files, setFiles] = useState([]);
+    const [apkFile, setApkFile] = useState(null);
     const [pollingInterval, setPollingInterval] = useState(null);
-    let process_id = null; 
+    let process_id = null;
 
-    const saveApkFiles = async (event) => {
+    const createHash = async (event) => {
         event.preventDefault();
 
         if(hashTypes.length === 0){
@@ -27,40 +27,28 @@ const ApkInput = ({
             return;
         }
 
-        const formData = new FormData();
-        files.forEach((file) => {
-            formData.append('files[]',file);
-        });
-
-        console.log(formData.getAll('files[]'));
-        try {
-            let response = await axios.post('/api/save-apk-file', formData);
-            createHash(response.data[0]);
-        } catch (error) {
-            console.log(`ERROR: ${error}`);
-        }
-    }
-
-    const createHash = async (fileName) => {
-        console.log(fileName);
         handleShowLoading();
 
         process_id = setNewActiveProcess();
 
         console.log(`after set process id ${process_id}`);
-    
-        let data = {
-            'file_name': fileName,
-            'input_type': 'apk_file',
-            'hash_types': hashTypes,
-            'frontend_id': process_id,
-        }
 
-        axios.post('/api/create-hash', data).then( res => {
-            console.log(res.data);
+        const data = new FormData();
+        data.append("apk_file", apkFile);
+        data.append("hash_types", JSON.stringify(hashTypes));
+        data.append("frontend_id", process_id);
+
+        try {
+            let results = await axios.post('/api/create-hash-apk', data);
+            console.log(results.data);
             pollStatus();
             setPollingInterval(setInterval(pollStatus, 2000));
-        });
+        } catch (error) {
+            clearInterval(pollingInterval);
+            setPollingInterval(null);
+            handleCloseLoading();
+            console.log(error);
+        }
     }
 
     const handleResults = async () => {
@@ -79,7 +67,6 @@ const ApkInput = ({
     }
 
     const pollStatus = async () => {
-
         let info = await getProcessInfo(process_id);
         console.log(info.status);
         setLoadingData(info);
@@ -100,16 +87,16 @@ const ApkInput = ({
 
     useEffect(() => {
         return () => clearInterval(pollingInterval);
-      }, [pollingInterval]);
+    }, [pollingInterval]);
 
     return (
         <div className='bg-light text-dark p-3 rounded-3'>
-            <Form onSubmit={saveApkFiles} className='container' encType="multipart/form-data">
-                <h3 className='pb-2'>Insert APK files</h3>
+            <Form onSubmit={createHash} className='container' encType="multipart/form-data">
+                <h3 className='pb-2'>Insert APK file</h3>
                 <Form.Group controlId="formFileAPK" className="row">
-                    <Form.Control type="file" multiple className='col'
-                        onChange={e =>{setFiles(Array.from(e.target.files))}} accept='.apk' required />
-                    <Button id="submit_apk_files" type='submit' onClick={saveApkFiles} className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
+                    <Form.Control type="file" className='col'
+                        onChange={e=>{setApkFile(e.target.files[0])}} accept='.apk' required />
+                    <Button id="submit_apk_files" type='submit' className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
                 </Form.Group>
             </Form>
         </div>

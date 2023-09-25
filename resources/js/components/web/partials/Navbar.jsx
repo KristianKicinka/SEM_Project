@@ -40,12 +40,12 @@ const Navbar = () => {
                             </Link>
                         </li>
                         <li className="nav-item ps-4 pt-1">
-                            <Link className="btn btn-sm btn-search-outline" aria-current="page" to="#" >
+                            <Link className="btn btn-sm btn-search-outline" aria-current="page" to="/login" >
                                 Sign in
                             </Link>
                         </li>
                         <li className="nav-item ps-2 pt-1">
-                            <Link className="btn btn-sm btn-search text-white" aria-current="page" to="#" >
+                            <Link className="btn btn-sm btn-search text-white" aria-current="page" to="/register" >
                                 Sign up
                             </Link>
                         </li>

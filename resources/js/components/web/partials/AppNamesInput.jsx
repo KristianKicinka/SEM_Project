@@ -30,7 +30,7 @@ const ApkInput = () => {
                 <Form.Group controlId="formFileNames" className="row">
                     <Form.Control type="file" className='col' accept='.txt'
                         onChange={(e) => handleChange(e.target.files)} required />
-                    <Button id="submit_file_names_input" type='submit' onClick={saveFilesNames} className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
+                    <Button id="submit_file_names_input" disabled type='submit' onClick={saveFilesNames} className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
                 </Form.Group>
             </Form>
         </div>

@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\DatabaseController;
+use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\HashController;
 use App\Http\Controllers\SearchController;
@@ -22,7 +22,7 @@ Route::view('/{any}', 'app')->where('any', '.*');
 
 // Post routes
 
-Route::post('search', [SearchController::class, 'index']);
-Route::post('saveNamesListFile', [FileController::class, 'saveNamesListFile']);
-Route::post('downloadApkFile', [FileController::class, 'downloadApkFile']);
-Route::post('getDatabaseData', [DatabaseController::class, 'getDatabaseData']);
+Route::post('/search-app', [SearchController::class, 'index']);
+Route::post('/save-app-list-file', [FileController::class, 'saveNamesListFile']);
+Route::post('/download-apk-file', [FileController::class, 'downloadApkFile']);
+Route::post('/get-app-data', [ApplicationController::class, 'getApplicationDataForWeb']);

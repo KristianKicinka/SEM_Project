@@ -2,10 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import AppItem from './AppItem';
 
-const ContentBox = ({items, handleShowLoading, handleCloseLoading, handleShowResults, setResults, hashTypes}) => {
+
+const ContentBox = (
+    {items, handleShowLoading, handleCloseLoading, handleShowResults,
+        setResults, hashTypes, handleShowAlert, setLoadingData}) => {
     return (
         <div className='ContentBox pt-4'>
-            <div className="container">
+            <div className="container pb-4">
                 <div className="row g-2">
                     {items.map((item, index) => {
                         return (
@@ -15,12 +18,14 @@ const ContentBox = ({items, handleShowLoading, handleCloseLoading, handleShowRes
                                     handleCloseLoading={handleCloseLoading}
                                     handleShowLoading={handleShowLoading}
                                     handleShowResults={handleShowResults}
+                                    handleShowAlert={handleShowAlert}
                                     setResults={setResults}
                                     hashTypes={hashTypes}
+                                    setLoadingData={setLoadingData}
                                   />
                             </div>
                         )
-                    })};
+                    })}
                 </div>
             </div>
         </div>

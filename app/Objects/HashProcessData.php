@@ -6,7 +6,8 @@ use App\Models\Process as ProcessModel;
 use Illuminate\Support\Facades\Log;
 
 const APP_NAME_MESSAGES = [
-    "Getting an APK file",
+    "Getting an application package name",
+    "Downloading APK file",
     "Installing an application in a virtual environment",
     "Network communication analysis",
     "Creating application fingerprints",
@@ -14,7 +15,6 @@ const APP_NAME_MESSAGES = [
 ];
 
 const APK_FILE_MESSAGES = [
-    //TODO
     "Getting an APK file",
     "Installing an application in a virtual environment",
     "Network communication analysis",
@@ -23,17 +23,22 @@ const APK_FILE_MESSAGES = [
 ];
 
 const APPS_NAMES_FILE_MESSAGES = [
-    //TODO
+    "Loading app parameters from file",
+    "Downloading APK files",
+    "Installing applications",
+    "Network communication analysis",
+    "Creating application fingerprints",
+    "Uploading fingerprints to the database system",
 ];
 
-class ProcessData {
+class HashProcessData {
 
-    private $process_part;
-    private $process_id;
-    private $ip_address;
-    private $status;
-    private $progress;
-    private $message;
+    private int $process_part;
+    private string $process_id;
+    private string $ip_address;
+    private string $status;
+    private int $progress;
+    private string $message;
 
     private array $messages = [];
 
@@ -46,42 +51,61 @@ class ProcessData {
         $this->store();
     }
 
-    private function preset(){
+    /**
+     * @return void
+     */
+    private function preset(): void {
         $this->process_part = 0;
         $this->status = "in_queue";
         $this->progress = 0;
         $this->message = "Waiting in queue";
     }
 
-    private function setMessagesArray($type){
-        if($type == "app_name")
+    /**
+     * @param $type
+     * @return void
+     */
+    private function setMessagesArray($type): void {
+        if($type == "APP_NAME")
             $this->messages = APP_NAME_MESSAGES;
-        if($type == "apk_file")
+        if($type == "APK_FILE")
             $this->messages = APK_FILE_MESSAGES;
-        if($type == "names_file") 
+        if($type == "NAMES_FILE")
             $this->messages = APPS_NAMES_FILE_MESSAGES;
     }
 
-    public function setProcessing(){
+    /**
+     * @return void
+     */
+    public function setProcessing(): void {
         $this->status = "processing";
         $this->store();
     }
 
-    public function setFinished(){
+    /**
+     * @return void
+     */
+    public function setFinished(): void {
         $this->status = "finished";
         $this->store();
     }
 
-    public function nextProcessPart(){
+    /**
+     * @return void
+     */
+    public function nextProcessPart(): void {
 
-        $this->progress = (100 / (count($this->messages) - 1)) * $this->process_part; 
+        $this->progress = (100 / (count($this->messages) - 1)) * $this->process_part;
         $this->message = $this->messages[$this->process_part];
         $this->store();
 
         $this->process_part++;
     }
 
-    private function store(){
+    /**
+     * @return void
+     */
+    private function store(): void {
 
         $identifier = ['frontend_id' => $this->process_id];
 

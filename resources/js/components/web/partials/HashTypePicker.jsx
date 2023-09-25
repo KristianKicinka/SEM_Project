@@ -26,7 +26,7 @@ const HashTypePicker = ({hashTypes, setHashTypes}) => {
                     <b className='px-3'>Select hash types : </b>
                     <Form.Check onChange={checkboxChange} inline label="JA3" name="JA3_checkbox" type='checkbox' id='JA3' />
                     <Form.Check onChange={checkboxChange} inline label="JA3S" name="JA3S_checkbox" type='checkbox' id='JA3S' />
-                    <Form.Check onChange={checkboxChange} inline label="NetFlow" name="NetFlow_checkbox" type='checkbox' id='NetFlow' />
+                    <Form.Check disabled onChange={checkboxChange} inline label="Flowmon" name="NetFlow_checkbox" type='checkbox' id='NetFlow' />
                 </div>
                 <div className="col"></div>
            </div>

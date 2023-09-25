@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
 import Form from 'react-bootstrap/Form';
@@ -11,6 +11,8 @@ import ImportSection from './ImportSection';
 import ContentBox from './ContentBox';
 import HashTypePicker from './HashTypePicker';
 
+import StaticData from '../../../../../scripts/StaticData.json';
+
 
 const SearchBox = ({
     handleShowLoading, handleCloseLoading, handleShowResults, 
@@ -21,22 +23,27 @@ const SearchBox = ({
     const [appItems, setAppItems] = useState();
     const [appItemsLoaded, setAppItemsLoaded] = useState(false);
 
-    const get_app_items = (event) =>{
+    const get_app_items = async (event) => {
         event.preventDefault();
         appName.toLowerCase();
 
-        axios.post('/search', {
-            app_name : appName,
-          })
-          .then((response) => {
+        try {
+            let response = await axios.post('/search-app', { app_name: appName});
             setAppItems(response.data);
             setAppItemsLoaded(true);
-            console.log(response.data);
-          }, (error) => {
+        } catch (error) {
             console.log(error);
-          });
-    
+        }
     }
+
+    const first_load_apps = async () => {
+       setAppItems(StaticData.MainPageAppsData);
+       setAppItemsLoaded(true);
+    }
+
+    useEffect(() => {
+        first_load_apps();
+    }, []);
 
     return (
         <div>
@@ -76,8 +83,10 @@ const SearchBox = ({
                                 handleCloseLoading={handleCloseLoading}
                                 handleShowLoading={handleShowLoading}
                                 handleShowResults={handleShowResults}
+                                handleShowAlert={handleShowAlert}
                                 setResults={setResults}
                                 hashTypes={hashTypes}
+                                setLoadingData={setLoadingData}
                                 /> : null}
         </div>
     );

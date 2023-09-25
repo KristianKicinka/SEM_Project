@@ -1,112 +1,55 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Objects;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Symfony\Component\Process\Process;
-
+use App\Exceptions\AppInstalationFailException;
+use App\Exceptions\AppNameNotFoundException;
+use App\Exceptions\AppUninstalationFailException;
+use App\Exceptions\AppVersionNotFoundException;
+use App\Exceptions\CloseAppFailException;
+use App\Exceptions\HashGeneratorFailException;
+use App\Exceptions\PackageNameNotFoundException;
+use App\Exceptions\PcapFileNotFoundException;
+use App\Exceptions\RunAppFailException;
 use App\Objects\ProcessData;
 
 use App\Models\Application;
 use App\Models\File;
 use App\Models\Hash;
 use App\Models\Process as ProcessModel;
+use Illuminate\Support\Facades\Log;
 
-const APK_INSERTED_DIR = 'app/public/uploads/apk_inserted/';
-const APK_DOWNLOADED_DIR = 'app/public/uploads/apk_downloaded/';
+use Symfony\Component\Process\Process;
+
 const HASH_SCRIPT_PATH = 'scripts/hash_generator.py';
 const PCAP_PATH = 'app/public/pcaps/';
 
+class CreateHash {
 
-class CreateHash implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    protected array $files = [];
+    protected array $hashes = [];
 
-    private array $files = [];
+    protected array $hash_types;
 
-    private string $apk_file_name;
-    private string $pcap_file_name;
-    private array $hash_types;
-    private string $apk_path;
-    private string $frontend_id;
-    private $ip_address;
-    private ProcessData $process_data;
+    protected string $frontend_id;
+    protected string $ip_address;
 
-    /**
-     * Create a new job instance.
-     *
-     * @return void
-     */
-    public function __construct($file_name, $hash_types, $input_type, $frontend_id, $ip_address){
-        $this->apk_file_name = $file_name;
-        $this->pcap_file_name = str_replace('.apk', '.pcap', $file_name);
+    protected HashProcessData $hash_process_data;
+
+    public function __construct($hash_types, $input_type, $frontend_id, $ip_address) {
         $this->hash_types = $hash_types;
         $this->frontend_id = $frontend_id;
         $this->ip_address = $ip_address;
-        $this->process_data = new ProcessData($frontend_id, $input_type, $ip_address);
-        $this->setApkPath($input_type);
+        $this->hash_process_data = new HashProcessData($frontend_id, $input_type, $ip_address);
     }
 
     /**
-     * Execute the job.
-     *
+     * @param $name
+     * @param $type
+     * @param $path
      * @return void
      */
-    public function handle(){
-        $hashes = [];
-
-        $this->process_data->setProcessing();
-        $this->process_data->nextProcessPart();
-        $this->addFileToFiles($this->apk_file_name, 'APK', $this->apk_path);
-        
-        $package_name = trim($this->getAppPackageName($this->apk_path));
-        $version_name = trim($this->getAppVersionName($this->apk_path));
-        $application_name = trim($this->getAppName($this->apk_path));
-
-        $this->process_data->nextProcessPart();
-        $this->installAppOnEmulator($this->apk_path);
-        
-        $this->process_data->nextProcessPart();
-        $pcap_file_path = $this->createPcapFile($this->pcap_file_name, $this->apk_path);
-        
-        $this->uninstallAppOnEmulator($package_name);
-
-        $this->process_data->nextProcessPart();
-
-        if(in_array('JA3', $this->hash_types)){
-            $JA3_hashes = $this->createJA3hash($pcap_file_path, $this->pcap_file_name);
-            $hashes['JA3'] = $JA3_hashes;
-        }
-
-        if(in_array('JA3S', $this->hash_types)){
-            $JA3S_hashes = $this->createJA3Shash($pcap_file_path, $this->pcap_file_name);
-            $hashes['JA3S'] = $JA3S_hashes;
-        }
-
-        $results = [
-            'app_name' => $application_name,
-            'package_name' => $package_name,
-            'app_version' => $version_name,
-            'hashes' => $hashes,
-        ];
-
-        $this->process_data->nextProcessPart();
-        $this->saveHashes($results);
-        $this->process_data->setFinished();
-    }
-
-    private function setApkPath($type){
-        if($type == 'apk_file')
-            $this->apk_path = storage_path(APK_INSERTED_DIR).$this->apk_file_name;
-        else if($type == 'app_name')
-            $this->apk_path = storage_path(APK_DOWNLOADED_DIR).$this->apk_file_name;
-    }
-
-    private function addFileToFiles($name, $type, $path){
+    protected function addFileToFiles($name, $type, $path) : void {
         $file = [
             'name' => $name,
             'type' => $type,
@@ -159,15 +102,15 @@ class CreateHash implements ShouldQueue
     /**
      * @param $pcap_file_path
      * @param $pcap_file_name
-     * @return array|JsonResponse
+     * @return array
      */
-    private function createJA3hash($pcap_file_path, $pcap_file_name) {
+    private function createJA3hash($pcap_file_path, $pcap_file_name) : array {
         $JA3_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3');
         $process = new Process(['python3', base_path(HASH_SCRIPT_PATH), $JA3_pcap_path, 'JA3']);
         $process->run();
 
         if (!$process->isSuccessful()) {
-            return response()->json('Hash creation failed!');
+            throw new HashGeneratorFailException($process->getErrorOutput());
         }
 
         return $this->parseAnalysisOutput($process->getOutput());
@@ -176,9 +119,9 @@ class CreateHash implements ShouldQueue
      /**
      * @param $pcap_file_path
      * @param $pcap_file_name
-     * @return array|JsonResponse
+     * @return array
      */
-    private function createJA3Shash($pcap_file_path, $pcap_file_name){
+    private function createJA3Shash($pcap_file_path, $pcap_file_name) : array {
         $JA3S_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3S');
         $process = new Process(['python3', base_path(HASH_SCRIPT_PATH), $JA3S_pcap_path, 'JA3S']);
         $process->run();
@@ -190,11 +133,28 @@ class CreateHash implements ShouldQueue
         return $this->parseAnalysisOutput($process->getOutput());
     }
 
+    
+    protected function createHashes($hash_types, $pcap_file_name, $pcap_file_path){
+        $hashes = [];
+
+        if(in_array('JA3', $hash_types)){
+            $JA3_hashes = $this->createJA3hash($pcap_file_path, $pcap_file_name);
+            $hashes['JA3'] = $JA3_hashes;
+        }
+
+        if(in_array('JA3S', $hash_types)){
+            $JA3S_hashes = $this->createJA3Shash($pcap_file_path, $pcap_file_name);
+            $hashes['JA3S'] = $JA3S_hashes;
+        }
+
+        return $hashes;
+    }
+
     /**
      * @param $type
      * @return string
      */
-    private function createFilter($type): string {
+    private function createFilter($type) : string {
         $filter = "";
 
         if($type == 'JA3')
@@ -224,12 +184,12 @@ class CreateHash implements ShouldQueue
         }
 
         $filter = $this->createFilter($hash_type);
-        $command = 'tshark -r '.$pcap_file_path.' -Y "'.$filter.'" -w '.$new_pcap_file_path;
+        $command = 'tshark -r '.trim($pcap_file_path).' -Y "'.$filter.'" -w '.$new_pcap_file_path;
         $process = Process::fromShellCommandline($command);
         $process->run();
 
         if (!$process->isSuccessful()) {
-            return response()->json('Apply pcap filter failed!');
+            throw new PcapFileNotFoundException($process->getErrorOutput());
         }
 
         return $new_pcap_file_path;
@@ -247,7 +207,7 @@ class CreateHash implements ShouldQueue
         $process->run();
 
         if (!$process->isSuccessful()) {
-            return response()->json('App installing error!');
+            throw new RunAppFailException($process->getErrorOutput());
         }
     }
 
@@ -259,51 +219,56 @@ class CreateHash implements ShouldQueue
 
         $command = 'adb shell pm clear '.$package_name;
 
-        $stop_app_process = Process::fromShellCommandline($command);
-        $stop_app_process->run();
+        $process = Process::fromShellCommandline($command);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            throw new CloseAppFailException($process->getErrorOutput());
+        }
     }
 
     /**
      * @param $apk_file_path
-     * @return JsonResponse|void
+     * @return void
      */
-    private function installAppOnEmulator($apk_file_path){
+    protected function installAppOnEmulator($apk_file_path):void {
         $process = new Process(['adb', 'install', $apk_file_path]);
         $process->run();
 
         if (!$process->isSuccessful()) {
-            return response()->json('App installing error!');
+            throw new AppInstalationFailException($process->getErrorOutput());
         }
-
     }
 
     /**
      * @param $package_name
-     * @return JsonResponse|void
+     * @return void
      */
-    private function uninstallAppOnEmulator($package_name){
+    protected function uninstallAppOnEmulator($package_name) : void {
         $process = new Process(['adb', 'uninstall', $package_name]);
         $process->run();
 
         if (!$process->isSuccessful()) {
-            return response()->json('App uninstalling error!');
+            throw new AppUninstalationFailException($process->getErrorOutput());
         }
-
     }
 
     /**
      * @param $apk_file_path
-     * @return JsonResponse|string
+     * @return string
      */
-    private function getAppPackageName($apk_file_path){
+    protected function getAppPackageName($apk_file_path) : string {
 
-        $command = 'aapt dump badging '.$apk_file_path.' | grep package | awk \'{print $2}\' | sed s/name=//g | sed s/\\\'//g';
+        $command = 'aapt dump badging '.trim($apk_file_path).' | grep package | awk \'{print $2}\' | sed s/name=//g | sed s/\\\'//g';
+
+        Log::channel('devlog')
+            ->info('aapt command: {command}', ['package_name' => $command]);
 
         $process = Process::fromShellCommandline($command);
         $process->run();
 
         if (!$process->isSuccessful()) {
-            return response()->json('App pcakage name error!');
+            throw new PackageNameNotFoundException($process->getErrorOutput());
         }
 
         return $process->getOutput();
@@ -311,36 +276,44 @@ class CreateHash implements ShouldQueue
 
     /**
      * @param $apk_file_path
-     * @return JsonResponse|string
+     * @return string
      */
-    private function getAppVersionName($apk_file_path){
+    protected function getAppVersionName($apk_file_path) : string {
 
-        $command = 'aapt dump badging '.$apk_file_path.' | grep package | awk \'{print $4}\' | sed s/versionName=//g | sed s/\\\'//g';
-
-        $process = Process::fromShellCommandline($command);
-        $process->run();
-
-        if (!$process->isSuccessful()) {
-            return response()->json('App version name error!');
-        }
-
-        return $process->getOutput();
-    }
-
-    private function getAppName($apk_file_path){
-        $command = 'aapt dump badging '.$apk_file_path.' | sed -n "s/^application-label:\'\(.*\)\'/\1/p"';
+        $command = 'aapt dump badging '.trim($apk_file_path).' | grep package | awk \'{print $4}\' | sed s/versionName=//g | sed s/\\\'//g';
 
         $process = Process::fromShellCommandline($command);
         $process->run();
 
         if (!$process->isSuccessful()) {
-            return response()->json('App name error!');
+            throw new AppVersionNotFoundException($process->getErrorOutput());
         }
 
         return $process->getOutput();
     }
 
-    private function saveHashes($results){
+    /**
+     * @param $apk_file_path
+     * @return string
+     */
+    protected function getAppName($apk_file_path) : string {
+        $command = 'aapt dump badging '.trim($apk_file_path).' | sed -n "s/^application-label:\'\(.*\)\'/\1/p"';
+
+        $process = Process::fromShellCommandline($command);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            throw new AppNameNotFoundException($process->getErrorOutput());
+        }
+
+        return $process->getOutput();
+    }
+
+    /**
+     * @param $results
+     * @return void
+     */
+    protected function saveHashes($results) : void {
 
         $process_id = ProcessModel::where('frontend_id', '=', $this->frontend_id)->first()->id;
 
@@ -377,10 +350,9 @@ class CreateHash implements ShouldQueue
                     'hash' => $hash,
                     'hash_type' => $hash_type,
                 ];
-                
+
                 Hash::firstOrCreate($identifier, $new_record);
             }
-        }        
+        }
     }
-
 }

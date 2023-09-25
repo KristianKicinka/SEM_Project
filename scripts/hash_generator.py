@@ -107,8 +107,10 @@ if __name__ == '__main__':
     packet_count = 1
     for packet in scapy_cap:
 
-        if check_useless_domain_name(packet[TLS].msg[0]):
-            continue
+        # check domains for JA3 only  
+        if hash_type == 'JA3':
+            if check_useless_domain_name(packet[TLS].msg[0]):
+                continue
         
         version = process_version(packet[TLS].msg[0])
         ciphers = process_ciphers(packet[TLS].msg[0])

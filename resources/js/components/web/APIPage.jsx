@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
+import Prism from "prismjs";
+import 'prismjs/components/prism-json';
+import "../../../css/prism.css";
+
 import Navbar from "./partials/Navbar";
 
 const APIPage = () => {
 
     const response = {
         "app": "com.facebook.orca",
-        "types": [
-            "JA3",
-            "JA3S",
-            "NetFlow"
-        ],
+        "types": [ "JA3", "JA3S", "FlowMon"],
         "hashes": {
             "JA3":[
                 "9b02ebd3a43b62d825e1ac605b621dc8",
@@ -42,21 +42,26 @@ const APIPage = () => {
                                     returned in the form of a json object.
                                 </p>
                             </div>
-                            <div className="row py-4">
-                                <h5>
-                                    request url:
-                                    'http://localhost:8000/api/create_fingerprints?types[]=JA3&types[]=JA3S&types[]=NetFlow&app=com.facebook.orca'
-                                </h5>
+                            <div className="row py-2">
+                                <div className="col">
+                                <span>Request url:</span>
+                                    <pre>
+                                        <code className="language-text">
+                                            {`http://localhost:8000/api/create_fingerprints?types[]=JA3&types[]=JA3S&types[]=NetFlow&app=com.facebook.orca`}
+                                        </code>
+                                    </pre>
+                                </div>
                             </div>
-                            <div className="row">
-                                <h5>
-                                    <p className="py-2">Response : </p>
-                                    <pre>{JSON.stringify(response,null,2)}</pre>
-                                </h5>
+                            <div className="row py-2">
+                                <div className="col">
+                                    <span className="">Response : </span>
+                                    <pre>
+                                        <code className="language-json">
+                                            {JSON.stringify(response,null,2)}
+                                        </code>
+                                    </pre>
+                                </div>
                             </div>
-                            <a href="/" className="btn btn-search text-light">
-                                Main page
-                            </a>
                         </div>
                     </div>
                 </div>

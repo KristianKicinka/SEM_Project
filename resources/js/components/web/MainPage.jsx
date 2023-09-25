@@ -16,7 +16,7 @@ const MainPage = () => {
 
     const [showResults, setShowResults] = useState(false);
     const [showLoading, setShowLoading] = useState(false);
-    const [loadingData, setLoadingData] = useState([]);
+    const [loadingData, setLoadingData] = useState({progress:0, message:'Hash process was created'});
 
     const [showAlert, setShowAlert] = useState(false);
 
@@ -32,7 +32,7 @@ const MainPage = () => {
     return (
         <div className='MainPage'>
             <Navbar/>
-            
+
             <SearchBox  
                 handleShowLoading={handleShowLoading} 
                 handleCloseLoading={handleCloseLoading}
@@ -43,12 +43,12 @@ const MainPage = () => {
                 handleShowAlert={handleShowAlert}
                 setLoadingData={setLoadingData}
             />
-            <div className="btn btn-danger" onClick={handleShowLoading}>Show modal</div>
+
             <LoadingModal show={showLoading} handleClose={handleCloseLoading} loadingData={loadingData} />
             <HashTypeAlert showAlert={showAlert} setShowAlert={setShowAlert} />
             <Results show={showResults} handleClose={handleCloseResults} results={results} hashTypes={hashTypes} />
         </div>
-    );
+    )
 }
 
 export default MainPage;

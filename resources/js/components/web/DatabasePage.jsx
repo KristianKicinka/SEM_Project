@@ -10,6 +10,7 @@ import Button from "react-bootstrap/Button";
 import Pagination from "./partials/Pagination";
 
 import CopyClipboard from "./partials/CopyClipboard";
+import http from "../../http";
 
 const DatabasePage = () => {
 
@@ -37,14 +38,13 @@ const DatabasePage = () => {
         return result;
     });
 
-    const getData = () => {
-        axios.post('/getDatabaseData')
-          .then((response) => {
-            console.log(response.data);
+    const getData = async () => {
+        try {
+            let response = await http.post('/get-app-data');
             setData(response.data);
-          }, (error) => {
+        } catch (error) {
             console.log(error);
-          });
+        }
     };
 
     useEffect(() => {
