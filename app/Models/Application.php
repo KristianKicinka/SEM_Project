@@ -13,5 +13,6 @@ class Application extends Model {
         'name',
         'package_name',
         'version',
+        'is_malware'
     ];
 }

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('package_name');
             $table->string('version');
+            $table->boolean('is_malware')->default(false);
             $table->timestamps();
         });
     }

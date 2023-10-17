@@ -5,7 +5,7 @@ import Table from "react-bootstrap/Table";
 import Pagination from "./Pagination";
 
 
-const TableComponent = ({columnNames, dataIndexes, data, tableName}) => {
+const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) => {
 
     const [filter, setFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -38,7 +38,10 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName}) => {
                     </div>
                     <div className="col"/>
                     <div className="col-md-5">
-                        <button className="btn btn-search text-white float-end d-inline mx-3">New item</button>
+                        <button 
+                            className="btn btn-search text-white float-end d-inline mx-3"
+                            onClick={() => buttons.get('createButton')()} 
+                        >New item</button>
                         <input 
                             type="text" 
                             className="form-control d-inline w-auto float-end" 
@@ -51,7 +54,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName}) => {
                         <Table className="table table-sm">
                             <thead>
                                 <tr className="table-dark">
-                                    {columnNames.map((name, key) =>{ return (<th key={key} >{name}</th>)})}
+                                    {columnNames.map((name, key) => { return (<th key={key} >{name}</th>)})}
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -63,16 +66,27 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName}) => {
                                                 return (<td key={key} >{item[name.toLowerCase()]}</td>)
                                             })}
                                             <td>
+                                                {buttons.has('infoButton') ? 
                                                 <small className="btn btn-link text-primary">
                                                     <i className="fa-solid fa-circle-info"/>
                                                 </small>
-                                                <small className="btn btn-link text-success">
+                                                :null}
+                                                {buttons.has('updateButton') ? 
+                                                <small 
+                                                    className="btn btn-link text-success"
+                                                    onClick={() => buttons.get('updateButton')(item)}
+                                                    >
                                                     <i className="fa-solid fa-pen-to-square"/>
                                                 </small>
-                                                <small className="btn btn-link text-danger">
+                                                :null}
+                                                {buttons.has('deleteButton') ? 
+                                                <small 
+                                                    className="btn btn-link text-danger"
+                                                    onClick={() => buttons.get('deleteButton')(item)}
+                                                >
                                                     <i className="fa-solid fa-trash"/>
                                                 </small>
-
+                                                :null}
                                             </td>
                                         </tr>
                                         );

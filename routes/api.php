@@ -40,6 +40,8 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::group(['middleware' => ['auth:api', 'admin']], function () {
     Route::post('/admin/hashes', [HashController::class, 'getHashesForAdmin']);
     Route::post('/admin/users', [UserController::class, 'getUsersForAdmin']);
+    Route::post('/admin/user/create', [UserController::class, 'createUser']);
+    Route::post('/admin/user/delete', [UserController::class, 'deleteUser']);
     //Route::post('/settings', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/files', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/api-requests', [HashesController::class, 'getHashesforAdmin']);
