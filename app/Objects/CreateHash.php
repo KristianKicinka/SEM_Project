@@ -36,12 +36,22 @@ class CreateHash {
 
     protected HashProcessData $hash_process_data;
 
-    public function __construct($hash_types, $input_type, $frontend_id, $ip_address) {
+    public function __construct($hash_types) {
         $this->hash_types = $hash_types;
-        $this->frontend_id = $frontend_id;
+    }
+
+    public function setIPaddress($ip_address){
         $this->ip_address = $ip_address;
+    }
+
+    public function setFrontendID($frontend_id){
+        $this->frontend_id = $frontend_id;
+    }
+
+    public function setHashProcessData($frontend_id, $input_type, $ip_address){
         $this->hash_process_data = new HashProcessData($frontend_id, $input_type, $ip_address);
     }
+
 
     /**
      * @param $name

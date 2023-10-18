@@ -31,7 +31,10 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
      * @return void
      */
     public function __construct($package_name, $hash_types, $frontend_id, $ip_address){
-        parent::__construct($hash_types, APP_NAME_INPUT_TYPE, $frontend_id, $ip_address);
+        parent::__construct($hash_types);
+        parent::setFrontendID($frontend_id);
+        parent::setIPaddress($ip_address);
+        parent::setHashProcessData($frontend_id, APP_NAME_INPUT_TYPE, $ip_address);
         $this->package_name = $package_name;
     }
 
