@@ -7,6 +7,7 @@ import TableComponent from "../partials/TableComponent";
 import AuthUser from "../../../AuthUser";
 
 import CreateUser from "./partials/users/CreateUser";
+import UpdateUser from "./partials/users/UpdateUser";
 import DeleteUser from "./partials/users/DeleteUser";
 
 const columnNames = ["ID","Name", "Surname", "Email", "Phone", "Role"];
@@ -20,8 +21,8 @@ const Users = () => {
 
     const [fetchDataState, setFetchDataState] = useState(false);
 
-    const [userOnDelete, setUserOnDelete] = useState();
-    const [userOnUpdate, setUserOnUpdate] = useState();
+    const [userOnDelete, setUserOnDelete] = useState(null);
+    const [userOnUpdate, setUserOnUpdate] = useState(null);
 
     const [createModalShow, setCreateModalShow] = useState(false);
     const [updateModalShow, setUpdateModalShow] = useState(false);
@@ -34,6 +35,7 @@ const Users = () => {
     const handleUpdateClick = (user) => {
         setUserOnUpdate(user);
         setUpdateModalShow(true);
+        console.log(user);
     }
 
     const handleDeleteClick = (user) => {
@@ -44,7 +46,7 @@ const Users = () => {
     const buttons = new Map([
         ["createButton", handleCreateClick],
         ["deleteButton", handleDeleteClick],
-        ["updateButton", handleDeleteClick]
+        ["updateButton", handleUpdateClick]
       ]);
 
     const fetchData = async () => {
@@ -74,6 +76,12 @@ const Users = () => {
                             show={createModalShow}
                             setFetchDataState={setFetchDataState}
                             handleClose={() => setCreateModalShow(false)}
+                        />
+                        <UpdateUser 
+                            show={updateModalShow} 
+                            user={userOnUpdate}
+                            setFetchDataState={setFetchDataState}
+                            handleClose={() => setUpdateModalShow(false)}
                         />
                         <DeleteUser 
                             show={deleteModalShow} 

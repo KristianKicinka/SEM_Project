@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller {
 
@@ -53,7 +54,47 @@ class UserController extends Controller {
         return response()->json(['status' => 'success'], 200);
     }
 
-    public function updateUser(){
+    public function updateUserData(Request $request): JsonResponse {
 
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'name' => 'required',
+            'surname' => 'required',
+            'email' => ['required', 'email', Rule::unique('users')->ignore($request->user_id)],
+            'phone' => ['required', Rule::unique('users')->ignore($request->user_id)],
+            'role' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $user = User::where('id','=',$request->user_id)->update([
+            'name' => $request->name,
+            'surname'=> $request->surname,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'role' => $request->role,
+        ]);
+
+        return response()->json(['status' => 'success'], 200);
+    }
+
+    public function updateUserPassword(Request $request): JsonResponse {
+
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'password' => 'required|min:8',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $user = User::where('id','=',$request->user_id)->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return response()->json(['status' => 'success'], 200);
     }
 }

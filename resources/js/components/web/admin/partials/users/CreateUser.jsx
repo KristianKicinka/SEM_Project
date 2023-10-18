@@ -40,7 +40,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         }
     }
 
-    const clearInputs = () =>{
+    const clearInputs = () => {
         setName('');
         setSurname('');
         setEmail('');

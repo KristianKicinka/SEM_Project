@@ -39,8 +39,14 @@ Route::post('/register', [AuthController::class, 'register']);
 // Admin routes
 Route::group(['middleware' => ['auth:api', 'admin']], function () {
     Route::post('/admin/hashes', [HashController::class, 'getHashesForAdmin']);
+    Route::post('/admin/hash/create', [HashController::class, 'createHashAdmin']);
+    Route::post('/admin/hash/update', [HashController::class, 'updateHashAdmin']);
+    Route::post('/admin/hash/delete', [HashController::class, 'deleteHashAdmin']);
+    Route::post('/admin/hashes', [HashController::class, 'getHashesForAdmin']);
     Route::post('/admin/users', [UserController::class, 'getUsersForAdmin']);
     Route::post('/admin/user/create', [UserController::class, 'createUser']);
+    Route::post('/admin/user/update/data', [UserController::class, 'updateUserData']);
+    Route::post('/admin/user/update/password', [UserController::class, 'updateUserPassword']);
     Route::post('/admin/user/delete', [UserController::class, 'deleteUser']);
     //Route::post('/settings', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/files', [HashesController::class, 'getHashesforAdmin']);

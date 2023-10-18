@@ -58,6 +58,40 @@ class HashController extends Controller {
      * @param Request $request
      * @return JsonResponse
      */
+    public function createHashFromPcap(Request $request): JsonResponse {
+
+        $validator = Validator::make($request->all(), [
+            'hash_types' => 'required',
+            'pcap_file' => 'required|file',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $hash_types = json_decode($request->hash_types);
+        $pcap_file_name = $this->saveApkFile($request->file('pcap_file'));
+
+
+        return response()->json('process success!', 200);
+    }
+
+    /**
+     * @param $file
+     * @return string
+     */
+    private function savePcapFile($file): string {
+        $file_name = $file->getClientOriginalName();
+        $final_name = date('his') .'_'. $file_name;
+        $file->storeAs('uploads/pcap_inserted',$final_name,'public');
+
+        return $final_name;
+    }
+
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function createHashFromAppName(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
