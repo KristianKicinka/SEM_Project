@@ -5,13 +5,22 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 use App\Jobs\CreateHashFromAPK;
 use App\Jobs\CreateHashFromAppName;
+use App\Objects\CreateHashFromPcap;
 use App\Models\Process as ProcessModel;
 use PhpParser\Node\Stmt\TryCatch;
+use App\Objects\CreateHash;
+
+use App\Models\Application;
+use App\Models\File;
+use App\Models\Hash;
+
+const PCAP_PATH = 'app/public/uploads/pcap_inserted/';
 
 class HashController extends Controller {
 
@@ -22,8 +31,8 @@ class HashController extends Controller {
     public function createHashFromAPK(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
-            'frontend_id' => 'required|string',
             'hash_types' => 'required',
+            'frontend_id' => 'required|string',
             'apk_file' => 'required|file',
         ]);
 
@@ -36,10 +45,14 @@ class HashController extends Controller {
         $hash_types = json_decode($request->input('hash_types'));
         $apk_file_name = $this->saveApkFile($request->file('apk_file'));
 
-        CreateHashFromAPK::dispatch($apk_file_name, $hash_types, $frontend_id, $ip_address)
-            ->onQueue('default');
+        $job_id = CreateHashFromAPK::dispatch(
+            $apk_file_name, 
+            $hash_types, 
+            $ip_address,
+            $frontend_id
+        )->onQueue('default');
 
-        return response()->json('process '.$frontend_id.' is in queue');
+        return response()->json(['job_id' => $job_id], 200);
     }
 
     /**
@@ -54,6 +67,7 @@ class HashController extends Controller {
         return $final_name;
     }
 
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -61,19 +75,32 @@ class HashController extends Controller {
     public function createHashFromPcap(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
-            'hash_types' => 'required',
+            'app_name_pcap' => 'required|string',
+            'package_name_pcap' => 'required|string',
+            'app_version_pcap' => 'required|string',
+            'hash_types_pcap' => 'required',
             'pcap_file' => 'required|file',
+            'is_malware_pcap' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $hash_types = json_decode($request->hash_types);
-        $pcap_file_name = $this->saveApkFile($request->file('pcap_file'));
+        $app_data = [
+            'app_name' => $request->input('app_name_pcap'),
+            'package_name' => $request->input('package_name_pcap'),
+            'app_version' => $request->input('app_version_pcap'),
+            'is_malware' => $request->input('is_malware_pcap')
+        ];
 
+        $pcap_file_name = $this->savePcapFile($request->file('pcap_file'));
+        $hash_types = json_decode($request->input('hash_types_pcap'));
 
-        return response()->json('process success!', 200);
+        $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types, $app_data);
+        $hashes = $pcap_hash->create();
+
+        return response()->json(['hashes' => $hashes], 200);
     }
 
     /**
@@ -95,8 +122,8 @@ class HashController extends Controller {
     public function createHashFromAppName(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
-            'package_name' => 'required|string',
             'frontend_id' => 'required|string',
+            'package_name' => 'required|string',
             'hash_types' => 'required',
         ]);
 
@@ -107,10 +134,41 @@ class HashController extends Controller {
         $ip_address = $request->ip();
         $frontend_id = $request->input('frontend_id');
 
-        CreateHashFromAppName::dispatch($request->package_name, $request->hash_types, $frontend_id, $ip_address)
-            ->onQueue('default');
+        $job_id = CreateHashFromAppName::dispatch(
+            $request->package_name, 
+            $request->hash_types,
+            $ip_address,
+            $frontend_id
+            )->onQueue('default');
 
-        return response()->json('process '.$frontend_id.' is in queue');
+        return response()->json(['job_id' => $job_id], 200);
+    }
+
+    public function createHashFromTextInput(Request $request): JsonResponse {
+        $application = Application::create([
+            'name' => $request->app_name,
+            'package_name' => $request->package_name,
+            'version' => $request->app_version,
+        ]);
+
+        $application->save();
+
+        $identifier = [
+            'app_id' => $application->id,
+            'hash' => $request->hash,
+            'hash_type' => $request->hash_type,
+        ];
+
+        $new_record = [
+            'app_id' => $application->id,
+            'hash' => $request->hash,
+            'hash_type' => $request->hash_type,
+            'is_malware' => $request->is_malware,
+        ];
+
+        Hash::firstOrCreate($identifier, $new_record);
+
+        return response()->json('process success!', 200);
     }
 
     /**
@@ -127,11 +185,11 @@ class HashController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $frontend_id = $request->input('frontend_id');
+        $job_id = $request->input('frontend_id');
         
-        $info = ProcessModel::select('status','progress','message')->where('frontend_id','=',$frontend_id)->first();
+        $info = ProcessModel::select('status','progress','message')->where('job_id','=',$job_id)->first();
 
-        return response()->json($info);
+        return response()->json($info, 200);
     }
 
     /**
@@ -158,7 +216,7 @@ class HashController extends Controller {
             )
             ->join('hashes','processes.id','=','hashes.process_id')
             ->join('applications','applications.id','=','hashes.app_id')
-            ->where('processes.frontend_id','=',$frontend_id)
+            ->where('processes.job_id','=',$frontend_id)
             ->get();
 
         foreach ($data as $item){
@@ -179,7 +237,7 @@ class HashController extends Controller {
             'FlowMon_hashes' => $FlowMon_hashes,
         ];
 
-        return response()->json($results);
+        return response()->json($results, 200);
     }
 
     /**
@@ -202,20 +260,20 @@ class HashController extends Controller {
         //FIX: app hashes
         $response = (new DatabaseController)->getAppHashes($app_name, $hash_types);
 
-        return response()->json($response);
+        return response()->json($response, 200);
     }
 
     /**
      * @param Request $request
      * @return JsonResponse
      */
-    public function getHashesForAdmin(Request $request): JsonResponse {
+    public function getHashesForAdmin(): JsonResponse {
         // ["id", "hash", "hash_type", "app_name", "package_name", "version"];
         $data = DB::table('applications')
             ->join('hashes','applications.id','=','hashes.app_id')
             ->select('hashes.id', 'hash','hash_type', 'name AS app_name', 'package_name', 'version')
             ->get();
 
-        return response()->json($data);
+        return response()->json($data, 200);
     }
 }

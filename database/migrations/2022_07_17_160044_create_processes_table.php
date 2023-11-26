@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('processes', function (Blueprint $table) {
             $table->id();
-            $table->string('frontend_id')->nullable();
+            $table->string('job_id')->nullable();
             $table->string('ip_address')->nullable();
             $table->string('status');
             $table->integer('progress');

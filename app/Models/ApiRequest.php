@@ -8,5 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class ApiRequest extends Model {
 
     use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'ip_address',
+        'type',
+        'description'
+    ];
     
 }

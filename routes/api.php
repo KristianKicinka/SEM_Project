@@ -39,18 +39,20 @@ Route::post('/register', [AuthController::class, 'register']);
 // Admin routes
 Route::group(['middleware' => ['auth:api', 'admin']], function () {
     Route::post('/admin/hashes', [HashController::class, 'getHashesForAdmin']);
-    Route::post('/admin/hash/create', [HashController::class, 'createHashAdmin']);
-    Route::post('/admin/hash/update', [HashController::class, 'updateHashAdmin']);
+    Route::post('/admin/hash/create/text-input', [HashController::class, 'createHashAdmin']);
+    Route::post('/admin/hash/create/pcap-file', [HashController::class, 'createHashFromPcap']);
     Route::post('/admin/hash/delete', [HashController::class, 'deleteHashAdmin']);
-    Route::post('/admin/hashes', [HashController::class, 'getHashesForAdmin']);
     Route::post('/admin/users', [UserController::class, 'getUsersForAdmin']);
     Route::post('/admin/user/create', [UserController::class, 'createUser']);
     Route::post('/admin/user/update/data', [UserController::class, 'updateUserData']);
     Route::post('/admin/user/update/password', [UserController::class, 'updateUserPassword']);
     Route::post('/admin/user/delete', [UserController::class, 'deleteUser']);
+    Route::post('/admin/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
+    Route::post('/admin/get-api-key', [ApiRequestController::class, 'getApiKey']);
+    Route::post('/admin/requests', [ApiRequestController::class, 'getRequests']);
+
     //Route::post('/settings', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/files', [HashesController::class, 'getHashesforAdmin']);
-    //Route::post('/api-requests', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/processes', [HashesController::class, 'getHashesforAdmin']);
 });
 
@@ -59,8 +61,15 @@ Route::group(['middleware' => ['auth:api', 'user']], function () {
     //Route::post('/hashes', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/settings', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/api-requests', [HashesController::class, 'getHashesforAdmin']);
+    Route::post('/user/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
+    Route::post('/user/get-api-key', [ApiRequestController::class, 'getApiKey']);
 });
 
-
-// External API
-Route::post('/get-app-hashes', [HashController::class, 'getAppHashAPI']);
+// External API routes
+Route::group(['middleware' => ['external']], function () {
+    Route::post('/get-app-hashes', [ApiRequestController::class, 'getAppHashes']);
+    Route::post('/get-apps-from-hashes', [ApiRequestController::class, 'getAppsFromHashes']);
+    Route::post('/create-hash-from-apk', [ApiRequestController::class, 'createHashFromAPK']);
+    Route::post('/create-hash-from-package-name', [ApiRequestController::class, 'createHashFromPackageName']);
+    Route::post('/create-hash-from-pcap', [ApiRequestController::class, 'createHashFromPcap']);
+});

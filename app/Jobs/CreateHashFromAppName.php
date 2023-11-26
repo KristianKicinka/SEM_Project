@@ -14,12 +14,12 @@ use Illuminate\Queue\SerializesModels;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
 
-
-
-const APP_NAME_INPUT_TYPE = "APP_NAME";
-const APK_DOWNLOADED_DIR = 'app/public/uploads/apk_downloaded/';
+    const PACKAGE_NAME_INPUT_TYPE = 'APP_NAME';
+    const APK_DOWNLOADED_DIR = 'app/public/uploads/apk_downloaded/';
 
 class CreateHashFromAppName extends CreateHash implements ShouldQueue {
+
+    
 
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -30,11 +30,8 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
      *
      * @return void
      */
-    public function __construct($package_name, $hash_types, $frontend_id, $ip_address){
-        parent::__construct($hash_types);
-        parent::setFrontendID($frontend_id);
-        parent::setIPaddress($ip_address);
-        parent::setHashProcessData($frontend_id, APP_NAME_INPUT_TYPE, $ip_address);
+    public function __construct($package_name, $hash_types, $ip_address, $job_id){
+        parent::__construct($hash_types, PACKAGE_NAME_INPUT_TYPE, $job_id, $ip_address);
         $this->package_name = $package_name;
     }
 

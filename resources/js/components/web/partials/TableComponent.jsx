@@ -14,14 +14,14 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
     const indexOfLastRecord = currentPage * recordsPerPage;
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
 
-    const nPages = Math.ceil(data.length / recordsPerPage);
+    const nPages = Math.ceil(data?.length / recordsPerPage);
 
-    let filteredData = data.slice(indexOfFirstRecord, indexOfLastRecord);
+    let filteredData = data?.slice(indexOfFirstRecord, indexOfLastRecord);
 
-    filteredData = filteredData.filter((item) => {
+    filteredData = filteredData?.filter((item) => {
         let result = false;
-        dataIndexes.map((index) => {
-            if(item[index.toLowerCase()].toString().toLowerCase().includes(filter.toLowerCase())){
+        dataIndexes?.map((index) => {
+            if(item[index.toLowerCase()].toString().toLowerCase().includes(filter?.toLowerCase())){
                 result = true;
             }
         });
@@ -59,10 +59,10 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                                 </tr>
                             </thead>
                             <tbody className="align-baseline">
-                                {filteredData.map((item, key) => {
+                                {filteredData?.map((item, key) => {
                                     return (
                                         <tr key={key}>
-                                            {dataIndexes.map((name, key) =>{
+                                            {dataIndexes?.map((name, key) =>{
                                                 return (<td key={key} >{item[name.toLowerCase()]}</td>)
                                             })}
                                             <td>

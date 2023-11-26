@@ -6,7 +6,9 @@ from scapy.layers.tls.record import TLS
 import hashlib
 import os
 
-BLACK_LIST_FILE = './scripts/domain_black_list.txt'
+BLACK_LIST_FILE = 'domain_black_list.txt'
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
 
 tls_supported_groups = []
 tls_ecf = []
@@ -14,12 +16,14 @@ tls_ecf = []
 hash_strings = []
 hashes = []
 
-def check_useless_domain_name(message):
+def check_useless_domain_name(packet):
     # row from : https://github.com/hsouna/tls-servername/blob/main/get_servername_from_tls.py
-    domain_name = packet['TLS']['TLS_Ext_ServerName'].servernames[0].servername.decode("utf-8")
+    if (packet['TLS_Ext_ServerName'].servernames):
+        domain_name = packet['TLS_Ext_ServerName'].servernames[0].servername.decode("utf-8")
 
-    if domain_name in open(BLACK_LIST_FILE, 'r').read():
-        return True
+        if domain_name in open(os.path.join(script_dir, BLACK_LIST_FILE), 'r').read():
+            return True
+        
     return False
 
 
@@ -84,20 +88,6 @@ def create_hash(hash_string):
     result = hashlib.md5(hash_string.encode())
     return result.hexdigest()
 
-
-def print_values(packet_id, version, ciphers, extensions, full_string, ja3_hash):
-    print()
-    print(f'Packet {packet_id}')
-    print(f'TLS version : {version}')
-    print(f'TLS ciphers : {ciphers}')
-    print(f'TLS extensions : {extensions}')
-    print(f'TLS supported groups : {tls_supported_groups}')
-    print(f'TLS ec format : {tls_ecf}')
-    print(f'Full string: {full_string}')
-    print(f'JA3 hash: {ja3_hash}')
-
-
-
 if __name__ == '__main__':
     load_layer('tls')
 
@@ -109,7 +99,7 @@ if __name__ == '__main__':
 
         # check domains for JA3 only  
         if hash_type == 'JA3':
-            if check_useless_domain_name(packet[TLS].msg[0]):
+            if check_useless_domain_name(packet[TLS]):
                 continue
         
         version = process_version(packet[TLS].msg[0])
@@ -126,12 +116,8 @@ if __name__ == '__main__':
         hash_strings.append(full_string)
         hashes.append(final_hash)
 
-        #print_values(packet_count, version, ciphers, extensions, full_string, ja3_hash)
         packet_count += 1
 
     final_hash_list = list(dict.fromkeys(hashes))
 
-    #print()
-    #print('JA3 hash list :')
     print(final_hash_list)
-    #print()

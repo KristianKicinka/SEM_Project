@@ -107,10 +107,10 @@ class HashProcessData {
      */
     private function store(): void {
 
-        $identifier = ['frontend_id' => $this->process_id];
+        $identifier = ['job_id' => $this->process_id];
 
         $data = [
-            'frontend_id' => $this->process_id,
+            'job_id' => $this->process_id,
             'ip_address' => $this->ip_address,
             'status' => $this->status,
             'progress' => $this->progress,

@@ -7,6 +7,9 @@ import TableComponent from "../partials/TableComponent";
 
 import AuthUser from "../../../AuthUser";
 
+import CreateHash from "./partials/hashes/CreateHash";
+//import DeleteHash from "./partials/hashes/DeleteHash";
+
 const columnNames = ["ID","Hash", "Hash type", "App Name", "Package name", "Version"];
 const dataIndexes = ["id", "hash", "hash_type", "app_name", "package_name", "version"];
 
@@ -15,7 +18,26 @@ const Hashes = () => {
     const [hashes, setHashes] = useState([]);
     const {http, token} = AuthUser();
 
-    const getHashes = async () => {
+    const [fetchDataState, setFetchDataState] = useState(false);
+
+    const [createModalShow, setCreateModalShow] = useState(false);
+    const [deleteModalShow, setDeleteModalShow] = useState(false);
+
+    const handleCreateClick = () => {
+        setCreateModalShow(true);
+    }
+
+    const handleDeleteClick = (hash) => {
+        setHashOnDelete(hash);
+        setDeleteModalShow(true);  
+    }
+
+    const buttons = new Map([
+        ["createButton", handleCreateClick],
+        ["deleteButton", handleDeleteClick],
+      ]);
+
+    const fetchData = async () => {
         try {
             let resp = await http.post('/admin/hashes');
             console.log(resp.data)
@@ -26,8 +48,10 @@ const Hashes = () => {
     }
     
     useEffect(() => {
-        getHashes();
-    }, []);
+        fetchData();
+        const interval = setInterval(() => {fetchData()}, 3000);
+        return () => clearInterval(interval);
+    }, [fetchDataState]);
 
     return (
         <div className="Hashes container-fluid">
@@ -36,10 +60,16 @@ const Hashes = () => {
                 <div className="col-md-10 px-0">
                     <Navbar />
                     <div className="container">
+                        <CreateHash  
+                            show={createModalShow}
+                            setFetchDataState={setFetchDataState}
+                            handleClose={() => setCreateModalShow(false)}
+                        />
                         <TableComponent 
                             data={hashes} 
                             dataIndexes={dataIndexes} 
                             columnNames={columnNames} 
+                            buttons={buttons}
                             tableName={"Hashes"}
                         />
                     </div>

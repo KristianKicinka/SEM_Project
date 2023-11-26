@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('hashes', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('app_id')->unsigned();
-            $table->bigInteger('process_id')->unsigned();
+            $table->bigInteger('process_id')->unsigned()->nullable();
             $table->string('hash');
             $table->string('hash_type');
             $table->timestamps();

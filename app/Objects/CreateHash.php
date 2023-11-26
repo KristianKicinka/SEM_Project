@@ -28,30 +28,19 @@ class CreateHash {
 
     protected array $files = [];
     protected array $hashes = [];
+    protected array $hash_types = [];
 
-    protected array $hash_types;
-
-    protected string $frontend_id;
+    protected string $job_id;
     protected string $ip_address;
 
     protected HashProcessData $hash_process_data;
 
-    public function __construct($hash_types) {
+    public function __construct($hash_types, $input_type, $job_id, $ip_address) {
         $this->hash_types = $hash_types;
-    }
-
-    public function setIPaddress($ip_address){
+        $this->job_id = $job_id;
         $this->ip_address = $ip_address;
+        $this->hash_process_data = new HashProcessData($job_id, $input_type, $ip_address);
     }
-
-    public function setFrontendID($frontend_id){
-        $this->frontend_id = $frontend_id;
-    }
-
-    public function setHashProcessData($frontend_id, $input_type, $ip_address){
-        $this->hash_process_data = new HashProcessData($frontend_id, $input_type, $ip_address);
-    }
-
 
     /**
      * @param $name
@@ -144,7 +133,7 @@ class CreateHash {
     }
 
     
-    protected function createHashes($hash_types, $pcap_file_name, $pcap_file_path){
+    public function createHashes($hash_types, $pcap_file_name, $pcap_file_path){
         $hashes = [];
 
         if(in_array('JA3', $hash_types)){
@@ -325,15 +314,15 @@ class CreateHash {
      */
     protected function saveHashes($results) : void {
 
-        $process_id = ProcessModel::where('frontend_id', '=', $this->frontend_id)->first()->id;
-
-        $application = Application::create([
+        $process_id = ProcessModel::where('job_id', '=', $this->job_id)->first()->id;
+    
+        $new_application = [
             'name' => $results['app_name'],
             'package_name' => $results['package_name'],
-            'version' => $results['app_version'],
-        ]);
+            'version' => $results['version'],
+        ];
 
-        $application->save();
+        $application = Application::firstOrCreate($new_application, $new_application);
 
         foreach($this->files as $file){
            $db_file = File::create([

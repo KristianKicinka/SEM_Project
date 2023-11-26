@@ -20,7 +20,7 @@ class Process extends Model {
      * @var array
      */
     protected $fillable = [
-        'frontend_id',
+        'job_id',
         'ip_address',
         'status',
         'progress',
