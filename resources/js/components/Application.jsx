@@ -18,6 +18,10 @@ import AdminAPI from './web/admin/API';
 import AdminDashboard from './web/admin/Dashboard';
 
 import BasicUserDashboard from './web/user/Dashboard';
+import BasicUserAPI from './web/user/API';
+import BasicUserHashes from './web/user/Hashes';
+import BasicUserApps from './web/user/Apps';
+import BasicUserProfile from './web/user/Profile';
 
 import ProtectedRoute from '../ProtectedRoute';
 
@@ -42,6 +46,10 @@ const Application = () => {
                     <Route path='/admin/api' element={<ProtectedRoute userType='admin'><AdminAPI/></ProtectedRoute>} />
 
                     <Route path='/user/dashboard' element={<ProtectedRoute userType='basic_user'><BasicUserDashboard/></ProtectedRoute>} />
+                    <Route path='/user/api' element={<ProtectedRoute userType='basic_user'><BasicUserAPI/></ProtectedRoute>} />
+                    <Route path='/user/hashes' element={<ProtectedRoute userType='basic_user'><BasicUserHashes/></ProtectedRoute>} />
+                    <Route path='/user/applications' element={<ProtectedRoute userType='basic_user'><BasicUserApps/></ProtectedRoute>} />
+                    <Route path='/user/profile' element={<ProtectedRoute userType='basic_user'><BasicUserProfile/></ProtectedRoute>} />
                 </Routes>
             </BrowserRouter>
         </div>

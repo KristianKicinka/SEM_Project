@@ -17,7 +17,7 @@ const Sidebar = ({sidebarType}) => {
         {id:1, text: "Dashboard" , url: "/user/dashboard", icon_class: "fa-solid fa-house pe-2"},
         {id:2, text: "API requests" , url: "/user/api", icon_class: "fa-solid fa-code pe-2"},
         {id:3, text: "Hashes" , url: "/user/hashes", icon_class: "fa-solid fa-hashtag  pe-2"},
-        {id:4, text: "Profile" , url: "/user/settings", icon_class: "fa-solid fa-user pe-2"},
+        {id:4, text: "Profile" , url: "/user/profile", icon_class: "fa-solid fa-user pe-2"},
         {id:5, text: "My Apps" , url: "/user/applications", icon_class: "fa-solid fa-heart pe-2"},
     ];
 

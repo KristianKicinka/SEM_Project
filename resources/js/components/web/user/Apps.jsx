@@ -6,7 +6,7 @@ import Sidebar from "../partials/auth/Sidebar";
 import TableComponent from "../partials/TableComponent";
 
 
-const Profile = () => {
+const Apps = () => {
     return (
         <div className="Dashboard container-fluid">
             <div className="row">
@@ -17,7 +17,7 @@ const Profile = () => {
                        <div className="container shadow bg-white text-dark p-3">
                             <div className="row p-3">
                                 <div className="col">
-                                    <h4 className="p-2">Profile</h4>
+                                    <h4 className="p-2">My Applications</h4>
                                 </div>
                                 <div className="col"></div>
                                 <div className="col"></div>
@@ -30,4 +30,4 @@ const Profile = () => {
     );
 };
 
-export default Profile;
+export default Apps;
