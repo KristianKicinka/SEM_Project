@@ -41,7 +41,7 @@ const AuthUser = () => {
     }
 
     const http = axios.create({
-        baseURL: `${import.meta.env.VITE_APP_URL}/api`,
+        baseURL: `/api`,
         headers: {
             "Content-type" : "application/json",
             "Authorization" : `Bearer ${token}`
