@@ -62,7 +62,7 @@ class ApiRequestController extends Controller {
 
     public function getAppHashes (Request $request) {
 
-        $this->registerApiRequest($request->header('auth_key'), $request->ip(), REQUEST_TYPES[1]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[1]);
         $results = [];
 
         foreach (json_decode($request->input('apps')) as $app){
@@ -174,7 +174,7 @@ class ApiRequestController extends Controller {
 
     public function createHashFromPcap (Request $request) {
 
-        $this->registerApiRequest($request->header('auth_key'), $request->ip(), REQUEST_TYPES[2]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[2]);
 
         $validator = Validator::make($request->all(), [
             'app_name' => 'required|string',

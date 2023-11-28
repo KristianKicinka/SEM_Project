@@ -19,7 +19,7 @@ class AuthExternalAPI
      */
     public function handle(Request $request, Closure $next){
 
-        $auth_key = $request->header('auth_key');
+        $auth_key = $request->input('auth_key');
 
         $user = User::where('api_auth_key', '=', $auth_key)->first();
 
