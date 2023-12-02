@@ -67,16 +67,17 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
         $this->hash_process_data->nextProcessPart();
         $hashes = $this->createHashes($this->hash_types, $pcap_file_name, $pcap_file_path);
 
-        $results = [
+        $db_data = [
             'app_name' => $application_name,
             'package_name' => $package_name,
-            'app_version' => $version_name,
+            'version' => $version_name,
             'hashes' => $hashes,
         ];
 
         // Save hashes to database
         $this->hash_process_data->nextProcessPart();
-        $this->saveHashes($results);
+        //dd($db_data);
+        $this->saveHashes($db_data);
 
         $this->hash_process_data->setFinished();
     }

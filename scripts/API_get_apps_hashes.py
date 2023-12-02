@@ -8,11 +8,11 @@ apps = [
     {'package_name': 'com.whatsapp', 'version': '', 'hash_types': ['JA3'] }
 ]
 
-headers = { 'auth_key' : '8AHniTyqoHztFRZWYwGJ73xdVUCgAV' }
+auth_key = 'wiZ68qvbifI3RHHZbtF6JZAIbzK78K'
 
-parameters = { 'apps': json.dumps(apps) }
+parameters = { 'apps': json.dumps(apps), 'auth_key' : auth_key }
 
-response = requests.post(API_URL, headers=headers, data=parameters)
+response = requests.post(API_URL, data=parameters)
 
 print(response)
 

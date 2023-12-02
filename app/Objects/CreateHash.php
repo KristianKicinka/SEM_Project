@@ -312,17 +312,23 @@ class CreateHash {
      * @param $results
      * @return void
      */
-    protected function saveHashes($results) : void {
+    protected function saveHashes($data) : void {
 
         $process_id = ProcessModel::where('job_id', '=', $this->job_id)->first()->id;
+
+        $identifier = [
+            'name' => $data['app_name'],
+            'package_name' => $data['package_name'],
+            'version' => $data['version'],
+        ];
     
         $new_application = [
-            'name' => $results['app_name'],
-            'package_name' => $results['package_name'],
-            'version' => $results['version'],
+            'name' => $data['app_name'],
+            'package_name' => $data['package_name'],
+            'version' => $data['version'],
         ];
 
-        $application = Application::firstOrCreate($new_application, $new_application);
+        $application = Application::firstOrCreate($identifier, $new_application);
 
         foreach($this->files as $file){
            $db_file = File::create([
@@ -334,7 +340,7 @@ class CreateHash {
            $db_file->save();
         }
 
-        foreach($results['hashes'] as $hash_type => $hashes){
+        foreach($data['hashes'] as $hash_type => $hashes){
             foreach($hashes as $hash){
 
                 $identifier = [

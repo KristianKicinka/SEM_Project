@@ -8,16 +8,15 @@ hashes = [
     'a0e20bdb405ae40b72f69b8746e07a11',
 ]
 
-headers = {
-    'auth_key' : '8AHniTyqoHztFRZWYwGJ73xdVUCgAV'
-}
+auth_key = 'wiZ68qvbifI3RHHZbtF6JZAIbzK78K'
 
 parameters = {
+    'auth_key' : auth_key,
     'hash_types' : json.dumps(['JA3']),
     'hashes': json.dumps(hashes),
 }
 
-response = requests.post(API_URL, headers=headers, data=parameters)
+response = requests.post(API_URL, data=parameters)
 
 print(response)
 

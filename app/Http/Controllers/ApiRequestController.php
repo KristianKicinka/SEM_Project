@@ -23,12 +23,17 @@ use Illuminate\Support\Facades\Bus;
 
 const REQUEST_TYPES = [
     'data_request', 'create_hash_APK', 'create_hash_PCAP',
-    'create_hash_PNAME', 'insert_hashes', 'get_apps_by_hashes', 'get_apps_hashes'
+    'create_hash_PNAME', 'insert_hashes', 'get_apps_by_hashes',
+    'get_apps_hashes', 'analyze_pcap_file'
 ];
 
-class ApiRequestController extends Controller { 
+class ApiRequestController extends Controller {
 
-    public function generateApiKey (Request $request) {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function generateApiKey (Request $request): JsonResponse {
 
         $auth_api_key = Str::random(30);
         User::where('id','=',$request->user_id)->update([
@@ -38,12 +43,19 @@ class ApiRequestController extends Controller {
         return response()->json(['auth_api_key' => $auth_api_key]);
     }
 
-    public function getApiKey (Request $request) {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getApiKey (Request $request): JsonResponse {
         $auth_api_key = User::select('api_auth_key')->where('id','=',$request->user_id)->first();
         return response()->json($auth_api_key);
     }
 
-    public function getRequests () {
+    /**
+     * @return JsonResponse
+     */
+    public function getRequests (): JsonResponse {
 
         $requests = DB::table('users')
             ->select(
@@ -60,7 +72,11 @@ class ApiRequestController extends Controller {
 
     // External API
 
-    public function getAppHashes (Request $request) {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getAppHashes (Request $request): JsonResponse {
 
         $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[1]);
         $results = [];
@@ -83,9 +99,13 @@ class ApiRequestController extends Controller {
         return response()->json($results, 200);
     }
 
-    public function getAppsFromHashes (Request $request) {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getAppsFromHashes (Request $request): JsonResponse {
 
-        $this->registerApiRequest($request->header('auth_key'), $request->ip(), REQUEST_TYPES[5]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[5]);
         $results = [];
 
         foreach (json_decode($request->input('hashes')) as $hash) {
@@ -105,13 +125,17 @@ class ApiRequestController extends Controller {
         return response()->json($results, 200);
     }
 
-    public function createHashFromAPK (Request $request) {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function createHashFromAPK (Request $request): JsonResponse {
 
-        $this->registerApiRequest($request->header('auth_key'), $request->ip(), REQUEST_TYPES[6]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[6]);
 
         $validator = Validator::make($request->all(), [
-            'hash_types' => 'required',
             'apk_file' => 'required|file',
+            'hash_types' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -120,16 +144,18 @@ class ApiRequestController extends Controller {
 
         $hash_types = json_decode($request->input('hash_types'));
         $apk_file_name = $this->saveApkFile($request->file('apk_file'));
+        $apk_original_file_name = $request->file('apk_file')->getClientOriginalName();
         $process_id = 'ext_api_'.Str::random(20);
 
         $job_id = CreateHashFromAPK::dispatch(
-            $apk_file_name, 
+            $apk_file_name,
             $hash_types,
             $request->ip(),
             $process_id,
         )->onQueue('default');
 
-        return response()->json('Task was added to queue succesfully.', 200);
+        return response()
+            ->json('Task for create hashes from APK ('.$apk_original_file_name.') was added to queue.', 200);
     }
 
      /**
@@ -144,9 +170,13 @@ class ApiRequestController extends Controller {
         return $final_name;
     }
 
-    public function createHashFromPackageName (Request $request) {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function createHashFromPackageName (Request $request): JsonResponse {
 
-        $this->registerApiRequest($request->header('auth_key'), $request->ip(), REQUEST_TYPES[3]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[3]);
 
         $validator = Validator::make($request->all(), [
             'package_name' => 'required|string',
@@ -172,7 +202,11 @@ class ApiRequestController extends Controller {
         return response()->json('Task was added to queue succesfully.', 200);
     }
 
-    public function createHashFromPcap (Request $request) {
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function createHashFromPcap (Request $request): JsonResponse {
 
         $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[2]);
 
@@ -201,10 +235,27 @@ class ApiRequestController extends Controller {
 
         $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types, $app_data);
         $hashes = $pcap_hash->create();
-        
+
         return response()->json($hashes, 200);
     }
 
+    /**
+     * @param Request $request
+     * @return void
+     */
+    public function analyzePcapFile (Request $request): void {
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[8]);
+
+        $pcap_file_name = $this->savePcapFile($request->file('pcap_file'));
+        $hash_types = json_decode($request->input('hash_types'));
+
+        //TODO: Implement pcap analysis only
+    }
+
+    /**
+     * @param $file
+     * @return string
+     */
     private function savePcapFile($file): string {
 
         $file_name = $file->getClientOriginalName();
@@ -214,9 +265,13 @@ class ApiRequestController extends Controller {
         return $final_name;
     }
 
-    public function insertHashes (Request $request) {
+    /**
+     * @param Request $request
+     * @return void
+     */
+    public function insertHashes (Request $request): void {
 
-        $this->registerApiRequest($request->header('auth_key'), $request->ip(), REQUEST_TYPES[4]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[4]);
 
         $application = [
             'name' => $request->app_name,
@@ -251,7 +306,13 @@ class ApiRequestController extends Controller {
         Hash::firstOrCreate($identifier, $new_hash);
     }
 
-    private function registerApiRequest ($auth_key, $ip_address, $type) {
+    /**
+     * @param $auth_key
+     * @param $ip_address
+     * @param $type
+     * @return void
+     */
+    private function registerApiRequest ($auth_key, $ip_address, $type): void {
 
         $user = User::where('api_auth_key', '=', $auth_key)->first();
 
