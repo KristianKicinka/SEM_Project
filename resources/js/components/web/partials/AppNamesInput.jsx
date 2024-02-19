@@ -4,9 +4,13 @@ import ReactDOM from 'react-dom';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 
-const ApkInput = () => {
+const AppNamesInput = ({
+    handleShowLoading, handleCloseLoading, handleShowResults,
+    setResults, hashTypes, setLoadingData
+}) => {
 
     const [file, setFile] = useState(null);
+    const [identifiers, setIdentifiers] = useState(null);
 
     const handleChange = file => {
         setFile(file[0]);
@@ -15,13 +19,68 @@ const ApkInput = () => {
     const saveFilesNames = (event) => {
         event.preventDefault();
 
-        const formDataNames = new FormData();
-        formDataNames.append("selectedFile", file);
+        if(hashTypes.length === 0){
+            toast.error('Hash type must be selected!');
+            return;
+        }
 
-        axios.post('/saveNamesListFile', formDataNames).then(res=>{
+        const data = new FormData();
+        data.append("text_file", file);
+        data.append("hash_types", JSON.stringify(hashTypes));
+
+        axios.post('/api/create-hash-textfile', data).then( res =>{
             console.log(res.data);
+            setIdentifiers(res.data);
         });
     }
+
+    const handleResults = async () => {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+
+        try {
+            let results = await axios.post('/api/get-process-results', {'frontend_id': process_id});
+            console.log(results.data);
+            setResults(results.data);
+            handleCloseLoading();
+            handleShowResults();
+        } catch (error) {
+            toast.error('Hash generation error!');
+            console.log(`ERROR: ${error}`);
+        }
+    }
+
+    const pollStatus = async () => {
+        let info = await getProcessInfo(process_id);
+        console.log(info.status);
+        setLoadingData(info);
+
+        if(info.status === 'finished')
+            handleResults();
+
+        if(info.status === 'failed'){
+            handleCloseLoading();
+            clearInterval(pollingInterval);
+            setPollingInterval(null);
+            toast.error('Hash generation error!');
+            console.log(`ERROR: ${error}`);
+        }
+    }
+
+    const getProcessInfo = async (processID) => {
+        try {
+            let results = await axios.post('/api/get-process-info', {'frontend_id': processID});
+            console.log(results.data);
+            return results.data;
+        } catch (error) {
+            toast.error('Hash generation error!');
+            console.log(`ERROR: ${error}`);
+        }
+    }
+
+    useEffect(() => {
+        return () => clearInterval(pollingInterval);
+    }, [pollingInterval]);
 
     return (
         <div className='bg-light text-dark p-3 rounded-3'>
@@ -30,11 +89,17 @@ const ApkInput = () => {
                 <Form.Group controlId="formFileNames" className="row">
                     <Form.Control type="file" className='col' accept='.txt'
                         onChange={(e) => handleChange(e.target.files)} required />
-                    <Button id="submit_file_names_input" disabled type='submit' onClick={saveFilesNames} className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
+                    <Button 
+                        id="submit_file_names_input"
+                        type='submit' 
+                        onClick={saveFilesNames} 
+                        className='btn-search text-light col-2 mx-2'>
+                            <i className='fa-solid fa-file-import'></i>
+                    </Button>
                 </Form.Group>
             </Form>
         </div>
     );
 }
 
-export default ApkInput;
+export default AppNamesInput;

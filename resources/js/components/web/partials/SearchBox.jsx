@@ -16,7 +16,7 @@ import StaticData from '../../../../../scripts/StaticData.json';
 
 const SearchBox = ({
     handleShowLoading, handleCloseLoading, handleShowResults, 
-    setResults, hashTypes, setHashTypes, handleShowAlert, setLoadingData
+    setResults, hashTypes, setHashTypes, setLoadingData
 }) => {
 
     const [appName, setAppName] = useState();
@@ -32,7 +32,8 @@ const SearchBox = ({
             setAppItems(response.data);
             setAppItemsLoaded(true);
         } catch (error) {
-            console.log(error);
+            toast.error('Search application failed!');
+            console.log(`ERROR: ${error}`);
         }
     }
 
@@ -54,7 +55,6 @@ const SearchBox = ({
                         handleShowLoading={handleShowLoading} 
                         handleCloseLoading={handleCloseLoading}
                         handleShowResults={handleShowResults}
-                        handleShowAlert={handleShowAlert}
                         setResults={setResults}
                         hashTypes={hashTypes}
                         setLoadingData={setLoadingData}
@@ -68,8 +68,17 @@ const SearchBox = ({
                             <div className="col-sm-12 col-md-6">
                                 <Form noValidate onSubmit={get_app_items}>
                                     <InputGroup className='mb-3'>
-                                        <Form.Control placeholder='Application name' aria-label='Application name' aria-describedby='search_btn' onChange={e=>setAppName(e.target.value)} />
-                                        <Button id="search_btn" type='submit'  className='btn-search text-light'><i className='fa-solid fa-magnifying-glass'></i></Button>
+                                        <Form.Control 
+                                            placeholder='Application name' 
+                                            aria-label='Application name' 
+                                            aria-describedby='search_btn' 
+                                            onChange={e=>setAppName(e.target.value)} />
+                                        <Button 
+                                            id="search_btn" 
+                                            type='submit'  
+                                            className='btn-search text-light'>
+                                                <i className='fa-solid fa-magnifying-glass'></i>
+                                        </Button>
                                     </InputGroup>
                                 </Form>
                             </div>
@@ -83,7 +92,6 @@ const SearchBox = ({
                                 handleCloseLoading={handleCloseLoading}
                                 handleShowLoading={handleShowLoading}
                                 handleShowResults={handleShowResults}
-                                handleShowAlert={handleShowAlert}
                                 setResults={setResults}
                                 hashTypes={hashTypes}
                                 setLoadingData={setLoadingData}

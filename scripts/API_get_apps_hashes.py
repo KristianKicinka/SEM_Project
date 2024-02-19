@@ -5,10 +5,11 @@ API_URL = 'http://localhost:8000/api/get-app-hashes'
 
 apps = [
     {'package_name': 'com.facebook.orca', 'version': '', 'hash_types': ['JA3'] },
-    {'package_name': 'com.whatsapp', 'version': '', 'hash_types': ['JA3'] }
+    {'package_name': 'com.spotify.music', 'version': '', 'hash_types': ['JA3'] },
+    {'package_name': 'com.netflix.mediaclient', 'version': '', 'hash_types': ['JA3'] }
 ]
 
-auth_key = 'wiZ68qvbifI3RHHZbtF6JZAIbzK78K'
+auth_key = 'j92x4jy6FvaMGusAYUkeh28vB2sSw9'
 
 parameters = { 'apps': json.dumps(apps), 'auth_key' : auth_key }
 

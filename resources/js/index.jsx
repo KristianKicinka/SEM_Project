@@ -7,4 +7,4 @@ if (document.getElementById('Application')) {
     ReactDOM.render(<Application />, document.getElementById('Application'));
 }
 
-localStorage.setItem("ActiveProcesses",JSON.stringify([]));
+localStorage.setItem("ActiveProcesses", JSON.stringify([]));

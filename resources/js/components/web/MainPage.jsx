@@ -7,7 +7,8 @@ import SearchBox from './partials/SearchBox';
 import Results from './partials/Results';
 import LoadingModal from './partials/LoadingModal';
 
-import HashTypeAlert from './partials/HashTypeAlert';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const MainPage = () => {
 
@@ -16,9 +17,9 @@ const MainPage = () => {
 
     const [showResults, setShowResults] = useState(false);
     const [showLoading, setShowLoading] = useState(false);
-    const [loadingData, setLoadingData] = useState({progress:0, message:'Hash process was created'});
-
-    const [showAlert, setShowAlert] = useState(false);
+    const [loadingData, setLoadingData] = useState(
+        {progress:0, message:'Hash process was created'}
+    );
 
     const handleCloseResults = () => setShowResults(false);
     const handleShowResults = () => setShowResults(true);
@@ -26,27 +27,43 @@ const MainPage = () => {
     const handleCloseLoading = () => setShowLoading(false);
     const handleShowLoading = () => setShowLoading(true);
 
-    const handleCloseAlert = () => setShowAlert(false);
-    const handleShowAlert = () => setShowAlert(true);
-
     return (
         <div className='MainPage'>
-            <Navbar/>
+            <Navbar />
 
-            <SearchBox  
+            <SearchBox
                 handleShowLoading={handleShowLoading} 
                 handleCloseLoading={handleCloseLoading}
                 handleShowResults={handleShowResults}
                 setResults={setResults}
                 hashTypes={hashTypes}
                 setHashTypes={setHashTypes}
-                handleShowAlert={handleShowAlert}
                 setLoadingData={setLoadingData}
             />
 
-            <LoadingModal show={showLoading} handleClose={handleCloseLoading} loadingData={loadingData} />
-            <HashTypeAlert showAlert={showAlert} setShowAlert={setShowAlert} />
-            <Results show={showResults} handleClose={handleCloseResults} results={results} hashTypes={hashTypes} />
+            <LoadingModal 
+                show={showLoading} 
+                handleClose={handleCloseLoading} 
+                loadingData={loadingData} 
+            />
+            <Results 
+                show={showResults} 
+                handleClose={handleCloseResults} 
+                results={results}
+                hashTypes={hashTypes} 
+            />
+            <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+            />
         </div>
     )
 }

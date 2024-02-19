@@ -15,28 +15,34 @@ class CreateHashFromPcap extends CreateHash {
 
     protected string $pcap_file_name;
     protected array $hash_types;
-    protected array $app_data;
 
-    public function __construct($pcap_file_name, $hash_types, $app_data) {
+    public function __construct($pcap_file_name, $hash_types) {
         $this->pcap_file_name = $pcap_file_name;
         $this->hash_types = $hash_types;
-        $this->app_data = $app_data;
+    }
+
+    public function create(){
+        $pcap_file_path = storage_path(PCAP_INSERTED_DIR).$this->pcap_file_name;
+
+        $this->hashes = $this->createHashes($this->hash_types, $this->pcap_file_name, $pcap_file_path);
+
+        return $this->hashes;
     }
 
 
-    public function create(){
+    public function createAndSave($app_data){
         $pcap_file_path = storage_path(PCAP_INSERTED_DIR).$this->pcap_file_name;
         
         $this->hashes = $this->createHashes($this->hash_types, $this->pcap_file_name, $pcap_file_path);
 
         $db_data = [
-            'app_name' => $this->app_data['app_name'],
-            'package_name' => $this->app_data['package_name'],
-            'version' => $this->app_data['app_version'],
+            'app_name' => $app_data['app_name'],
+            'package_name' => $app_data['package_name'],
+            'version' => $app_data['app_version'],
             'pcap_file_name' => $this->pcap_file_name,
             'pcap_file_path' => $pcap_file_path,
             'pcap_file_type' => 'PCAP',
-            'is_malware' => $this->app_data['is_malware'],
+            'is_malware' => $app_data['is_malware'],
             'hashes' => $this->hashes,
         ];
 
@@ -45,7 +51,7 @@ class CreateHashFromPcap extends CreateHash {
         return $this->hashes;
     }
 
-    private function save_hashes ($data) {
+    private function save_hashes($data){
 
         $identifier = [
             'name' => $data['app_name'],

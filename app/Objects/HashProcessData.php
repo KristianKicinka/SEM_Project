@@ -90,6 +90,14 @@ class HashProcessData {
         $this->store();
     }
 
+     /**
+     * @return void
+     */
+    public function setFailed(): void {
+        $this->status = "failed";
+        $this->store();
+    }
+
     /**
      * @return void
      */

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Exceptions\ApkDownloadException;
 use App\Objects\CreateHash;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -44,80 +45,57 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 
         $hashes = [];
 
-        Log::channel('devlog')
-            ->info('Hash creation process for package_name: {name} started!', ['name' => $this->package_name]);
+        try {
+            // Log::channel('devlog')->info('Hash creation process for package_name: {name} started!', ['name' => $this->package_name]);
 
-        $this->hash_process_data->setProcessing();
+            $this->hash_process_data->setProcessing();
 
-        // Download APK file
-        $this->hash_process_data->nextProcessPart();
+            // Download APK file
+            $this->hash_process_data->nextProcessPart();
 
-        $apk_file_name = trim($this->downloadApkFile($this->package_name));
+            $apk_file_name = trim($this->downloadApkFile($this->package_name));
+            $pcap_file_name = str_replace('.apk', '.pcap', $apk_file_name);
+            $apk_path = trim(storage_path(APK_DOWNLOADED_DIR).$apk_file_name);
 
-        Log::channel('devlog')
-            ->info('After downloading APK file | file name: {name}', ['name' => $apk_file_name]);
+            $this->addFileToFiles($apk_file_name, 'APK', $apk_path);
 
-        $pcap_file_name = str_replace('.apk', '.pcap', $apk_file_name);
-        Log::channel('devlog')
-            ->info('After creating PCAP file | file name: {name}', ['name' => $pcap_file_name]);
+            // Get information's about APK file
+            $this->hash_process_data->nextProcessPart();
+            $package_name = trim($this->getAppPackageName($apk_path));
+            $version_name = trim($this->getAppVersionName($apk_path));
+            $application_name = trim($this->getAppName($apk_path));
 
-        $apk_path = trim(storage_path(APK_DOWNLOADED_DIR).$apk_file_name);
-        Log::channel('devlog')
-            ->info('After creating APK path | APK path: {path}', ['path' => $apk_path]);
+            // App installation
+            $this->hash_process_data->nextProcessPart();
+            $this->installAppOnEmulator($apk_path);
 
+            // Network analysis
+            $this->hash_process_data->nextProcessPart();
+            $pcap_file_path = trim($this->createPcapFile($pcap_file_name, $apk_path));
 
-        $this->addFileToFiles($apk_file_name, 'APK', $apk_path);
+            // Clear android emulator
+            $this->uninstallAppOnEmulator($package_name);
 
-        // Get information's about APK file
-        $this->hash_process_data->nextProcessPart();
-        $package_name = trim($this->getAppPackageName($apk_path));
-        $version_name = trim($this->getAppVersionName($apk_path));
-        $application_name = trim($this->getAppName($apk_path));
+            // Create hashes
+            $this->hash_process_data->nextProcessPart();
+            $hashes = $this->createHashes($this->hash_types, $pcap_file_name, $pcap_file_path);
 
-        Log::channel('devlog')
-            ->info('After get app info | App package name: {package_name}', ['package_name' => $package_name]);
-        Log::channel('devlog')
-            ->info('After get app info | App version name: {version_name}', ['version_name' => $version_name]);
-        Log::channel('devlog')
-            ->info('After get app info | App name: {app_name}', ['app_name' => $application_name]);
+            $results = [
+                'app_name' => $application_name,
+                'package_name' => $package_name,
+                'app_version' => $version_name,
+                'hashes' => $hashes,
+            ];
 
+            // Save hashes to database
+            $this->hash_process_data->nextProcessPart();
+            $this->saveHashes($results);
 
-        // App installation
-        $this->hash_process_data->nextProcessPart();
-        $this->installAppOnEmulator($apk_path);
-        Log::channel('devlog')->info('App was installed on emulator');
-
-        // Network analysis
-        $this->hash_process_data->nextProcessPart();
-        $pcap_file_path = trim($this->createPcapFile($pcap_file_name, $apk_path));
-
-        // Clear android emulator
-        $this->uninstallAppOnEmulator($package_name);
-        Log::channel('devlog')->info('App was un-installed on emulator');
-
-        // Create hashes
-        $this->hash_process_data->nextProcessPart();
-        $hashes = $this->createHashes($this->hash_types, $pcap_file_name, $pcap_file_path);
-
-        Log::channel('devlog')
-            ->info('After create hashes | hashes: {hashes}', ['hashes' => $hashes]);
-
-        $results = [
-            'app_name' => $application_name,
-            'package_name' => $package_name,
-            'app_version' => $version_name,
-            'hashes' => $hashes,
-        ];
-
-        // Save hashes to database
-        $this->hash_process_data->nextProcessPart();
-        $this->saveHashes($results);
-
-        Log::channel('devlog')
-            ->info('After save hashes to database');
-
-        $this->hash_process_data->setFinished();
-
+            $this->hash_process_data->setFinished();
+    
+        } catch(Exception $e){
+            $this->hash_process_data->setFailed();
+        }
     }
 
     /**
@@ -126,7 +104,8 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
      */
     private function downloadApkFile(string $package_name): string {
 
-        $url = "https://d.apkpure.com/b/APK/".$package_name."?version=latest";
+        // old "https://d.apkpure.com/b/APK/".$package_name."?version=latest";
+        $url = "https://d.cdnpure.com/b/APK/".$package_name."?version=latest";
 
         $file_prefix = date('his');
 

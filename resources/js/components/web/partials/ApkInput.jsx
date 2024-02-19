@@ -4,14 +4,14 @@ import ReactDOM from 'react-dom';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import axios from 'axios';
+
 import { setNewActiveProcess } from '../../../processManagement';
-
-
+import { toast } from 'react-toastify';
 
 
 const ApkInput = ({
     handleShowLoading, handleCloseLoading, handleShowResults,
-    handleShowAlert, setResults, hashTypes, setLoadingData
+    setResults, hashTypes, setLoadingData
 }) => {
 
     const [apkFile, setApkFile] = useState(null);
@@ -22,8 +22,7 @@ const ApkInput = ({
         event.preventDefault();
 
         if(hashTypes.length === 0){
-            console.log("Select hash type");
-            handleShowAlert();
+            toast.error('Hash type must be selected!');
             return;
         }
 
@@ -47,7 +46,8 @@ const ApkInput = ({
             clearInterval(pollingInterval);
             setPollingInterval(null);
             handleCloseLoading();
-            console.log(error);
+            toast.error('Hash generation error!');
+            console.log(`ERROR: ${error}`);
         }
     }
 
@@ -62,6 +62,7 @@ const ApkInput = ({
             handleCloseLoading();
             handleShowResults();
         } catch (error) {
+            toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
     }
@@ -73,6 +74,14 @@ const ApkInput = ({
 
         if(info.status === 'finished')
             handleResults();
+
+        if(info.status === 'failed'){
+            handleCloseLoading();
+            clearInterval(pollingInterval);
+            setPollingInterval(null);
+            toast.error('Hash generation error!');
+            console.log(`ERROR: ${error}`);
+        }
     }
 
     const getProcessInfo = async (processID) => {
@@ -81,6 +90,7 @@ const ApkInput = ({
             console.log(results.data);
             return results.data;
         } catch (error) {
+            toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
     }

@@ -18,18 +18,17 @@ const Settings = () => {
     const generateApiKey = async (e) => {
         e.preventDefault();
         try {
-            let resp = await http.post('/admin/api-key-generate',{user_id:user.id});
+            let resp = await http.post('/admin/api-key-generate', {user_id:user.id});
             setFetchDataState(prevState => !prevState);
             setApiKey(resp.data.api_auth_key ? resp.data.api_auth_key : "" );
         } catch (error) {
             console.log(error);
         }
-       
     }
 
     const fetchData = async () => {
         try {
-            let resp = await http.post('/admin/get-api-key',{user_id:user.id});
+            let resp = await http.post('/admin/get-api-key', {user_id:user.id});
             setApiKey(resp.data.api_auth_key ? resp.data.api_auth_key : "" );
         } catch (error) {
             console.log(error);

@@ -19,6 +19,7 @@ use App\Objects\CreateHash;
 use App\Models\Application;
 use App\Models\File;
 use App\Models\Hash;
+use Illuminate\Support\Facades\Storage;
 
 const PCAP_PATH = 'app/public/uploads/pcap_inserted/';
 
@@ -46,8 +47,8 @@ class HashController extends Controller {
         $apk_file_name = $this->saveApkFile($request->file('apk_file'));
 
         $job_id = CreateHashFromAPK::dispatch(
-            $apk_file_name, 
-            $hash_types, 
+            $apk_file_name,
+            $hash_types,
             $ip_address,
             $frontend_id
         )->onQueue('default');
@@ -97,8 +98,8 @@ class HashController extends Controller {
         $pcap_file_name = $this->savePcapFile($request->file('pcap_file'));
         $hash_types = json_decode($request->input('hash_types_pcap'));
 
-        $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types, $app_data);
-        $hashes = $pcap_hash->create();
+        $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types);
+        $hashes = $pcap_hash->createAndSave($app_data);
 
         return response()->json(['hashes' => $hashes], 200);
     }
@@ -169,6 +170,51 @@ class HashController extends Controller {
         Hash::firstOrCreate($identifier, $new_record);
 
         return response()->json('process success!', 200);
+    }
+
+    public function createHashFromTextFile(Request $request): JsonResponse {
+
+        $validator = Validator::make($request->all(), [
+            'text_file' => 'required|file|mimes:txt',
+            'hash_types' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $hash_types = json_decode($request->input('hash_types'));
+        $ip_address = $request->ip();
+        $text_file_path = $this->saveTextFile($request->file('text_file'));
+
+        $package_names = file($text_file_path);
+
+        $response = [];
+
+        foreach($package_names as $package_name){
+            $frontend_id = 'int_api_'.Str::random(20);
+            $response[$package_name] = $frontend_id;
+
+            CreateHashFromAppName::dispatch(
+                $package_name, $hash_types, $ip_address, $frontend_id
+            )->onQueue('default');
+        }
+
+        return response()->json($response, 200);
+    }
+
+    /**
+     * @param $file
+     * @return string
+     */
+    private function saveTextFile($file): string {
+        $file_name = $file->getClientOriginalName();
+        $final_name = date('his') .'_'. $file_name;
+
+        $file->storeAs('uploads/text_inserted',$final_name,'public');
+        $file_path = storage_path('app/public/uploads/text_inserted/').$final_name;
+
+        return $file_path;
     }
 
     /**

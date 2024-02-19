@@ -33,7 +33,6 @@ class ApplicationController extends Controller {
 
         foreach($app_versions as $app_version){
             foreach($hash_types as $hash_type){
-
                 $db_items = $this->getApplicationHashes($hash_type, $app_name, $app_version);
                 $hashes[$hash_type] = $db_items;
             }

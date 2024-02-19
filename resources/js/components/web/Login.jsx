@@ -23,7 +23,7 @@ const Login = () => {
             if (error.response.status === 400)
                 setErrors(error.response.data.errors);
             
-            console.log(error);
+            console.log(`ERROR: ${error}`);
         }
     }
 

@@ -60,9 +60,11 @@ Route::group(['middleware' => ['auth:api', 'admin']], function () {
 Route::group(['middleware' => ['auth:api', 'user']], function () {
     //Route::post('/hashes', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/settings', [HashesController::class, 'getHashesforAdmin']);
-    //Route::post('/api-requests', [HashesController::class, 'getHashesforAdmin']);
+    Route::post('/user/api-requests', [ApiRequestController::class, 'getRequests']);
     Route::post('/user/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
     Route::post('/user/get-api-key', [ApiRequestController::class, 'getApiKey']);
+    Route::post('/user/edit', [UserController::class, 'updateUserData']);
+    Route::post('/user/change-password', [UserController::class, 'updateUserPassword']);
 });
 
 // External API routes
@@ -72,4 +74,6 @@ Route::group(['middleware' => ['external']], function () {
     Route::post('/create-hash-from-apk', [ApiRequestController::class, 'createHashFromAPK']);
     Route::post('/create-hash-from-package-name', [ApiRequestController::class, 'createHashFromPackageName']);
     Route::post('/create-hash-from-pcap', [ApiRequestController::class, 'createHashFromPcap']);
+    Route::post('/analyze-flowmon-file', [ApiRequestController::class, 'analyzeFlowMonFile']);
+    Route::post('/analyze-pcap-file', [ApiRequestController::class, 'analyzePcapFile']);
 });

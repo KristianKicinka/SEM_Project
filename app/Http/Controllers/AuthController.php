@@ -19,7 +19,7 @@ class AuthController extends Controller {
      * @param $token_type
      * @return array
      */
-    private function createResponse ($user, $token, $token_type): array {
+    private function createResponse($user, $token, $token_type): array {
         return [
             'status' => 'success',
             'user' => $user,
@@ -34,7 +34,7 @@ class AuthController extends Controller {
      * @param Request $request
      * @return JsonResponse
      */
-    public function login (Request $request): JsonResponse {
+    public function login(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
@@ -62,7 +62,7 @@ class AuthController extends Controller {
      * @param Request $request
      * @return JsonResponse
      */
-    public function register (Request $request): JsonResponse {
+    public function register(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
             'name' => 'required',
@@ -95,7 +95,7 @@ class AuthController extends Controller {
     /**
      * @return JsonResponse
      */
-    public function logout (): JsonResponse {
+    public function logout(): JsonResponse {
         Auth::logout();
 
         return response()->json([
@@ -106,7 +106,7 @@ class AuthController extends Controller {
     /**
      * @return JsonResponse
      */
-    public function refresh (): JsonResponse {
+    public function refresh(): JsonResponse {
         $user = Auth::user();
         $token = Auth::refresh();
 

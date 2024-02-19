@@ -6,7 +6,7 @@ import { setNewActiveProcess } from '../../../processManagement';
 
 const AppItem = (
     { item, handleShowLoading, handleCloseLoading, handleShowResults, 
-        setResults, hashTypes, handleShowAlert, setLoadingData}) => {
+        setResults, hashTypes, setLoadingData}) => {
 
     const [pollingInterval, setPollingInterval] = useState(null);
     let process_id = null;
@@ -15,8 +15,7 @@ const AppItem = (
         event.preventDefault();
 
         if(hashTypes.length === 0){
-            console.log("Select hash type");
-            handleShowAlert();
+            toast.error('Hash type must be selected!');
             return;
         }
 
@@ -38,6 +37,7 @@ const AppItem = (
             pollStatus();
             setPollingInterval(setInterval(pollStatus, 2000));
         } catch (error) {
+            toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
     }
@@ -53,6 +53,7 @@ const AppItem = (
             handleCloseLoading();
             handleShowResults();
         } catch (error) {
+            toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
     }
@@ -64,6 +65,14 @@ const AppItem = (
 
         if(info.status === 'finished')
             handleResults();
+
+        if(info.status === 'failed'){
+            handleCloseLoading();
+            clearInterval(pollingInterval);
+            setPollingInterval(null);
+            toast.error('Hash generation error!');
+            console.log(`ERROR: ${error}`);
+        }
     }
 
     const getProcessInfo = async (processID) => {
@@ -72,6 +81,7 @@ const AppItem = (
             console.log(results.data);
             return results.data;
         } catch (error) {
+            toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
     }

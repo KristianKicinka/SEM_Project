@@ -126,7 +126,7 @@ class CreateHash {
         $process->run();
 
         if (!$process->isSuccessful()) {
-            return response()->json('Hash creation failed!');
+            throw new HashGeneratorFailException($process->getErrorOutput());
         }
 
         return $this->parseAnalysisOutput($process->getOutput());
@@ -200,7 +200,10 @@ class CreateHash {
      */
     private function runAppOnEmulator($package_name) {
 
-        $command = 'adb shell monkey -p '.$package_name.' -c android.intent.category.LAUNCHER 1';
+        $command = 'adb shell monkey -p '.trim($package_name).' -c android.intent.category.LAUNCHER 1';
+
+        Log::channel('devlog')
+        ->info('Run app command: {command}', ['command' => $command]);
 
         $process = Process::fromShellCommandline($command);
         $process->run();
@@ -258,7 +261,7 @@ class CreateHash {
      */
     protected function getAppPackageName($apk_file_path) : string {
 
-        $command = 'aapt dump badging '.trim($apk_file_path).' | grep package | awk \'{print $2}\' | sed s/name=//g | sed s/\\\'//g';
+        $command = "aapt dump badging ".trim($apk_file_path)." | grep \"package: name\" | awk -F\"'\" '{print $2}'";
 
         Log::channel('devlog')
             ->info('aapt command: {command}', ['package_name' => $command]);
@@ -269,6 +272,9 @@ class CreateHash {
         if (!$process->isSuccessful()) {
             throw new PackageNameNotFoundException($process->getErrorOutput());
         }
+
+        Log::channel('devlog')
+            ->info('package name: {package_name}', ['package_name' => $process->getOutput()]);
 
         return $process->getOutput();
     }

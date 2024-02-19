@@ -9,6 +9,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 use App\Objects\CreateHash;
+use Exception;
 
 const APK_INPUT_TYPE = "APK_FILE";
 const APK_INSERTED_DIR = 'app/public/uploads/apk_inserted/';
@@ -37,48 +38,52 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
     public function handle(): void {
         $hashes = [];
 
-        $this->hash_process_data->setProcessing();
+        try {
+            $this->hash_process_data->setProcessing();
 
-        // Get and save APK file
-        $this->hash_process_data->nextProcessPart();
+            // Get and save APK file
+            $this->hash_process_data->nextProcessPart();
 
-        $pcap_file_name = str_replace('.apk', '.pcap', $this->apk_file_name);
-        $apk_path = storage_path(APK_INSERTED_DIR).$this->apk_file_name;
+            $pcap_file_name = str_replace('.apk', '.pcap', $this->apk_file_name);
+            $apk_path = storage_path(APK_INSERTED_DIR).$this->apk_file_name;
 
-        $this->addFileToFiles($this->apk_file_name, 'APK', $apk_path);
+            $this->addFileToFiles($this->apk_file_name, 'APK', $apk_path);
 
-        // Get information's about APK file
-        $package_name = trim($this->getAppPackageName($apk_path));
-        $version_name = trim($this->getAppVersionName($apk_path));
-        $application_name = trim($this->getAppName($apk_path));
+            // Get information's about APK file
+            $package_name = trim($this->getAppPackageName($apk_path));
+            $version_name = trim($this->getAppVersionName($apk_path));
+            $application_name = trim($this->getAppName($apk_path));
 
-        // App installation
-        $this->hash_process_data->nextProcessPart();
-        $this->installAppOnEmulator($apk_path);
+            // App installation
+            $this->hash_process_data->nextProcessPart();
+            $this->installAppOnEmulator($apk_path);
 
-        // Network analysis
-        $this->hash_process_data->nextProcessPart();
-        $pcap_file_path = $this->createPcapFile($pcap_file_name, $apk_path);
+            // Network analysis
+            $this->hash_process_data->nextProcessPart();
+            $pcap_file_path = $this->createPcapFile($pcap_file_name, $apk_path);
 
-        // Clear android emulator
-        $this->uninstallAppOnEmulator($package_name);
+            // Clear android emulator
+            $this->uninstallAppOnEmulator($package_name);
 
-        // Create hashes
-        $this->hash_process_data->nextProcessPart();
-        $hashes = $this->createHashes($this->hash_types, $pcap_file_name, $pcap_file_path);
+            // Create hashes
+            $this->hash_process_data->nextProcessPart();
+            $hashes = $this->createHashes($this->hash_types, $pcap_file_name, $pcap_file_path);
 
-        $db_data = [
-            'app_name' => $application_name,
-            'package_name' => $package_name,
-            'version' => $version_name,
-            'hashes' => $hashes,
-        ];
+            $db_data = [
+                'app_name' => $application_name,
+                'package_name' => $package_name,
+                'version' => $version_name,
+                'hashes' => $hashes,
+            ];
 
-        // Save hashes to database
-        $this->hash_process_data->nextProcessPart();
-        //dd($db_data);
-        $this->saveHashes($db_data);
+            // Save hashes to database
+            $this->hash_process_data->nextProcessPart();
+            $this->saveHashes($db_data);
 
-        $this->hash_process_data->setFinished();
+            $this->hash_process_data->setFinished();
+
+        } catch(Exception $e){
+            $this->hash_process_data->setFailed();
+        }
     }
 }

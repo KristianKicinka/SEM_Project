@@ -43,7 +43,8 @@ const DatabasePage = () => {
             let response = await http.post('/get-app-data');
             setData(response.data);
         } catch (error) {
-            console.log(error);
+            toast.error('Get applications data failed!');
+            console.log(`ERROR: ${error}`);
         }
     };
 

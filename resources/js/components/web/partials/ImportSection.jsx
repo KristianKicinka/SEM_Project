@@ -5,7 +5,7 @@ import AppNamesInput from './AppNamesInput';
 
 const ImportSection = ({
     handleShowLoading, handleCloseLoading, handleShowResults,
-    handleShowAlert, setResults, hashTypes, setLoadingData
+    setResults, hashTypes, setLoadingData
 }) => {
     return (
         <div className="row g-5 px-4">
@@ -14,14 +14,20 @@ const ImportSection = ({
                     handleShowLoading={handleShowLoading} 
                     handleCloseLoading={handleCloseLoading}
                     handleShowResults={handleShowResults}
-                    handleShowAlert={handleShowAlert}
                     setResults={setResults}
                     hashTypes={hashTypes}
                     setLoadingData={setLoadingData}
                  />
             </div>
             <div className='col-sm-12 col-md-6'>
-                <AppNamesInput/>
+                <AppNamesInput
+                    handleShowLoading={handleShowLoading}
+                    handleCloseLoading={handleCloseLoading}
+                    handleShowResults={handleShowResults}
+                    setResults={setResults}
+                    hashTypes={hashTypes}
+                    setLoadingData={setLoadingData}
+                />
             </div>
         </div>
     );
