@@ -5,6 +5,8 @@ from scapy.all import *
 from scapy.layers.tls.record import TLS
 from scapy.layers.tls.extensions import TLS_Ext_SupportedGroups
 from scapy.layers.tls.extensions import TLS_Ext_SupportedPointFormat
+from scapy.layers.tls.extensions import TLS_Ext_ServerName
+
 from scapy.layers.tls.handshake import TLSClientHello
 from scapy.layers.tls.handshake import TLSServerHello
 
@@ -120,6 +122,17 @@ def get_ec_point_formats(packet):
                     ec_point_formats.append(format_code)
     return ec_point_formats
 
+# Get SNI Client hello
+def get_sni_client_hello(pcap):
+    sni = None
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLS_Ext_ServerName):  # Check if TLS layer contains Client Hello
+            sni_field = tls_layers[TLS_Ext_ServerName].servernames
+            if sni_field:
+                sni = sni_field[0].servername.decode()  # Decode SNI to string
+    return sni
+
 
 def add_to_string(full_string, items):
     index = 0
@@ -171,6 +184,7 @@ if __name__ == '__main__':
         supported_groups = get_supported_groups(packet)
         point_format = get_ec_point_formats(packet)
 
+        #print(f"SNI : {get_sni_client_hello(packet)}")
 
         if(hash_type == "JA3"):
             version = get_client_hello_version(packet)
@@ -188,6 +202,8 @@ if __name__ == '__main__':
         hash_strings.append(full_string)
         hashes.append(final_hash)
 
+        #packet.show()
+
         #print("################")
         #print(f"IP SRC : {packet[IP].src}")
         #print(f"IP DST : {packet[IP].dst}")
@@ -199,8 +215,6 @@ if __name__ == '__main__':
         #print(f"JA3 Full string : {full_string}")
         #print(f"JA3 Hash : {final_hash}")
         #print("################")
-
-        #exit(1)
 
         packet_count += 1
 
