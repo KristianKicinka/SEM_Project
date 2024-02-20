@@ -29,16 +29,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 hash_strings = []
 hashes = []
 
-def check_useless_domain_name(packet):
-    # row from : https://github.com/hsouna/tls-servername/blob/main/get_servername_from_tls.py
-    if (packet['TLS_Ext_ServerName'].servernames):
-        domain_name = packet['TLS_Ext_ServerName'].servernames[0].servername.decode("utf-8")
-
-        if domain_name in open(os.path.join(script_dir, BLACK_LIST_FILE), 'r').read():
-            return True
-        
-    return False
-
 def remove_reserved_grease_values(array):
     return [item for item in array if item not in RESERVED_GREASE_VALUES]
 
@@ -122,8 +112,8 @@ def get_ec_point_formats(packet):
                     ec_point_formats.append(format_code)
     return ec_point_formats
 
-# Get SNI Client hello
-def get_sni_client_hello(pcap):
+# Get SNI
+def get_sni(packet):
     sni = None
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
@@ -132,6 +122,16 @@ def get_sni_client_hello(pcap):
             if sni_field:
                 sni = sni_field[0].servername.decode()  # Decode SNI to string
     return sni
+
+
+def check_useless_domain_name(packet):
+    # row from : https://github.com/hsouna/tls-servername/blob/main/get_servername_from_tls.py
+    sni = get_sni(packet)
+    if (sni):
+        if sni in open(os.path.join(script_dir, BLACK_LIST_FILE), 'r').read():
+            return True
+        
+    return False
 
 
 def add_to_string(full_string, items):
@@ -174,7 +174,7 @@ if __name__ == '__main__':
 
         # check domains for JA3 only  
         if hash_type == 'JA3':
-            if check_useless_domain_name(packet[TLS]):
+            if check_useless_domain_name(packet):
                 continue
         
         
