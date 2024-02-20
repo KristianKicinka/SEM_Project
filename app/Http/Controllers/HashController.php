@@ -224,18 +224,21 @@ class HashController extends Controller {
     public function getProcessInfo(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
-            'frontend_id' => 'required|string',
+            'identifiers' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $job_id = $request->input('frontend_id');
-        
-        $info = ProcessModel::select('status','progress','message')->where('job_id','=',$job_id)->first();
+        $response = [];
 
-        return response()->json($info, 200);
+        foreach(json_decode($request->input('identifiers')) as $id){
+            $response[$id] = ProcessModel::select('status','progress','message')
+                ->where('job_id','=',$id)->first();
+        }
+
+        return response()->json($response, 200);
     }
 
     /**
@@ -245,45 +248,52 @@ class HashController extends Controller {
     public function getProcessResults(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
-            'frontend_id' => 'required|string',
+            'identifiers' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $frontend_id = $request->input('frontend_id');
         $JA3_hashes = $JA3S_hashes = $FlowMon_hashes = [];
+        $response = [];
 
-        $data = DB::table('processes')
+        foreach(json_decode($request->input('identifiers')) as $id){
+
+            $data = DB::table('processes')
             ->select(
                 'applications.name as app_name','applications.package_name as package_name',
                 'applications.version as app_version','hashes.hash as hash','hashes.hash_type as hash_type'
             )
             ->join('hashes','processes.id','=','hashes.process_id')
             ->join('applications','applications.id','=','hashes.app_id')
-            ->where('processes.job_id','=',$frontend_id)
+            ->where('processes.job_id','=',$id)
             ->get();
 
-        foreach ($data as $item){
-            if ($item->hash_type == 'JA3')
-                $JA3_hashes[] = $item->hash;
-            else if ($item->hash_type == 'JA3S')
-                $JA3S_hashes[] = $item->hash;
-            else if ($item->hash_type == 'FlowMon')
-                $FlowMon_hashes[] = $item->hash;
+            if(count($data) == 0){
+                return response()->json(['errors' => 'No hashes!'], 400);
+            }
+
+            foreach ($data as $item){
+                if ($item->hash_type == 'JA3')
+                    $JA3_hashes[] = $item->hash;
+                else if ($item->hash_type == 'JA3S')
+                    $JA3S_hashes[] = $item->hash;
+                else if ($item->hash_type == 'FlowMon')
+                    $FlowMon_hashes[] = $item->hash;
+            }
+
+            $response[$id] = [
+                'app_name' => $data[0]->app_name,
+                'package_name' => $data[0]->package_name,
+                'app_version' => $data[0]->app_version,
+                'JA3_hashes' => $JA3_hashes,
+                'JA3S_hashes' => $JA3S_hashes,
+                'FlowMon_hashes' => $FlowMon_hashes,
+            ];
         }
 
-        $results = [
-            'app_name' => $data[0]->app_name,
-            'package_name' => $data[0]->package_name,
-            'app_version' => $data[0]->app_version,
-            'JA3_hashes' => $JA3_hashes,
-            'JA3S_hashes' => $JA3S_hashes,
-            'FlowMon_hashes' => $FlowMon_hashes,
-        ];
-
-        return response()->json($results, 200);
+        return response()->json($response, 200);
     }
 
     /**

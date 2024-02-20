@@ -74,7 +74,7 @@ class CreateHash {
         $pcap_process->start();
 
         $this->runAppOnEmulator($package_name);
-        sleep(10);
+        sleep(20);
         $this->closeAppOnEmulator($package_name);
 
         $pcap_process->stop();
@@ -349,11 +349,12 @@ class CreateHash {
         foreach($data['hashes'] as $hash_type => $hashes){
             foreach($hashes as $hash){
 
+                /*
                 $identifier = [
                     'app_id' => $application->id,
                     'hash' => $hash,
                     'hash_type' => $hash_type,
-                ];
+                ];*/
 
                 $new_record = [
                     'app_id' => $application->id,
@@ -362,7 +363,10 @@ class CreateHash {
                     'hash_type' => $hash_type,
                 ];
 
-                Hash::firstOrCreate($identifier, $new_record);
+                $db_hash = Hash::create($new_record);
+                $db_hash->save();
+
+                //Hash::firstOrCreate($identifier, $new_record);
             }
         }
     }

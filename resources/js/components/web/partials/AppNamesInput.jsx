@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+import { toast } from 'react-toastify';
 
 const AppNamesInput = ({
     handleShowLoading, handleCloseLoading, handleShowResults,
@@ -10,6 +11,7 @@ const AppNamesInput = ({
 }) => {
 
     const [file, setFile] = useState(null);
+    const [pollingInterval, setPollingInterval] = useState(null);
     const [identifiers, setIdentifiers] = useState(null);
 
     const handleChange = file => {
@@ -39,21 +41,46 @@ const AppNamesInput = ({
         setPollingInterval(null);
 
         try {
-            let results = await axios.post('/api/get-process-results', {'frontend_id': process_id});
+            const data = new FormData();
+            data.append("identifiers", JSON.stringify(identifiers));
+
+            let results = await axios.post('/api/get-process-results', data);
             console.log(results.data);
             setResults(results.data);
+
             handleCloseLoading();
             handleShowResults();
         } catch (error) {
+            handleCloseLoading();
             toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
     }
 
     const pollStatus = async () => {
-        let info = await getProcessInfo(process_id);
-        console.log(info.status);
+        let info = await getProcessInfo(identifiers);
+
+        Object.keys(identifiers).map((key) => {
+            let id = identifiers[key];
+            let process = info[id];
+
+            if(process.status === 'finished')
+                handleResults();
+
+            if(process.status === 'failed'){
+                handleCloseLoading();
+
+                clearInterval(pollingInterval);
+                setPollingInterval(null);
+
+                toast.error('Hash generation error!');
+                console.log(`ERROR: ${error}`);
+            }
+        });
+        
+        return;
         setLoadingData(info);
+        let process = info[process_id];
 
         if(info.status === 'finished')
             handleResults();
@@ -62,14 +89,18 @@ const AppNamesInput = ({
             handleCloseLoading();
             clearInterval(pollingInterval);
             setPollingInterval(null);
+
             toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
     }
 
-    const getProcessInfo = async (processID) => {
+    const getProcessInfo = async (identifiers) => {
         try {
-            let results = await axios.post('/api/get-process-info', {'frontend_id': processID});
+            const data = new FormData();
+            data.append("identifiers", JSON.stringify([identifiers]));
+
+            let results = await axios.post('/api/get-process-info', data);
             console.log(results.data);
             return results.data;
         } catch (error) {

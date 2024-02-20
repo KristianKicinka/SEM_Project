@@ -5,7 +5,6 @@ import { Modal, Button } from "react-bootstrap";
 import CopyClipboard from "./CopyClipboard";
 
 const Results = ({ show, handleClose, results, hashTypes }) => {
-    console.log(results.hashes);
 
     const hashItems = (hashType, hashes) => {
         return (
@@ -24,6 +23,27 @@ const Results = ({ show, handleClose, results, hashTypes }) => {
         );
     }
 
+    const resultItem = (key, data) => {
+        return (
+            <li key={key} >
+                <ul className="list-group">
+                    <li className="list-group-item">
+                        <b>App name : </b> {data.app_name}
+                    </li>
+                    <li className="list-group-item">
+                        <b>Package name : </b> {data.package_name}
+                    </li>
+                    <li className="list-group-item">
+                        <b>Version name : </b> {data.app_version}
+                    </li>
+                    {data.JA3_hashes?.length !== 0 && hashItems('JA3', data.JA3_hashes)}
+                    {data.JA3S_hashes?.length !== 0 && hashItems('JA3S', data.JA3S_hashes)}
+                    {data.FlowMon_hashes?.length !== 0 && hashItems('FlowMon', data.FlowMon_hashes)}
+                </ul>
+            </li>
+        );
+    }
+
     return (
         <div className="Results">
             <Modal show={show} onHide={handleClose}>
@@ -31,19 +51,8 @@ const Results = ({ show, handleClose, results, hashTypes }) => {
                     <Modal.Title>Results</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <ul className="list-group">
-                        <li className="list-group-item">
-                            <b>App name : </b> {results.app_name}
-                        </li>
-                        <li className="list-group-item">
-                            <b>Package name : </b> {results.package_name}
-                        </li>
-                        <li className="list-group-item">
-                            <b>Version name : </b> {results.app_version}
-                        </li>
-                        {results.JA3_hashes?.length !== 0 && hashItems('JA3', results.JA3_hashes)}
-                        {results.JA3S_hashes?.length !== 0 && hashItems('JA3S', results.JA3S_hashes)}
-                        {results.FlowMon_hashes?.length !== 0 && hashItems('FlowMon', results.FlowMon_hashes)}
+                    <ul className="list-unstyled">
+                        {Object.keys(results).map((key, index) => resultItem(index, results[key]))}
                     </ul>
                 </Modal.Body>
             </Modal>

@@ -3,6 +3,11 @@ import sys
 import pyshark as pyshark
 from scapy.all import *
 from scapy.layers.tls.record import TLS
+from scapy.layers.tls.extensions import TLS_Ext_SupportedGroups
+from scapy.layers.tls.extensions import TLS_Ext_SupportedPointFormat
+from scapy.layers.tls.handshake import TLSClientHello
+from scapy.layers.tls.handshake import TLSServerHello
+
 import hashlib
 import os
 
@@ -35,33 +40,85 @@ def check_useless_domain_name(packet):
 def remove_reserved_grease_values(array):
     return [item for item in array if item not in RESERVED_GREASE_VALUES]
 
-def process_ciphers(message):
-    if(hash_type == 'JA3'):
-        return remove_reserved_grease_values(message.ciphers)
-    elif(hash_type == 'JA3S'):
-        return message.cipher
+def process_JA3_ciphers(packet):
+    ciphers = []
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLSClientHello):  # Check if TLS layer contains Client Hello
+            ciphers_field = tls_layers[TLSClientHello].ciphers
+            if ciphers_field:
+                for cipher in ciphers_field:
+                    ciphers.append(cipher)
+    ciphers = remove_reserved_grease_values(ciphers)
+    return ciphers
 
 
-def process_version(message):
-    return message.version
 
 
-def process_extensions(message):
-    ext_types = []
+def get_client_hello_version(packet):
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLSClientHello):  # Client Hello
+            version = tls_layers[TLSClientHello].version
+            return version
+
+    return None
+
+def get_server_hello_version(packet):
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLSServerHello):  # Client Hello
+            version = tls_layers[TLSServerHello].version
+            return version
+
+    return None
+
+
+def get_client_hello_extensions(packet):
+    extensions = []
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLSClientHello):  # Check if TLS layer contains Client Hello
+            extensions_field = tls_layers[TLSClientHello].ext
+            if extensions_field:
+                for ext in extensions_field:
+                    extensions.append(ext.type)
+    return extensions
+
+def get_server_hello_extensions(packet):
+    extensions = []
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLSServerHello):  # Check if TLS layer contains Client Hello
+            extensions_field = tls_layers[TLSServerHello].ext
+            if extensions_field:
+                for ext in extensions_field:
+                    extensions.append(ext.type)
+    return extensions
+
+# Get supported groups
+def get_supported_groups(packet):
     supported_groups = []
-    point_format = []
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLS_Ext_SupportedGroups):  # Check if TLS layer contains Supported Groups extension
+            supported_groups_field = tls_layers[TLS_Ext_SupportedGroups].groups
+            if supported_groups_field:
+                for group in supported_groups_field:
+                    supported_groups.append(group)
+    return supported_groups
 
-    for extension in message.ext:
-        ext_types.append(extension.type)
-        if extension.type == 10:
-            supported_groups = extension.groups
-        if extension.type == 11:
-            point_format = extension.ecpl
-
-    ext_types = remove_reserved_grease_values(ext_types)
-    supported_groups = remove_reserved_grease_values(supported_groups)
-
-    return ext_types, supported_groups, point_format
+# Get EC point formats
+def get_ec_point_formats(packet):
+    ec_point_formats = []
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLS_Ext_SupportedPointFormat):  # Check if TLS layer contains EC Point Formats extension
+            ec_point_formats_field = tls_layers[TLS_Ext_SupportedPointFormat].ecpl
+            if ec_point_formats_field:
+                for format_code in ec_point_formats_field:
+                    ec_point_formats.append(format_code)
+    return ec_point_formats
 
 
 def add_to_string(full_string, items):
@@ -107,19 +164,43 @@ if __name__ == '__main__':
             if check_useless_domain_name(packet[TLS]):
                 continue
         
-        version = process_version(packet[TLS].msg[0])
-        ciphers = process_ciphers(packet[TLS].msg[0])
-        extensions, supported_groups, point_format = process_extensions(packet[TLS].msg[0])
+        
+        #extensions, supported_groups, point_format = process_extensions(packet[TLS].msg[0])
+
+        ciphers = process_JA3_ciphers(packet)
+        supported_groups = get_supported_groups(packet)
+        point_format = get_ec_point_formats(packet)
+
 
         if(hash_type == "JA3"):
+            version = get_client_hello_version(packet)
+            extensions = get_client_hello_extensions(packet)
+
             full_string = create_JA3_string(version, ciphers, extensions, supported_groups, point_format)
             final_hash = create_hash(full_string)
         elif(hash_type == "JA3S"):
+            version = get_server_hello_version(packet)
+            extensions = get_server_hello_extensions(packet)
+
             full_string = create_JA3S_string(version, ciphers, extensions)
             final_hash = create_hash(full_string)
 
         hash_strings.append(full_string)
         hashes.append(final_hash)
+
+        #print("################")
+        #print(f"IP SRC : {packet[IP].src}")
+        #print(f"IP DST : {packet[IP].dst}")
+        #print(f"TLS Version : {version}")
+        #print(f"TLS Ciphers : {ciphers}")
+        #print(f"TLS Extensions : {extensions}")
+        #print(f"TLS Supported groups : {supported_groups}")
+        #print(f"TLS EC Point format : {point_format}")
+        #print(f"JA3 Full string : {full_string}")
+        #print(f"JA3 Hash : {final_hash}")
+        #print("################")
+
+        #exit(1)
 
         packet_count += 1
 
