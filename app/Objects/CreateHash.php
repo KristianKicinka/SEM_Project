@@ -70,7 +70,9 @@ class CreateHash {
 
         $this->addFileToFiles($pcap_file_name, 'PCAP', $pcap_out_path);
 
-        $pcap_process = new Process(['tshark','-i','en0','-F','pcap','-w',$pcap_out_path]);
+        $pcap_process = new Process(
+            ['tshark', '-i', env("NETWORK_INTERFACE", "en0"), '-F', 'pcap', '-w', $pcap_out_path]
+        );
         $pcap_process->start();
 
         $this->runAppOnEmulator($package_name);
@@ -105,7 +107,7 @@ class CreateHash {
      */
     private function createJA3hash($pcap_file_path, $pcap_file_name) : array {
         $JA3_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3');
-        $process = new Process(['python3', base_path(HASH_SCRIPT_PATH), $JA3_pcap_path, 'JA3']);
+        $process = new Process([env("PYTHON_COMMAND", "python3"), base_path(HASH_SCRIPT_PATH), $JA3_pcap_path, 'JA3']);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -126,7 +128,7 @@ class CreateHash {
      */
     private function createJA3Shash($pcap_file_path, $pcap_file_name) : array {
         $JA3S_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3S');
-        $process = new Process(['python3', base_path(HASH_SCRIPT_PATH), $JA3S_pcap_path, 'JA3S']);
+        $process = new Process([env("PYTHON_COMMAND", "python3"), base_path(HASH_SCRIPT_PATH), $JA3S_pcap_path, 'JA3S']);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -206,6 +208,10 @@ class CreateHash {
 
         $command = 'adb shell monkey -p '.trim($package_name).' -c android.intent.category.LAUNCHER 1';
 
+        if (env("ENVIRONMENT", "local") == "server"){
+            $command = 'docker exec -it '.env("EMULATOR_NAME", null).' '.$command;
+        }
+
         Log::channel('devlog')
         ->info('Run app command: {command}', ['command' => $command]);
 
@@ -225,6 +231,10 @@ class CreateHash {
 
         $command = 'adb shell pm clear '.$package_name;
 
+        if (env("ENVIRONMENT", "local") == "server"){
+            $command = 'docker exec -it '.env("EMULATOR_NAME", null).' '.$command;
+        }
+
         $process = Process::fromShellCommandline($command);
         $process->run();
 
@@ -238,7 +248,14 @@ class CreateHash {
      * @return void
      */
     protected function installAppOnEmulator($apk_file_path):void {
-        $process = new Process(['adb', 'install', $apk_file_path]);
+
+        $command = 'adb install '.$apk_file_path;
+
+        if (env("ENVIRONMENT", "local") == "server"){
+            $command = 'docker exec -it '.env("EMULATOR_NAME", null).' '.$command;
+        }
+
+        $process = Process::fromShellCommandline($command);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -251,7 +268,14 @@ class CreateHash {
      * @return void
      */
     protected function uninstallAppOnEmulator($package_name) : void {
-        $process = new Process(['adb', 'uninstall', $package_name]);
+
+        $command = 'adb uninstall '.$package_name;
+
+        if (env("ENVIRONMENT", "local") == "server"){
+            $command = 'docker exec -it '.env("EMULATOR_NAME", null).' '.$command;
+        }
+
+        $process = Process::fromShellCommandline($command);
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -266,6 +290,10 @@ class CreateHash {
     protected function getAppPackageName($apk_file_path) : string {
 
         $command = "aapt dump badging ".trim($apk_file_path)." | grep \"package: name\" | awk -F\"'\" '{print $2}'";
+
+        if (env("ENVIRONMENT", "local") == "server"){
+            $command = 'docker exec -it '.env("EMULATOR_NAME", null).' '.$command;
+        }
 
         Log::channel('devlog')
             ->info('aapt command: {command}', ['package_name' => $command]);
@@ -291,6 +319,10 @@ class CreateHash {
 
         $command = 'aapt dump badging '.trim($apk_file_path).' | grep package | awk \'{print $4}\' | sed s/versionName=//g | sed s/\\\'//g';
 
+        if (env("ENVIRONMENT", "local") == "server"){
+            $command = 'docker exec -it '.env("EMULATOR_NAME", null).' '.$command;
+        }
+
         $process = Process::fromShellCommandline($command);
         $process->run();
 
@@ -306,7 +338,12 @@ class CreateHash {
      * @return string
      */
     protected function getAppName($apk_file_path) : string {
+
         $command = 'aapt dump badging '.trim($apk_file_path).' | sed -n "s/^application-label:\'\(.*\)\'/\1/p"';
+
+        if (env("ENVIRONMENT", "local") == "server"){
+            $command = 'docker exec -it '.env("EMULATOR_NAME", null).' '.$command;
+        }
 
         $process = Process::fromShellCommandline($command);
         $process->run();

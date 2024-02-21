@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('sni')->nullable();
             $table->timestamps();
             $table->foreign('app_id')->references('id')->on('applications');
-            $table->foreign('process_id')->references('id')->on('processes'); 
+            $table->foreign('process_id')->references('id')->on('processes');
         });
     }
 

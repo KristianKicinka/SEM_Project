@@ -46,7 +46,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
         $hashes = [];
 
         try {
-            // Log::channel('devlog')->info('Hash creation process for package_name: {name} started!', ['name' => $this->package_name]);
+            Log::channel('devlog')->info('Hash creation process for package_name: {name} started!', ['name' => $this->package_name]);
 
             $this->hash_process_data->setProcessing();
 
@@ -56,6 +56,8 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
             $apk_file_name = trim($this->downloadApkFile($this->package_name));
             $pcap_file_name = str_replace('.apk', '.pcap', $apk_file_name);
             $apk_path = trim(storage_path(APK_DOWNLOADED_DIR).$apk_file_name);
+
+            Log::channel('devlog')->info('APK path: {path} ', ['path' => $apk_path]);
 
             $this->addFileToFiles($apk_file_name, 'APK', $apk_path);
 
