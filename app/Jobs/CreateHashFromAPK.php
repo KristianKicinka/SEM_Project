@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 use App\Objects\CreateHash;
 use Exception;
@@ -75,6 +76,8 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
                 'version' => $version_name,
                 'hashes' => $hashes,
             ];
+
+            Log::channel('devlog')->info('DB_DATA : {name}', ['name' => $db_data]);
 
             // Save hashes to database
             $this->hash_process_data->nextProcessPart();

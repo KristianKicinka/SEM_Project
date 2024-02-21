@@ -12,6 +12,7 @@ from scapy.layers.tls.handshake import TLSServerHello
 
 import hashlib
 import os
+import json
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -184,6 +185,8 @@ if __name__ == '__main__':
         supported_groups = get_supported_groups(packet)
         point_format = get_ec_point_formats(packet)
 
+        sni = get_sni(packet)
+
         #print(f"SNI : {get_sni_client_hello(packet)}")
 
         if(hash_type == "JA3"):
@@ -199,8 +202,10 @@ if __name__ == '__main__':
             full_string = create_JA3S_string(version, ciphers, extensions)
             final_hash = create_hash(full_string)
 
-        hash_strings.append(full_string)
-        hashes.append(final_hash)
+        new_hash = { 'hash' : final_hash, 'sni' : sni }
+
+        #hash_strings.append(full_string)
+        hashes.append(new_hash)
 
         #packet.show()
 
@@ -217,7 +222,14 @@ if __name__ == '__main__':
         #print("################")
 
         packet_count += 1
+    
+    hash_dict = {}
 
-    final_hash_list = list(dict.fromkeys(hashes))
+    for hash_item in hashes:
+        hash_value = hash_item["hash"]
+        if hash_value not in hash_dict:
+            hash_dict[hash_value] = hash_item
 
-    print(final_hash_list)
+    final_hash_list = list(hash_dict.values())
+
+    print(json.dumps(final_hash_list))

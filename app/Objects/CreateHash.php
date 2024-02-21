@@ -112,7 +112,11 @@ class CreateHash {
             throw new HashGeneratorFailException($process->getErrorOutput());
         }
 
-        return $this->parseAnalysisOutput($process->getOutput());
+        $ja3_hashes = json_decode($process->getOutput(), true);
+
+        Log::channel('devlog')->info('JA3 hashes : {hashes}', ['hashes' => $ja3_hashes]);
+
+        return json_decode($process->getOutput());
     }
 
      /**
@@ -129,7 +133,7 @@ class CreateHash {
             throw new HashGeneratorFailException($process->getErrorOutput());
         }
 
-        return $this->parseAnalysisOutput($process->getOutput());
+        return json_decode($process->getOutput());
     }
 
     
@@ -349,6 +353,8 @@ class CreateHash {
         foreach($data['hashes'] as $hash_type => $hashes){
             foreach($hashes as $hash){
 
+                Log::channel('devlog')->info('Hashes : {name}', ['name' => $hash]);
+
                 /*
                 $identifier = [
                     'app_id' => $application->id,
@@ -359,8 +365,9 @@ class CreateHash {
                 $new_record = [
                     'app_id' => $application->id,
                     'process_id' => $process_id,
-                    'hash' => $hash,
+                    'hash' => $hash->hash,
                     'hash_type' => $hash_type,
+                    'sni' => $hash->sni
                 ];
 
                 $db_hash = Hash::create($new_record);

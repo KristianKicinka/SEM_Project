@@ -19,5 +19,6 @@ class Hash extends Model {
         'process_id',
         'hash',
         'hash_type',
+        'sni',
     ];
 }
