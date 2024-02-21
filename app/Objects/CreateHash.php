@@ -255,6 +255,8 @@ class CreateHash {
             $command = 'docker exec -it '.env("EMULATOR_NAME", null).' '.$command;
         }
 
+        Log::channel('devlog')->info('ADB INSTALL command {command}', ['command' => $command]);
+
         $process = Process::fromShellCommandline($command);
         $process->run();
 
