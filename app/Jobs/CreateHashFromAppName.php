@@ -16,7 +16,7 @@ use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
 
     const PACKAGE_NAME_INPUT_TYPE = 'APP_NAME';
-    const APK_DOWNLOADED_DIR = 'app/public/uploads/apk_downloaded/';
+    const APK_DOWNLOADED_DIR = '/mnt/storage/app/public/uploads/apk_downloaded/';
 
 class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 

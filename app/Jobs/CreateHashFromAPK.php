@@ -13,7 +13,7 @@ use App\Objects\CreateHash;
 use Exception;
 
 const APK_INPUT_TYPE = "APK_FILE";
-const APK_INSERTED_DIR = 'app/public/uploads/apk_inserted/';
+const APK_INSERTED_DIR = '/mnt/storage/app/public/uploads/apk_inserted/';
 
 class CreateHashFromAPK extends CreateHash implements ShouldQueue {
 
@@ -46,7 +46,7 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
             $this->hash_process_data->nextProcessPart();
 
             $pcap_file_name = str_replace('.apk', '.pcap', $this->apk_file_name);
-            $apk_path = storage_path(APK_INSERTED_DIR).$this->apk_file_name;
+            $apk_path = APK_INSERTED_DIR.$this->apk_file_name;
 
             $this->addFileToFiles($this->apk_file_name, 'APK', $apk_path);
 

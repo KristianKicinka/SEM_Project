@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ApiRequestController;
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\TestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,4 +77,20 @@ Route::group(['middleware' => ['external']], function () {
     Route::post('/create-hash-from-pcap', [ApiRequestController::class, 'createHashFromPcap']);
     Route::post('/analyze-flowmon-file', [ApiRequestController::class, 'analyzeFlowMonFile']);
     Route::post('/analyze-pcap-file', [ApiRequestController::class, 'analyzePcapFile']);
+
+    
 });
+
+/*
+Route::get("/install", [TestController::class, 'install']);
+Route::get("/uninstall", [TestController::class, 'uninstall']);
+Route::get("/run", [TestController::class, 'run']);
+Route::get("/close", [TestController::class, 'close']);
+
+Route::get("/get_package_name", [TestController::class, 'getAppPackageName']);
+Route::get("/get_app_name", [TestController::class, 'getAppName']);
+Route::get("/get_app_version", [TestController::class, 'getAppVersionName']);
+Route::get("/python", [TestController::class, 'python']);
+*/
+
+
