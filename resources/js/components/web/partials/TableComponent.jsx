@@ -101,7 +101,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                     <div className="col"></div>
                     <div className="col"></div>
                     <div className="col">
-                        {data && <PaginationControl page={currentPage} between={4} total={nPages} limit={20} changePage={(page) => {setCurrentPage(page)}} ellipsis={1} /> }
+                        {data && <PaginationControl page={currentPage} between={4} total={nPages} limit={1} changePage={(page) => {setCurrentPage(page)}} ellipsis={1} /> }
                     </div>
                 </div>
             </div>

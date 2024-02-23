@@ -42,6 +42,7 @@ def process_JA3_ciphers(packet):
             if ciphers_field:
                 for cipher in ciphers_field:
                     ciphers.append(cipher)
+
     ciphers = remove_reserved_grease_values(ciphers)
     return ciphers
 
@@ -76,6 +77,8 @@ def get_client_hello_extensions(packet):
             if extensions_field:
                 for ext in extensions_field:
                     extensions.append(ext.type)
+
+    extensions = remove_reserved_grease_values(extensions)
     return extensions
 
 def get_server_hello_extensions(packet):
@@ -87,6 +90,8 @@ def get_server_hello_extensions(packet):
             if extensions_field:
                 for ext in extensions_field:
                     extensions.append(ext.type)
+
+    extensions = remove_reserved_grease_values(extensions)
     return extensions
 
 # Get supported groups
@@ -99,6 +104,8 @@ def get_supported_groups(packet):
             if supported_groups_field:
                 for group in supported_groups_field:
                     supported_groups.append(group)
+
+    supported_groups = remove_reserved_grease_values(supported_groups)                
     return supported_groups
 
 # Get EC point formats
@@ -111,6 +118,7 @@ def get_ec_point_formats(packet):
             if ec_point_formats_field:
                 for format_code in ec_point_formats_field:
                     ec_point_formats.append(format_code)
+                    
     return ec_point_formats
 
 # Get SNI
@@ -209,17 +217,17 @@ if __name__ == '__main__':
 
         #packet.show()
 
-        #print("################")
-        #print(f"IP SRC : {packet[IP].src}")
-        #print(f"IP DST : {packet[IP].dst}")
-        #print(f"TLS Version : {version}")
-        #print(f"TLS Ciphers : {ciphers}")
-        #print(f"TLS Extensions : {extensions}")
-        #print(f"TLS Supported groups : {supported_groups}")
-        #print(f"TLS EC Point format : {point_format}")
-        #print(f"JA3 Full string : {full_string}")
-        #print(f"JA3 Hash : {final_hash}")
-        #print("################")
+        print("################")
+        print(f"IP SRC : {packet[IP].src}")
+        print(f"IP DST : {packet[IP].dst}")
+        print(f"TLS Version : {version}")
+        print(f"TLS Ciphers : {ciphers}")
+        print(f"TLS Extensions : {extensions}")
+        print(f"TLS Supported groups : {supported_groups}")
+        print(f"TLS EC Point format : {point_format}")
+        print(f"JA3 Full string : {full_string}")
+        print(f"JA3 Hash : {final_hash}")
+        print("################")
 
         packet_count += 1
     
