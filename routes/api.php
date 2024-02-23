@@ -91,5 +91,6 @@ Route::get("/get_package_name", [TestController::class, 'getAppPackageName']);
 Route::get("/get_app_name", [TestController::class, 'getAppName']);
 Route::get("/get_app_version", [TestController::class, 'getAppVersionName']);
 Route::get("/python", [TestController::class, 'python']);
-
+Route::get("/download", [TestController::class, 'download']);
+Route::get("/get_installed_apps", [TestController::class, 'getInstlledApps']);
 

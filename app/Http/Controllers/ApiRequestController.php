@@ -131,6 +131,7 @@ class ApiRequestController extends Controller {
             'applications.version',
             'applications.is_malware'
             )
+           ->distinct()
            ->join('hashes', 'hashes.app_id', '=', 'applications.id')
            ->where('hashes.hash', '=', $hash)
            ->get();

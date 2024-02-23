@@ -15,6 +15,8 @@ use Illuminate\Queue\SerializesModels;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
 
+use function PHPUnit\Framework\throwException;
+
     const PACKAGE_NAME_INPUT_TYPE = 'APP_NAME';
     const APK_DOWNLOADED_DIR = '/mnt/storage/app/public/uploads/apk_downloaded/';
 
@@ -50,12 +52,18 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 
             $this->hash_process_data->setProcessing();
 
+            Log::channel('devlog')->info('After processing');
+
             // Download APK file
             $this->hash_process_data->nextProcessPart();
 
             $apk_file_name = trim($this->downloadApkFile($this->package_name));
+
+            Log::channel('devlog')->info('After download file : {file}', ['file' => $apk_file_name]);
+
             $pcap_file_name = str_replace('.apk', '.pcap', $apk_file_name);
-            $apk_path = trim(storage_path(APK_DOWNLOADED_DIR).$apk_file_name);
+
+            $apk_path = APK_DOWNLOADED_DIR.$apk_file_name;
 
             Log::channel('devlog')->info('APK path: {path} ', ['path' => $apk_path]);
 
@@ -97,6 +105,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
     
         } catch(Exception $e){
             $this->hash_process_data->setFailed();
+            throwException($e);
         }
     }
 
@@ -109,14 +118,17 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
         // old "https://d.apkpure.com/b/APK/".$package_name."?version=latest";
         $url = "https://d.cdnpure.com/b/APK/".$package_name."?version=latest";
 
-        $file_prefix = date('his');
+        $file_name = date('his')."_".$package_name.".apk";
+        $download_dir = storage_path("app/public/uploads/apk_downloaded");
 
-        $process = new Process(['python3', './scripts/download_apk_file.py', $url, $file_prefix]);
+        $command = "aria2c -d ".$download_dir." -o ".$file_name." ".$url;
+
+        $process = Process::fromShellCommandline($command);
         $process->run();
 
         if (!$process->isSuccessful())
             throw new ApkDownloadException($process->getErrorOutput());
 
-        return $process->getOutput();
+        return $file_name;
     }
 }
