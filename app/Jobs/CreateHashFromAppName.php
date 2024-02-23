@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Exceptions\ApkDownloadException;
+use App\Exceptions\HashGenerationProcessFailed;
 use App\Objects\CreateHash;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -14,8 +15,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
-
-use function PHPUnit\Framework\throwException;
 
     const PACKAGE_NAME_INPUT_TYPE = 'APP_NAME';
     const APK_DOWNLOADED_DIR = '/mnt/storage/app/public/uploads/apk_downloaded/';
@@ -77,14 +76,17 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 
             // App installation
             $this->hash_process_data->nextProcessPart();
-            $this->installAppOnEmulator($apk_path);
+
+            if (!in_array($package_name, $this->getPreInstlledApps()))
+                $this->installAppOnEmulator($apk_path);
 
             // Network analysis
             $this->hash_process_data->nextProcessPart();
             $pcap_file_path = trim($this->createPcapFile($pcap_file_name, $apk_path));
 
             // Clear android emulator
-            $this->uninstallAppOnEmulator($package_name);
+            if (!in_array($package_name, $this->getPreInstlledApps()))
+                $this->uninstallAppOnEmulator($package_name);
 
             // Create hashes
             $this->hash_process_data->nextProcessPart();
@@ -105,7 +107,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
     
         } catch(Exception $e){
             $this->hash_process_data->setFailed();
-            throwException($e);
+            throw new HashGenerationProcessFailed($e);
         }
     }
 

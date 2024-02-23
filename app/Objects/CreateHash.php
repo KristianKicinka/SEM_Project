@@ -351,6 +351,28 @@ class CreateHash {
         return $process->getOutput();
     }
 
+    protected function getPreInstlledApps(){
+
+        $command = "docker exec ".env("EMULATOR_NAME", null)." adb shell cmd package list packages";
+
+        $process = Process::fromShellCommandline($command);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            return "ERR: ".$process->getErrorOutput();
+        }
+
+        $packages = explode("\n", $process->getOutput());
+
+        $response = [];
+
+        foreach($packages as $package){
+            $response[] = str_replace("package:", "", $package);
+        }
+
+        return $response;
+    }
+
     /**
      * @param $results
      * @return void

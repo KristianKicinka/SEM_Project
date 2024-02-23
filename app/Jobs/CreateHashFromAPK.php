@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Exceptions\HashGenerationProcessFailed;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -57,15 +58,18 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
 
             // App installation
             $this->hash_process_data->nextProcessPart();
-            $this->installAppOnEmulator($apk_path);
+
+            if (!in_array($package_name, $this->getPreInstlledApps()))
+                $this->installAppOnEmulator($apk_path);
 
             // Network analysis
             $this->hash_process_data->nextProcessPart();
             $pcap_file_path = $this->createPcapFile($pcap_file_name, $apk_path);
 
             // Clear android emulator
-            $this->uninstallAppOnEmulator($package_name);
-
+            if (!in_array($package_name, $this->getPreInstlledApps()))
+                $this->uninstallAppOnEmulator($package_name);
+            
             // Create hashes
             $this->hash_process_data->nextProcessPart();
             $hashes = $this->createHashes($this->hash_types, $pcap_file_name, $pcap_file_path);
@@ -87,6 +91,7 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
 
         } catch(Exception $e){
             $this->hash_process_data->setFailed();
+            throw new HashGenerationProcessFailed($e);
         }
     }
 }
