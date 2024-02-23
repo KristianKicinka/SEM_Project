@@ -12,6 +12,8 @@ import Pagination from "./partials/Pagination";
 import CopyClipboard from "./partials/CopyClipboard";
 import http from "../../http";
 
+import { PaginationControl } from 'react-bootstrap-pagination-control';
+
 const DatabasePage = () => {
 
     const [data, setData] = useState([]);
@@ -123,7 +125,7 @@ const DatabasePage = () => {
                                 <div className="col"></div>
                                 <div className="col"></div>
                                 <div className="col">
-                                {data && <Pagination nPages = { nPages } currentPage = { currentPage } setCurrentPage = { setCurrentPage } /> }
+                                {data && <PaginationControl page={currentPage} between={4} total={nPages} limit={1} changePage={(page) => {setCurrentPage(page)}} ellipsis={1} /> }
                                 </div>
                             </div>
                         </div>

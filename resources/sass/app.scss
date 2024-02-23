@@ -62,12 +62,45 @@ $search_color:#FF8809;
 .pagination > .active > a
 {
     color: white;
-    background-color: $search_color !Important;
-    border: solid 1px $search_color !Important;
+    background-color: $search_color !important;
+    border: solid 1px $search_color !important;
 }
 
 .pagination > .active > a:hover
 {
-    background-color: $search_color !Important;
+    background-color: $search_color !important;
     border: solid 1px $search_color;
 }
+
+.paginationItemStyle {
+	margin-left: 5px;
+	.page-link {
+		color: #fff
+	}
+	&.page-item {
+		&.active {
+			button {
+				background-color: $search_color !important;
+				border-color: $search_color !important;
+			}
+		}
+	}
+}
+
+.paginationLinkStyle {
+	background-color: $search_color !important;
+	border-radius: 5px;
+	&:hover {
+		background-color: $search_color !important;
+	}
+	&:active {
+		background-color: $search_color !important;
+	}
+}
+
+.page-item.active .page-link {
+    z-index: 3;
+    color: #fff !important;
+    background-color: $search_color !important;
+    border-color: #FF8809;
+  }
