@@ -78,7 +78,7 @@ class CreateHash {
         $process->start();
 
         $this->runAppOnEmulator($package_name);
-        sleep(20);
+        sleep(env("NETWORK_ANALYSIS_TIME", 30));
         $this->closeAppOnEmulator($package_name);
 
         $process->stop();
@@ -186,7 +186,7 @@ class CreateHash {
         $filter = $this->createFilter($hash_type);
 
         $command = 'tshark -r '.trim($pcap_file_path).' -Y "'.$filter.'" -w '.$new_pcap_file_path;
-        
+
         $process = Process::fromShellCommandline($command);
         $process->run();
 

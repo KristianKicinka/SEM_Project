@@ -12,7 +12,7 @@ class TestController extends Controller
 
     public function install(){
 
-        $apk_file_path = "/mnt/storage/app/public/uploads/apk_inserted/125920_Alza_10.15.1_Apkpure.apk";
+        $apk_file_path = "/mnt/storage/app/public/uploads/apk_inserted/025317_facebook.apk";
         $command = 'adb install '.$apk_file_path;
 
         if (env("ENVIRONMENT", "local") == "server"){

@@ -81,7 +81,7 @@ Route::group(['middleware' => ['external']], function () {
     
 });
 
-/*
+
 Route::get("/install", [TestController::class, 'install']);
 Route::get("/uninstall", [TestController::class, 'uninstall']);
 Route::get("/run", [TestController::class, 'run']);
@@ -91,6 +91,5 @@ Route::get("/get_package_name", [TestController::class, 'getAppPackageName']);
 Route::get("/get_app_name", [TestController::class, 'getAppName']);
 Route::get("/get_app_version", [TestController::class, 'getAppVersionName']);
 Route::get("/python", [TestController::class, 'python']);
-*/
 
 
