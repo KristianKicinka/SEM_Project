@@ -95,7 +95,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
             $results = [
                 'app_name' => $application_name,
                 'package_name' => $package_name,
-                'app_version' => $version_name,
+                'version' => $version_name,
                 'hashes' => $hashes,
             ];
 
