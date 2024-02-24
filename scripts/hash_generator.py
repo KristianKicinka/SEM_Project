@@ -46,8 +46,15 @@ def process_JA3_ciphers(packet):
     ciphers = remove_reserved_grease_values(ciphers)
     return ciphers
 
-
-
+def process_JA3S_ciphers(packet):
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLSServerHello):  # Check if TLS layer contains Client Hello
+            ciphers_field = tls_layers[TLSServerHello].cipher
+            if ciphers_field not in RESERVED_GREASE_VALUES:
+                return ciphers_field
+                    
+    return None
 
 def get_client_hello_version(packet):
     if packet.haslayer(TLS):
@@ -185,35 +192,41 @@ if __name__ == '__main__':
         if hash_type == 'JA3':
             if check_useless_domain_name(packet):
                 continue
-        
-        
-        #extensions, supported_groups, point_format = process_extensions(packet[TLS].msg[0])
 
-        ciphers = process_JA3_ciphers(packet)
         supported_groups = get_supported_groups(packet)
         point_format = get_ec_point_formats(packet)
-
         sni = get_sni(packet)
 
-        #print(f"SNI : {get_sni_client_hello(packet)}")
-
         if(hash_type == "JA3"):
-            version = get_client_hello_version(packet)
-            extensions = get_client_hello_extensions(packet)
+            if packet.haslayer(TLS):
+                tls_layers = packet[TLS]
+                if tls_layers.haslayer(TLSClientHello):
+                    
+                    version = get_client_hello_version(packet)
+                    extensions = get_client_hello_extensions(packet)
+                    ciphers = process_JA3_ciphers(packet)
 
-            full_string = create_JA3_string(version, ciphers, extensions, supported_groups, point_format)
-            final_hash = create_hash(full_string)
+                    full_string = create_JA3_string(version, ciphers, extensions, supported_groups, point_format)
+                    final_hash = create_hash(full_string)
+
+                    new_hash = { 'hash' : final_hash, 'sni' : sni }
+                    hashes.append(new_hash)
+
         elif(hash_type == "JA3S"):
-            version = get_server_hello_version(packet)
-            extensions = get_server_hello_extensions(packet)
+            if packet.haslayer(TLS):
+                tls_layers = packet[TLS]
+                if tls_layers.haslayer(TLSServerHello):
 
-            full_string = create_JA3S_string(version, ciphers, extensions)
-            final_hash = create_hash(full_string)
+                    version = get_server_hello_version(packet)
+                    extensions = get_server_hello_extensions(packet)
+                    ciphers = process_JA3S_ciphers(packet)
 
-        new_hash = { 'hash' : final_hash, 'sni' : sni }
+                    full_string = create_JA3S_string(version, ciphers, extensions)
+                    final_hash = create_hash(full_string)
 
-        #hash_strings.append(full_string)
-        hashes.append(new_hash)
+                    new_hash = { 'hash' : final_hash, 'sni' : sni }
+
+                    hashes.append(new_hash)
 
         #packet.show()
 
@@ -225,8 +238,9 @@ if __name__ == '__main__':
         #print(f"TLS Extensions : {extensions}")
         #print(f"TLS Supported groups : {supported_groups}")
         #print(f"TLS EC Point format : {point_format}")
-        #print(f"JA3 Full string : {full_string}")
-        #print(f"JA3 Hash : {final_hash}")
+        #print(f"JA3S Full string : {full_string}")
+        #print(f"JA3S Hash : {final_hash}")
+        #print(f"SNI : {get_sni_client_hello(packet)}")
         #print("################")
 
         packet_count += 1
