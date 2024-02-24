@@ -32,7 +32,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
 
     return (
         <div className="TableComponent pt-md-3">
-            <div className="container shadow bg-white text-dark">
+            <div className="container-fluid px-2 shadow bg-white text-dark">
                 <div className="row p-3">
                     <div className="col-md-4">
                         <h4 className="p-2">{tableName}</h4>

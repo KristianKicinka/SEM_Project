@@ -71,7 +71,7 @@ const Users = () => {
                 <Sidebar sidebarType="admin" />
                 <div className="col-md-10 px-0">
                     <Navbar />
-                    <div className="container">
+                    <div className="container-fluid px-4">
                         <CreateUser  
                             show={createModalShow}
                             setFetchDataState={setFetchDataState}

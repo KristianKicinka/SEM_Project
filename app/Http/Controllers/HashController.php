@@ -326,7 +326,8 @@ class HashController extends Controller {
         // ["id", "hash", "hash_type", "app_name", "package_name", "version"];
         $data = DB::table('applications')
             ->join('hashes','applications.id','=','hashes.app_id')
-            ->select('hashes.id', 'hash','hash_type', 'name AS app_name', 'package_name', 'version')
+            ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash', 'name AS app_name', 'package_name', 'version')
+            ->distinct()
             ->get();
 
         return response()->json($data, 200);

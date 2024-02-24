@@ -10,8 +10,8 @@ import AuthUser from "../../../AuthUser";
 import CreateHash from "./partials/hashes/CreateHash";
 //import DeleteHash from "./partials/hashes/DeleteHash";
 
-const columnNames = ["ID","Hash", "Hash type", "App Name", "Package name", "Version"];
-const dataIndexes = ["id", "hash", "hash_type", "app_name", "package_name", "version"];
+const columnNames = ["ID", "JA3 hash", "SNI", "JA3S hash" ,"App Name", "Package name", "Version"];
+const dataIndexes = ["id", "ja3_hash", "sni", "ja3s_hash", "app_name", "package_name", "version"];
 
 const Hashes = () => {
 
@@ -59,7 +59,7 @@ const Hashes = () => {
                 <Sidebar sidebarType="admin" />
                 <div className="col-md-10 px-0">
                     <Navbar />
-                    <div className="container">
+                    <div className="container-fluid">
                         <CreateHash  
                             show={createModalShow}
                             setFetchDataState={setFetchDataState}
