@@ -275,15 +275,11 @@ class HashController extends Controller {
                 return response()->json(['errors' => 'No hashes!'], 400);
             }
 
-            
 
             foreach ($data as $item){
-                if ($item->hash_type == 'JA3')
-                    $JA3_hashes[] = $item->hash;
-                else if ($item->hash_type == 'JA3S')
-                    $JA3S_hashes[] = $item->hash;
-                else if ($item->hash_type == 'FlowMon')
-                    $FlowMon_hashes[] = $item->hash;
+                $JA3_hashes[] = $item->hash;
+                $JA3S_hashes[] = $item->hash;
+                $FlowMon_hashes[] = $item->hash;
             }
 
             $response[$id] = [
@@ -292,7 +288,7 @@ class HashController extends Controller {
                 'app_version' => $data[0]->app_version,
                 'JA3_hashes' => $JA3_hashes,
                 'JA3S_hashes' => $JA3S_hashes,
-                'FlowMon_hashes' => $FlowMon_hashes,
+                //'FlowMon_hashes' => $FlowMon_hashes,
             ];
         }
 

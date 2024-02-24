@@ -113,7 +113,7 @@ class ApiRequestController extends Controller {
 
         $validator = Validator::make($request->all(), [
             'auth_key' => 'required|string',
-            'hashes' => 'required',
+            'data' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -123,19 +123,75 @@ class ApiRequestController extends Controller {
         $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[5]);
         $results = [];
 
-        foreach (json_decode($request->input('hashes')) as $hash) {
-           $apps = DB::table('applications')
-           ->select(
-            'applications.name',
-            'applications.package_name',
-            'applications.version',
-            'applications.is_malware'
-            )
-           ->distinct()
-           ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-           ->where('hashes.hash', '=', $hash)
-           ->get();
-           $results[$hash] = $apps;
+        foreach (json_decode($request->input('data')) as $item){
+
+            if($request->input('input_type') == "JA3"){
+
+                $apps = DB::table('applications')->select(
+                    'applications.name',
+                    'applications.package_name',
+                    'applications.version',
+                    'applications.is_malware'
+                    )
+                    ->distinct()
+                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
+                    ->where('hashes.ja3_hash', '=', $item->ja3_hash)
+                    ->get();
+
+                $res_obj = [ "ja3_hash" => $item->ja3_hash, "apps" => $apps];
+                $results[] = $res_obj;
+            }
+
+            if($request->input('input_type') == "JA3S"){
+                $apps = DB::table('applications')->select(
+                    'applications.name',
+                    'applications.package_name',
+                    'applications.version',
+                    'applications.is_malware'
+                    )
+                    ->distinct()
+                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
+                    ->where('hashes.ja3s_hash', '=', $item->ja3s_hash)
+                    ->get();
+
+                $res_obj = [ "ja3s_hash" => $item->ja3s_hash, "apps" => $apps];
+                $results[] = $res_obj;
+            }
+
+            if($request->input('input_type') == "JA3_SNI"){
+                $apps = DB::table('applications')->select(
+                    'applications.name',
+                    'applications.package_name',
+                    'applications.version',
+                    'applications.is_malware'
+                    )
+                    ->distinct()
+                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
+                    ->where('hashes.ja3_hash', '=', $item->ja3_hash)
+                    ->where('hashes.sni', '=', $item->sni)
+                    ->get();
+
+                $res_obj = [ "ja3_hash" => $item->ja3_hash, "sni" => $item->sni, "apps" => $apps];
+                $results[] = $res_obj;
+            }
+
+            if($request->input('input_type') == "JA3_JA3S_SNI"){
+                $apps = DB::table('applications')->select(
+                    'applications.name',
+                    'applications.package_name',
+                    'applications.version',
+                    'applications.is_malware'
+                    )
+                    ->distinct()
+                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
+                    ->where('hashes.ja3_hash', '=', $item->ja3_hash)
+                    ->where('hashes.ja3s_hash', '=', $item->ja3s_hash)
+                    ->where('hashes.sni', '=', $item->sni)
+                    ->get();
+                
+                $res_obj = [ "ja3_hash" => $item->ja3_hash, "sni" => $item->sni, "ja3s_hash" => $item->ja3s_hash, "apps" => $apps];
+                $results[] = $res_obj;
+            }
         }
 
         return response()->json($results, 200);
