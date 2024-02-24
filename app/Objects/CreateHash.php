@@ -93,8 +93,6 @@ class CreateHash {
      */
     private function createJA3hash($pcap_file_path, $pcap_file_name) : array {
 
-        //$JA3_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3');
-
         $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$pcap_file_path." JA3";
 
         $process = Process::fromShellCommandline($command);
@@ -111,6 +109,21 @@ class CreateHash {
         return json_decode($process->getOutput());
     }
 
+
+    private function createHashSniJa3Ja3S($pcap_file_path, $pcap_file_name) : array {
+
+        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$pcap_file_path;
+
+        $process = Process::fromShellCommandline($command);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            throw new HashGeneratorFailException($process->getErrorOutput());
+        }
+
+        return json_decode($process->getOutput());
+    }
+
      /**
      * @param $pcap_file_path
      * @param $pcap_file_name
@@ -118,7 +131,6 @@ class CreateHash {
      */
     private function createJA3Shash($pcap_file_path, $pcap_file_name) : array {
 
-        //$JA3S_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3S');
 
         $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$pcap_file_path." JA3S";
 
@@ -134,8 +146,9 @@ class CreateHash {
 
     
     public function createHashes($hash_types, $pcap_file_name, $pcap_file_path){
-        $hashes = [];
+        //$hashes = [];
 
+        /*
         if(in_array('JA3', $hash_types)){
             $JA3_hashes = $this->createJA3hash($pcap_file_path, $pcap_file_name);
             $hashes['JA3'] = $JA3_hashes;
@@ -146,56 +159,13 @@ class CreateHash {
             $hashes['JA3S'] = $JA3S_hashes;
         }
 
+        */
+
+        $hashes = $this->createHashSniJa3Ja3S($pcap_file_path, $pcap_file_name);
+
         return $hashes;
     }
 
-    /**
-     * @param $type
-     * @return string
-     */
-    private function createFilter($type) : string {
-
-        $filter = "";
-
-        if($type == 'JA3')
-            $filter = "tls.handshake.type==1 && tcp";
-        else if($type == 'JA3S')
-            $filter = "tls.handshake.type==2 && tcp";
-
-        return $filter;
-    }
-
-    /**
-     * @param $pcap_file_path
-     * @param $pcap_file_name
-     * @param $hash_type
-     * @return string
-     */
-    private function applyPcapFilter($pcap_file_path, $pcap_file_name, $hash_type) : string {
-        $new_pcap_file_path = "";
-
-        if($hash_type == 'JA3'){
-            $new_pcap_file_path = storage_path(PCAP_PATH).'JA3_'.$pcap_file_name;
-            $this->addFileToFiles('JA3_'.$pcap_file_name, 'PCAP', $new_pcap_file_path);
-        }
-        else if($hash_type == 'JA3S'){
-            $new_pcap_file_path = storage_path(PCAP_PATH).'JA3S_'.$pcap_file_name;
-            $this->addFileToFiles('JA3S_'.$pcap_file_name, 'PCAP', $new_pcap_file_path);
-        }
-
-        $filter = $this->createFilter($hash_type);
-
-        $command = 'tshark -r '.trim($pcap_file_path).' -Y "'.$filter.'" -w '.$new_pcap_file_path;
-
-        $process = Process::fromShellCommandline($command);
-        $process->run();
-
-        if (!$process->isSuccessful()) {
-            throw new PcapFileNotFoundException($process->getErrorOutput());
-        }
-
-        return $new_pcap_file_path;
-    }
 
     /**
      * @param $package_name
@@ -405,10 +375,10 @@ class CreateHash {
            $db_file->save();
         }
 
-        foreach($data['hashes'] as $hash_type => $hashes){
-            foreach($hashes as $hash){
 
-                Log::channel('devlog')->info('Hashes : {name}', ['name' => $hash]);
+        foreach($data["hashes"] as $hash){
+
+            Log::channel('devlog')->info('Hashes : {name}', ['name' => $hash]);
 
                 /*
                 $identifier = [
@@ -417,19 +387,19 @@ class CreateHash {
                     'hash_type' => $hash_type,
                 ];*/
 
-                $new_record = [
-                    'app_id' => $application->id,
-                    'process_id' => $process_id,
-                    'hash' => $hash->hash,
-                    'hash_type' => $hash_type,
-                    'sni' => $hash->sni
-                ];
+            $new_record = [
+                'app_id' => $application->id,
+                'process_id' => $process_id,
+                'ja3_hash' => $hash->ja3_hash,
+                'ja3s_hash' => $hash->ja3s_hash,
+                'hash_type' => null,
+                'sni' => $hash->sni
+            ];
 
-                $db_hash = Hash::create($new_record);
-                $db_hash->save();
+            $db_hash = Hash::create($new_record);
+            $db_hash->save();
 
-                //Hash::firstOrCreate($identifier, $new_record);
-            }
+            //Hash::firstOrCreate($identifier, $new_record);
         }
     }
 }

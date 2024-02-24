@@ -17,9 +17,10 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('app_id')->unsigned();
             $table->bigInteger('process_id')->unsigned()->nullable();
-            $table->string('hash');
-            $table->string('hash_type');
+            $table->string('ja3_hash');
+            $table->string('ja3s_hash');
             $table->string('sni')->nullable();
+            $table->string('hash_type')->nullable();
             $table->timestamps();
             $table->foreign('app_id')->references('id')->on('applications');
             $table->foreign('process_id')->references('id')->on('processes');

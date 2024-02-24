@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\Process\Process;
 
 const APK_DOWNLOADED_DIR = '/mnt/storage/app/public/uploads/apk_downloaded/';
+const HASH_SCRIPT_PATH = 'scripts/hash_generator.py';
+const PCAP_PATH = 'app/public/pcaps/';
 
 class TestController extends Controller
 {
@@ -211,6 +213,25 @@ class TestController extends Controller
             return $process->getErrorOutput();
 
         return $process->getOutput();
+    }
+
+
+    protected function createHashes(){
+
+        $pcap_file_path = storage_path("/app/public/pcaps/022135_alzicka.pcap");
+
+        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$pcap_file_path;
+
+        $process = Process::fromShellCommandline($command);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            return $process->getErrorOutput();
+        }
+
+        $hashes = json_decode($process->getOutput());
+
+        return $hashes[0]->sni;
     }
 
 }

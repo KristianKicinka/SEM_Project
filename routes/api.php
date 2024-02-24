@@ -93,4 +93,5 @@ Route::get("/get_app_version", [TestController::class, 'getAppVersionName']);
 Route::get("/python", [TestController::class, 'python']);
 Route::get("/download", [TestController::class, 'download']);
 Route::get("/get_installed_apps", [TestController::class, 'getInstlledApps']);
+Route::get("/create_hashes", [TestController::class, 'createHashes']);
 

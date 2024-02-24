@@ -275,6 +275,8 @@ class HashController extends Controller {
                 return response()->json(['errors' => 'No hashes!'], 400);
             }
 
+            
+
             foreach ($data as $item){
                 if ($item->hash_type == 'JA3')
                     $JA3_hashes[] = $item->hash;

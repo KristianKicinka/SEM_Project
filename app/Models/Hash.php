@@ -17,7 +17,8 @@ class Hash extends Model {
     protected $fillable = [
         'app_id',
         'process_id',
-        'hash',
+        'ja3_hash',
+        'ja3s_hash',
         'hash_type',
         'sni',
     ];

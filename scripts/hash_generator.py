@@ -6,6 +6,7 @@ from scapy.layers.tls.record import TLS
 from scapy.layers.tls.extensions import TLS_Ext_SupportedGroups
 from scapy.layers.tls.extensions import TLS_Ext_SupportedPointFormat
 from scapy.layers.tls.extensions import TLS_Ext_ServerName
+from scapy.layers.inet import IP , TCP
 
 from scapy.layers.tls.handshake import TLSClientHello
 from scapy.layers.tls.handshake import TLSServerHello
@@ -20,7 +21,7 @@ warnings.filterwarnings('ignore')
 BLACK_LIST_FILE_1 = "./black_lists/domain_black_list.txt"
 BLACK_LIST_FILE_2 = "./black_lists/ad-list.txt"
 
-black_list_files = [BLACK_LIST_FILE_1, BLACK_LIST_FILE_2]
+black_list_files = [BLACK_LIST_FILE_2]
 
 # source : https://www.rfc-editor.org/rfc/rfc8701.html
 RESERVED_GREASE_VALUES = [
@@ -156,6 +157,19 @@ def check_useless_domain_name(packet):
     return False
 
 
+def remove_adds (res_array):
+
+    filtered = []
+
+    for res in res_array:
+        sni = res["sni"]
+        for black_list_file in black_list_files:
+            with open(os.path.join(script_dir, black_list_file), "r") as file:
+                for line in file:
+                    if not (sni.strip().lower() == line.strip().lower()):
+                        filtered.append(res)
+    return filtered
+
 def add_to_string(full_string, items):
     index = 0
     for item in items:
@@ -189,75 +203,82 @@ if __name__ == '__main__':
     load_layer('tls')
 
     scapy_cap = rdpcap(sys.argv[1])
-    hash_type = sys.argv[2]
+
+    results = {}
 
     packet_count = 1
     for packet in scapy_cap:
 
-        supported_groups = get_supported_groups(packet)
-        point_format = get_ec_point_formats(packet)
+        if packet.haslayer(TLS):
 
-        if(hash_type == "JA3"):
-            if packet.haslayer(TLS):
-                tls_layers = packet[TLS]
-                if tls_layers.haslayer(TLSClientHello):
+            ip_src = packet[IP].src
+            ip_dest = packet[IP].dst
+            port_src = packet[TCP].sport
+            port_dest = packet[TCP].dport
 
-                    if check_useless_domain_name(packet):
-                        continue
+            tls_layers = packet[TLS]
 
-                    version = get_client_hello_version(packet)
-                    extensions = get_client_hello_extensions(packet)
-                    ciphers = process_JA3_ciphers(packet)
-                    sni = get_sni(packet)
+            supported_groups = get_supported_groups(packet)
+            point_format = get_ec_point_formats(packet)
 
-                    full_string = create_JA3_string(version, ciphers, extensions, supported_groups, point_format)
-                    final_hash = create_hash(full_string)
+            if tls_layers.haslayer(TLSClientHello):
+                
+                version = get_client_hello_version(packet)
+                extensions = get_client_hello_extensions(packet)
+                ciphers = process_JA3_ciphers(packet)
+                sni = get_sni(packet)
 
-                    new_hash = { 'hash' : final_hash, 'sni' : sni }
-                    hashes.append(new_hash)
+                full_string = create_JA3_string(version, ciphers, extensions, supported_groups, point_format)
+                ja3_hash = create_hash(full_string)
 
-        elif(hash_type == "JA3S"):
-            if packet.haslayer(TLS):
-                tls_layers = packet[TLS]
-                if tls_layers.haslayer(TLSServerHello):
+                key = (ip_src, port_src, ip_dest, port_dest)
 
-                    version = get_server_hello_version(packet)
-                    extensions = get_server_hello_extensions(packet)
-                    ciphers = process_JA3S_ciphers(packet)
-                    sni = get_sni(packet)
+                if key not in results:
+                    results[key] = {
+                        "ip_src" : ip_src, "port_src":port_src, 
+                        "ip_dest":ip_dest, "port_dest":port_dest, 
+                        "ja3_hash": ja3_hash, "sni": sni, "ja3s_hash": None
+                    }
+                else:
+                    results[key]["ja3_hash"] = ja3_hash
+                    results[key]["sni"] = sni
 
-                    full_string = create_JA3S_string(version, ciphers, extensions)
-                    final_hash = create_hash(full_string)
+            if tls_layers.haslayer(TLSServerHello):
+                version = get_server_hello_version(packet)
+                extensions = get_server_hello_extensions(packet)
+                ciphers = process_JA3S_ciphers(packet)
 
-                    new_hash = { 'hash' : final_hash, 'sni' : sni }
+                full_string = create_JA3S_string(version, ciphers, extensions)
+                ja3s_hash = create_hash(full_string)
 
-                    hashes.append(new_hash)
+                key = (ip_dest, port_dest, ip_src, port_src)
 
-        #packet.show()
-
-        #print("################")
-        #print(f"IP SRC : {packet[IP].src}")
-        #print(f"IP DST : {packet[IP].dst}")
-        #print(f"TLS Version : {version}")
-        #print(f"TLS Ciphers : {ciphers}")
-        #print(f"TLS Extensions : {extensions}")
-        #print(f"TLS Supported groups : {supported_groups}")
-        #print(f"TLS EC Point format : {point_format}")
-        #print(f"JA3S Full string : {full_string}")
-        #print(f"JA3S Hash : {final_hash}")
-        #print(f"SNI : {get_sni_client_hello(packet)}")
-        #print("################")
+                if key not in results:
+                    results[key] = {
+                        "ip_src" : ip_src, "port_src":port_src, 
+                        "ip_dest":ip_dest, "port_dest":port_dest, 
+                        "ja3_hash": None, "sni": None, "ja3s_hash": ja3s_hash
+                    }
+                else:
+                    results[key]["ja3s_hash"] = ja3s_hash
 
         packet_count += 1
+
+    array_results = []
+
+    for key in results:
+        obj = {
+            "ja3_hash": results[key]["ja3_hash"],
+            "sni": results[key]["sni"],
+            "ja3s_hash": results[key]["ja3s_hash"],
+        }
+        array_results.append(obj)
+
+    array_results = remove_adds(array_results)
+
+    # Remove duplicities
+    tuple_of_results = [tuple(sorted(res.items())) for res in array_results]
+    unique_tuples = set(tuple_of_results)
+    array_results = [dict(tp) for tp in unique_tuples]
     
-    hash_dict = {}
-
-    for hash_item in hashes:
-        hash_value = hash_item["hash"]
-        sni = hash_item["sni"]
-        if (hash_value not in hash_dict) and (sni not in hash_dict):
-            hash_dict[hash_value] = hash_item
-
-    final_hash_list = list(hash_dict.values())
-
-    print(json.dumps(final_hash_list))
+    print(json.dumps(array_results))
