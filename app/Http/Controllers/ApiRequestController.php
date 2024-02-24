@@ -89,15 +89,13 @@ class ApiRequestController extends Controller {
 
         foreach (json_decode($request->input('apps')) as $app){
             $hashes =  DB::table('applications')
-                ->select('hashes.hash', 'hashes.hash_type')
+                ->select('hashes.ja3_hash', 'hashes.ja3s_hash', 'hashes.sni')
                 ->join('hashes','hashes.app_id','=','applications.id');
 
             if($app->package_name != null)
                 $hashes->where('applications.package_name','=',$app->package_name);
             if($app->version != null)
                 $hashes->where('applications.version','=',$app->version);
-            if($app->hash_types != null)
-                $hashes->whereIn('hashes.hash_type',$app->hash_types);
 
             $results[$app->package_name] = $hashes->get();
         }
@@ -206,8 +204,9 @@ class ApiRequestController extends Controller {
         $validator = Validator::make($request->all(), [
             'auth_key' => 'required|string',
             'apk_file' => 'required|file',
-            'hash_types' => 'required',
         ]);
+
+        $hash_types = ["JA3"];
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
@@ -215,7 +214,6 @@ class ApiRequestController extends Controller {
 
         $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[6]);
 
-        $hash_types = json_decode($request->input('hash_types'));
         $apk_file_name = $this->saveApkFile($request->file('apk_file'));
         $apk_original_file_name = $request->file('apk_file')->getClientOriginalName();
         $process_id = 'ext_api_'.Str::random(20);
@@ -252,7 +250,6 @@ class ApiRequestController extends Controller {
         $validator = Validator::make($request->all(), [
             'auth_key' => 'required|string',
             'package_name' => 'required|string',
-            'hash_types' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -262,7 +259,7 @@ class ApiRequestController extends Controller {
         $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[3]);
 
         $process_id = 'ext_api_'.Str::random(20);
-        $hash_types = json_decode($request->input('hash_types'));
+        $hash_types = ["JA3"];
 
         $job = CreateHashFromAppName::dispatch(
             $request->input('package_name'),
@@ -285,7 +282,6 @@ class ApiRequestController extends Controller {
             'app_name' => 'required|string',
             'package_name' => 'required|string',
             'app_version' => 'required|string',
-            'hash_types' => 'required',
             'pcap_file' => 'required|file',
             'is_malware' => 'required',
         ]);
@@ -304,7 +300,7 @@ class ApiRequestController extends Controller {
         ];
 
         $pcap_file_name = $this->savePcapFile($request->file('pcap_file'));
-        $hash_types = json_decode($request->input('hash_types'));
+        $hash_types = ["JA3"];
 
         $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types);
         $hashes = $pcap_hash->createAndSave($app_data);

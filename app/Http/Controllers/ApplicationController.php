@@ -14,6 +14,7 @@ class ApplicationController extends Controller {
      */
     public function getApplicationDataForWeb(): JsonResponse {
         $applications = DB::table('applications')
+                    ->distinct()
                     ->join('hashes','applications.id','=','hashes.app_id')
                     ->get();
 

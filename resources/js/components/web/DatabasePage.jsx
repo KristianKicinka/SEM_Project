@@ -18,7 +18,7 @@ const DatabasePage = () => {
 
     const [data, setData] = useState([]);
     const [filter, setFilter] = useState('');
-    const columns = ['id','name','package_name','version','created_at','hash_type','hash'];
+    const columns = ['id','name','package_name','version','ja3_hash', 'sni', 'ja3s_hash','created_at'];
 
     const [currentPage, setCurrentPage] = useState(1);
     const [recordsPerPage] = useState(8);
@@ -57,8 +57,8 @@ const DatabasePage = () => {
     return (
         <div className="DatabasePage bg-primary bg-gradient pt-5 min-vh-100">
             <Navbar />
-            <div className="container pt-5">
-                <div className="row">
+            <div className="container-fluid pt-5">
+                <div className="row px-4">
                     <div className="card bg-white text-dark p-3">
                         <div className="card-body">
                             <div className="row p-3">
@@ -94,9 +94,10 @@ const DatabasePage = () => {
                                             <th>App name</th>
                                             <th>Package name</th>
                                             <th>Version</th>
+                                            <th>JA3 hash</th>
+                                            <th>SNI</th>
+                                            <th>JA3S hash</th>
                                             <th>Created at</th>
-                                            <th>Hash type</th>
-                                            <th>Hash</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -107,14 +108,10 @@ const DatabasePage = () => {
                                                     <td>{item.name}</td>
                                                     <td>{item.package_name}</td>
                                                     <td>{item.version}</td>
+                                                    <td><CopyClipboard  text={item.ja3_hash}/></td>
+                                                    <td><CopyClipboard  text={item.sni}/></td>
+                                                    <td><CopyClipboard  text={item.ja3s_hash}/></td>
                                                     <td>{item.created_at}</td>
-                                                    <td>{item.hash_type}</td>
-                                                    <td>
-                                                        <CopyClipboard
-                                                            text={item.hash}
-                                                        />
-                                                    </td>
-                                                    
                                                 </tr>
                                             );
                                         })}

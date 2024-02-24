@@ -23,7 +23,7 @@ const CopyClipboard = ({ text }) => {
     return (
         <div className="CopyClipboard">
             <div className="row">
-                <div className="col">
+                <div className="col-auto">
                     <b>{text}</b>
                 </div>
                 <div className="col">
