@@ -17,7 +17,10 @@ import json
 import warnings
 warnings.filterwarnings('ignore')
 
-BLACK_LIST_FILE = 'domain_black_list.txt'
+BLACK_LIST_FILE_1 = "./black_lists/domain_black_list.txt"
+BLACK_LIST_FILE_2 = "./black_lists/ad-list.txt"
+
+black_list_files = [BLACK_LIST_FILE_1, BLACK_LIST_FILE_2]
 
 # source : https://www.rfc-editor.org/rfc/rfc8701.html
 RESERVED_GREASE_VALUES = [
@@ -143,9 +146,12 @@ def get_sni(packet):
 def check_useless_domain_name(packet):
     # row from : https://github.com/hsouna/tls-servername/blob/main/get_servername_from_tls.py
     sni = get_sni(packet)
-    if (sni):
-        if sni in open(os.path.join(script_dir, BLACK_LIST_FILE), 'r').read():
-            return True
+
+    for black_list_file in black_list_files:
+        with open(os.path.join(script_dir, black_list_file), "r") as file:
+            for line in file:
+                if sni.strip().lower() == line.strip().lower():
+                    return True
         
     return False
 
@@ -188,23 +194,21 @@ if __name__ == '__main__':
     packet_count = 1
     for packet in scapy_cap:
 
-        # check domains for JA3 only  
-        if hash_type == 'JA3':
-            if check_useless_domain_name(packet):
-                continue
-
         supported_groups = get_supported_groups(packet)
         point_format = get_ec_point_formats(packet)
-        sni = get_sni(packet)
 
         if(hash_type == "JA3"):
             if packet.haslayer(TLS):
                 tls_layers = packet[TLS]
                 if tls_layers.haslayer(TLSClientHello):
-                    
+
+                    if check_useless_domain_name(packet):
+                        continue
+
                     version = get_client_hello_version(packet)
                     extensions = get_client_hello_extensions(packet)
                     ciphers = process_JA3_ciphers(packet)
+                    sni = get_sni(packet)
 
                     full_string = create_JA3_string(version, ciphers, extensions, supported_groups, point_format)
                     final_hash = create_hash(full_string)
@@ -220,6 +224,7 @@ if __name__ == '__main__':
                     version = get_server_hello_version(packet)
                     extensions = get_server_hello_extensions(packet)
                     ciphers = process_JA3S_ciphers(packet)
+                    sni = get_sni(packet)
 
                     full_string = create_JA3S_string(version, ciphers, extensions)
                     final_hash = create_hash(full_string)
@@ -249,7 +254,8 @@ if __name__ == '__main__':
 
     for hash_item in hashes:
         hash_value = hash_item["hash"]
-        if hash_value not in hash_dict:
+        sni = hash_item["sni"]
+        if (hash_value not in hash_dict) and (sni not in hash_dict):
             hash_dict[hash_value] = hash_item
 
     final_hash_list = list(hash_dict.values())

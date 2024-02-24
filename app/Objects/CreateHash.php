@@ -93,9 +93,9 @@ class CreateHash {
      */
     private function createJA3hash($pcap_file_path, $pcap_file_name) : array {
 
-        $JA3_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3');
+        //$JA3_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3');
 
-        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$JA3_pcap_path." JA3";
+        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$pcap_file_path." JA3";
 
         $process = Process::fromShellCommandline($command);
         $process->run();
@@ -118,9 +118,9 @@ class CreateHash {
      */
     private function createJA3Shash($pcap_file_path, $pcap_file_name) : array {
 
-        $JA3S_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3S');
+        //$JA3S_pcap_path =  $this->applyPcapFilter($pcap_file_path, $pcap_file_name, 'JA3S');
 
-        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$JA3S_pcap_path." JA3S";
+        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$pcap_file_path." JA3S";
 
         $process = Process::fromShellCommandline($command);
         $process->run();
