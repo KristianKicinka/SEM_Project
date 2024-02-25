@@ -35,7 +35,7 @@ class TestController extends Controller
     }
 
     public function run(){
-        $command = 'adb shell monkey -p cz.alza.eshop -c android.intent.category.LAUNCHER 1';
+        $command = 'adb shell monkey -p cz.alza.eshop -v 500';
 
         if (env("ENVIRONMENT", "local") == "server"){
             $command = 'docker exec '.env("EMULATOR_NAME", null).' '.$command;
@@ -95,16 +95,24 @@ class TestController extends Controller
 
         $this->install();
         
-        $pcap_out_path = "/home/xbwolf02/pcaps/novy3.pcap";
+        $pcap_out_path = "/home/xbwolf02/pcaps/novy_2225.pcap";
 
         $command = "tshark -i ".env("NETWORK_INTERFACE", "en0")." -F pcap -w ".$pcap_out_path;
 
         $process = Process::fromShellCommandline($command);
         $process->start();
 
-        $this->run();
-        sleep(20);
-        $this->close();
+        $sec_command = 'adb shell monkey -p cz.alza.eshop -v 500';
+
+        if (env("ENVIRONMENT", "local") == "server"){
+            $sec_command = 'docker exec '.env("EMULATOR_NAME", null).' '.$sec_command;
+        }
+
+        $sec_process = Process::fromShellCommandline($sec_command);
+        $sec_process->run();
+
+        if(!$sec_process->isSuccessful())
+            return "ERR : ".$process->getErrorOutput();
 
         $process->stop();
     }

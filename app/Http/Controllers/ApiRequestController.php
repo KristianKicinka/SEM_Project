@@ -156,6 +156,23 @@ class ApiRequestController extends Controller {
                 $results[] = $res_obj;
             }
 
+            if($request->input('input_type') == "JA3_JA3S"){
+                $apps = DB::table('applications')->select(
+                    'applications.name',
+                    'applications.package_name',
+                    'applications.version',
+                    'applications.is_malware'
+                    )
+                    ->distinct()
+                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
+                    ->where('hashes.ja3_hash', '=', $item->ja3_hash)
+                    ->where('hashes.ja3s_hash', '=', $item->ja3s_hash)
+                    ->get();
+
+                $res_obj = [ "ja3_hash" => $item->ja3_hash, "ja3s_hash" => $item->ja3s_hash, "apps" => $apps];
+                $results[] = $res_obj;
+            }
+
             if($request->input('input_type') == "JA3_SNI"){
                 $apps = DB::table('applications')->select(
                     'applications.name',

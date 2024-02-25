@@ -21,7 +21,7 @@ warnings.filterwarnings('ignore')
 BLACK_LIST_FILE_1 = "./black_lists/domain_black_list.txt"
 BLACK_LIST_FILE_2 = "./black_lists/ad-list.txt"
 
-black_list_files = [BLACK_LIST_FILE_2]
+black_list_files = [BLACK_LIST_FILE_1]
 
 # source : https://www.rfc-editor.org/rfc/rfc8701.html
 RESERVED_GREASE_VALUES = [
@@ -156,19 +156,20 @@ def check_useless_domain_name(packet):
         
     return False
 
+def is_in_black_list(sni, black_list):
+    return sni in black_list
+
 
 def remove_adds (res_array):
 
     filtered = []
 
-    for res in res_array:
-        sni = res["sni"]
-        if sni:
-            for black_list_file in black_list_files:
-                with open(os.path.join(script_dir, black_list_file), "r") as file:
-                    for line in file:
-                        if not (sni.strip().lower() == line.strip().lower()):
-                            filtered.append(res)
+    for black_list_file in black_list_files:
+        with open(os.path.join(script_dir, black_list_file), "r") as file:
+            domain_names = file.read().splitlines()
+
+            filtered = [res for res in res_array if not is_in_black_list(res["sni"], domain_names)]
+                        
     return filtered
 
 def add_to_string(full_string, items):

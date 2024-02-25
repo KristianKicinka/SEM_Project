@@ -1,0 +1,177 @@
+[
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "video-cdn.aliexpress-media.com"
+    },
+    {
+        "ja3_hash": "7ba4bfbc0a64444f2e344e26774e7adc",
+        "ja3s_hash": null,
+        "sni": "umdc.alibabachengdun.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "fourier.taobao.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "afbc203706421f15554867b55caf16d6",
+        "sni": "acs.aliexpress.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "42ec7b1db61428bf1cc6e01b9ef02b04",
+        "sni": "assets.alicdn.com"
+    },
+    {
+        "ja3_hash": "c67e9dc27d283f1f89b4ebb4b4670c21",
+        "ja3s_hash": "2253c82f03b621c5144709b393fde2c9",
+        "sni": "video-cdn.aliexpress-media.com"
+    },
+    {
+        "ja3_hash": "9c815150ea821166faecf80757d8826a",
+        "ja3s_hash": "b8d072db1f2e5be0acbae44d5808eca0",
+        "sni": "acs.aliexpress.com"
+    },
+    {
+        "ja3_hash": "f79b6bad2ad0641e1921aef10262856b",
+        "ja3s_hash": "afbc203706421f15554867b55caf16d6",
+        "sni": "us-click.aliexpress.com"
+    },
+    {
+        "ja3_hash": "c633e8065aa54592213b9df30ef397fe",
+        "ja3s_hash": "5badad76fbdd6e8b6296e2e9f4024401",
+        "sni": "infinitedata-pa.googleapis.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "dinamicx.alibabausercontent.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "afbc203706421f15554867b55caf16d6",
+        "sni": "acs.m.taobao.com"
+    },
+    {
+        "ja3_hash": "9c815150ea821166faecf80757d8826a",
+        "ja3s_hash": "bfc467d8f21eeebfc1da1310a02758e2",
+        "sni": "assets.alicdn.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "global-orange-source.alibaba.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "42ec7b1db61428bf1cc6e01b9ef02b04",
+        "sni": "is.alicdn.com"
+    },
+    {
+        "ja3_hash": "9c815150ea821166faecf80757d8826a",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "h-adashx4ae.ut.taobao.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "00447ab319e9d94ba2b4c1248e155917",
+        "sni": "umdc.alibabachengdun.com"
+    },
+    {
+        "ja3_hash": "9c815150ea821166faecf80757d8826a",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "ae01.alicdn.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "6e15a5bf660856fa03186247ca41d059",
+        "sni": "fourier.aliexpress.com"
+    },
+    {
+        "ja3_hash": "bc29aa426fc99c0be1b9be941869f88a",
+        "ja3s_hash": "5d79edf64e03689ff559a54e9d9487bc",
+        "sni": "cloud-config-service.rtc.aliyuncs.com"
+    },
+    {
+        "ja3_hash": "f79b6bad2ad0641e1921aef10262856b",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "ae02.alicdn.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "eb1d94daa7e0344597e756a1fb6e7054",
+        "sni": "play.googleapis.com"
+    },
+    {
+        "ja3_hash": "f79b6bad2ad0641e1921aef10262856b",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "ae01.alicdn.com"
+    },
+    {
+        "ja3_hash": "f79b6bad2ad0641e1921aef10262856b",
+        "ja3s_hash": "42ec7b1db61428bf1cc6e01b9ef02b04",
+        "sni": "campaign.aliexpress.com"
+    },
+    {
+        "ja3_hash": "f79b6bad2ad0641e1921aef10262856b",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "aeproductsourcesite.alicdn.com"
+    },
+    {
+        "ja3_hash": "9c815150ea821166faecf80757d8826a",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "global-orange-source.alibaba.com"
+    },
+    {
+        "ja3_hash": "9c815150ea821166faecf80757d8826a",
+        "ja3s_hash": "61be9ce3d068c08ff99a857f62352f9d",
+        "sni": "amdc.aliexpress.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "6e15a5bf660856fa03186247ca41d059",
+        "sni": "vpp-license-proxy.aliyuncs.com"
+    },
+    {
+        "ja3_hash": "46f5131e766d248db0248a86c494b71c",
+        "ja3s_hash": "2253c82f03b621c5144709b393fde2c9",
+        "sni": "assets.msn.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "audid-api.taobao.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "afbc203706421f15554867b55caf16d6",
+        "sni": "video.aliexpress-media.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "42ec7b1db61428bf1cc6e01b9ef02b04",
+        "sni": "www.aliexpress.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "b898351eb5e266aefd3723d466935494",
+        "sni": "ae.mmstat.com"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "42ec7b1db61428bf1cc6e01b9ef02b04",
+        "sni": "aeis.alicdn.com"
+    },
+    {
+        "ja3_hash": "f79b6bad2ad0641e1921aef10262856b",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "gcp-img.slatic.net"
+    },
+    {
+        "ja3_hash": "9b02ebd3a43b62d825e1ac605b621dc8",
+        "ja3s_hash": "15af977ce25de452b96affa2addb1036",
+        "sni": "ae01.alicdn.com"
+    }
+]
