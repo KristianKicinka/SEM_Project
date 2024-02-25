@@ -109,7 +109,7 @@ class TestController extends Controller
         $process->stop();
     }
 
-    protected function getPreInstlledApps(){
+    protected function getPreInstlledApps_old(){
 
         $command = "docker exec ".env("EMULATOR_NAME", null)." adb shell cmd package list packages";
 
@@ -232,6 +232,39 @@ class TestController extends Controller
         $hashes = json_decode($process->getOutput());
 
         return $hashes[0]->sni;
+    }
+
+    protected function getInstlledApps(){
+
+    
+        
+            $file = base_path('scripts/pre_installed_apps.txt');
+            $packages = [];
+    
+            $file_handle = fopen($file, "r");
+    
+            if($file_handle){
+    
+                while(($line = fgets($file_handle)) !== false){
+                    $packages[] = trim($line);
+                }
+    
+                fclose($file_handle);
+                $response = [];
+    
+                foreach($packages as $package){
+                    $response[] = str_replace("package:", "", $package);
+                }
+
+                if(!in_array("com.android.server.telecom", $response))
+                    return "nie je";
+                else 
+                    return "je";
+        
+                return $response;
+            }else {
+                return "error";
+            }
     }
 
 }

@@ -163,11 +163,12 @@ def remove_adds (res_array):
 
     for res in res_array:
         sni = res["sni"]
-        for black_list_file in black_list_files:
-            with open(os.path.join(script_dir, black_list_file), "r") as file:
-                for line in file:
-                    if not (sni.strip().lower() == line.strip().lower()):
-                        filtered.append(res)
+        if sni:
+            for black_list_file in black_list_files:
+                with open(os.path.join(script_dir, black_list_file), "r") as file:
+                    for line in file:
+                        if not (sni.strip().lower() == line.strip().lower()):
+                            filtered.append(res)
     return filtered
 
 def add_to_string(full_string, items):
@@ -274,11 +275,12 @@ if __name__ == '__main__':
         }
         array_results.append(obj)
 
+
     array_results = remove_adds(array_results)
 
     # Remove duplicities
     tuple_of_results = [tuple(sorted(res.items())) for res in array_results]
     unique_tuples = set(tuple_of_results)
     array_results = [dict(tp) for tp in unique_tuples]
-    
+
     print(json.dumps(array_results))

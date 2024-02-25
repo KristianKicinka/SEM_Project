@@ -8,6 +8,7 @@ use App\Exceptions\AppUninstalationFailException;
 use App\Exceptions\AppVersionNotFoundException;
 use App\Exceptions\CloseAppFailException;
 use App\Exceptions\HashGeneratorFailException;
+use App\Exceptions\LoadingPreinstalledAppsFailed;
 use App\Exceptions\PackageNameNotFoundException;
 use App\Exceptions\PcapFileNotFoundException;
 use App\Exceptions\RunAppFailException;
@@ -17,12 +18,14 @@ use App\Models\Application;
 use App\Models\File;
 use App\Models\Hash;
 use App\Models\Process as ProcessModel;
+use Exception;
 use Illuminate\Support\Facades\Log;
 
 use Symfony\Component\Process\Process;
 
 const HASH_SCRIPT_PATH = 'scripts/hash_generator.py';
 const PCAP_PATH = 'app/public/pcaps/';
+const PRE_INSTALLED_APPS_FILE = 'scripts/pre_installed_apps.txt';
 
 class CreateHash {
 
@@ -323,24 +326,34 @@ class CreateHash {
 
     protected function getPreInstlledApps(){
 
-        $command = "docker exec ".env("EMULATOR_NAME", null)." adb shell cmd package list packages";
+        try {
+        
+            $file = base_path(PRE_INSTALLED_APPS_FILE);
+            $packages = [];
+    
+            $file_handle = fopen($file, "r");
+    
+            if($file_handle){
+    
+                while(($line = fgets($file_handle)) !== false){
+                    $packages[] = trim($line);
+                }
+    
+                fclose($file_handle);
+                $response = [];
+    
+                foreach($packages as $package){
+                    $response[] = str_replace("package:", "", $package);
+                }
+        
+                return $response;
+            }else {
+                throw new Exception("Error opening file!");
+            }
 
-        $process = Process::fromShellCommandline($command);
-        $process->run();
-
-        if (!$process->isSuccessful()) {
-            return "ERR: ".$process->getErrorOutput();
+        } catch(Exception $e){
+            throw new LoadingPreinstalledAppsFailed($e);
         }
-
-        $packages = explode("\n", $process->getOutput());
-
-        $response = [];
-
-        foreach($packages as $package){
-            $response[] = str_replace("package:", "", $package);
-        }
-
-        return $response;
     }
 
     /**

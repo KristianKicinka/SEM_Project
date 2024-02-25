@@ -56,10 +56,12 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
             $version_name = trim($this->getAppVersionName($apk_path));
             $application_name = trim($this->getAppName($apk_path));
 
+            $pre_installed_apps = $this->getPreInstlledApps();
+
             // App installation
             $this->hash_process_data->nextProcessPart();
 
-            if (!in_array($package_name, $this->getPreInstlledApps()))
+            if (!in_array($package_name, $pre_installed_apps))
                 $this->installAppOnEmulator($apk_path);
 
             // Network analysis
@@ -67,7 +69,7 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
             $pcap_file_path = $this->createPcapFile($pcap_file_name, $apk_path);
 
             // Clear android emulator
-            if (!in_array($package_name, $this->getPreInstlledApps()))
+            if (!in_array($package_name, $pre_installed_apps))
                 $this->uninstallAppOnEmulator($package_name);
             
             // Create hashes

@@ -6,6 +6,8 @@ import CopyClipboard from "./CopyClipboard";
 
 const Results = ({ show, handleClose, results, hashTypes }) => {
 
+    console.log(hashTypes);
+
     const hashItems = (hashType, hashes) => {
         return (
             <li className="list-group-item" key={hashType}>
@@ -14,7 +16,7 @@ const Results = ({ show, handleClose, results, hashTypes }) => {
                     {hashes?.map((hash, id) => {
                         return (
                             <li className="list-group-item" key={id} >
-                                <CopyClipboard text={hash}/>
+                                
                             </li>
                         );
                     })}
@@ -23,36 +25,58 @@ const Results = ({ show, handleClose, results, hashTypes }) => {
         );
     }
 
-    const resultItem = (key, data) => {
+    const resultItem = (key, data, hashTypes) => {
         return (
             <li key={key} >
-                <ul className="list-group">
-                    <li className="list-group-item">
-                        <b>App name : </b> {data.app_name}
-                    </li>
-                    <li className="list-group-item">
-                        <b>Package name : </b> {data.package_name}
-                    </li>
-                    <li className="list-group-item">
-                        <b>Version name : </b> {data.app_version}
-                    </li>
-                    {data.JA3_hashes?.length !== 0 && hashItems('JA3', data.JA3_hashes)}
-                    {data.JA3S_hashes?.length !== 0 && hashItems('JA3S', data.JA3S_hashes)}
-                    {data.FlowMon_hashes?.length !== 0 && hashItems('FlowMon', data.FlowMon_hashes)}
-                </ul>
+                {resultTable(data, hashTypes)}
             </li>
+        );
+    }
+
+    const resultTable = (data, hashTypes) => {
+        console.log(hashTypes);
+        return (
+            <table className="table">
+                <thead>
+                    <tr>
+                        <th>App name</th>
+                        <th>Pcakage name</th>
+                        <th>Version</th>
+                        {(hashTypes.includes("JA3")) ? <th>JA3 hash</th> : null}
+                        <th>SNI</th>
+                        {(hashTypes.includes("JA3S")) ? <th>JA3S hash</th> : null}
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.map((row) => dataItem(row))}
+                </tbody>
+            </table>
+        );
+    }
+
+    const dataItem = (row) => {
+        console.log(row.ja3_hash);
+        return (
+            <tr>
+                <td>{row.app_name}</td>
+                <td>{row.package_name}</td>
+                <td>{row.app_version}</td>
+                {(hashTypes.includes("JA3")) ? <td><CopyClipboard text={row.ja3_hash}/></td> : null}
+                <td><CopyClipboard text={row.sni}/></td>
+                {(hashTypes.includes("JA3S")) ? <td><CopyClipboard text={row.ja3s_hash}/></td> : null}
+            </tr>
         );
     }
 
     return (
         <div className="Results">
-            <Modal show={show} onHide={handleClose}>
+            <Modal size="xl" dialogClassName="modal-85w" show={show} onHide={handleClose} aria-labelledby="result-modal">
                 <Modal.Header closeButton>
-                    <Modal.Title>Results</Modal.Title>
+                    <Modal.Title id="result-modal">Results</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <ul className="list-unstyled">
-                        {Object.keys(results).map((key, index) => resultItem(index, results[key]))}
+                        {Object.keys(results).map((key, index) => resultItem(index, results[key], hashTypes))}
                     </ul>
                 </Modal.Body>
             </Modal>

@@ -256,7 +256,6 @@ class HashController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $JA3_hashes = $JA3S_hashes = $FlowMon_hashes = [];
         $response = [];
 
         foreach(json_decode($request->input('identifiers')) as $id){
@@ -264,7 +263,8 @@ class HashController extends Controller {
             $data = DB::table('processes')
             ->select(
                 'applications.name as app_name','applications.package_name as package_name',
-                'applications.version as app_version','hashes.hash as hash','hashes.hash_type as hash_type'
+                'applications.version as app_version','hashes.ja3_hash as ja3_hash',
+                'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash'
             )
             ->join('hashes','processes.id','=','hashes.process_id')
             ->join('applications','applications.id','=','hashes.app_id')
@@ -275,21 +275,7 @@ class HashController extends Controller {
                 return response()->json(['errors' => 'No hashes!'], 400);
             }
 
-
-            foreach ($data as $item){
-                $JA3_hashes[] = $item->hash;
-                $JA3S_hashes[] = $item->hash;
-                $FlowMon_hashes[] = $item->hash;
-            }
-
-            $response[$id] = [
-                'app_name' => $data[0]->app_name,
-                'package_name' => $data[0]->package_name,
-                'app_version' => $data[0]->app_version,
-                'JA3_hashes' => $JA3_hashes,
-                'JA3S_hashes' => $JA3S_hashes,
-                //'FlowMon_hashes' => $FlowMon_hashes,
-            ];
+            $response[$id] = $data;
         }
 
         return response()->json($response, 200);
