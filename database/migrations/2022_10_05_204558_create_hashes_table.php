@@ -17,8 +17,8 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('app_id')->unsigned();
             $table->bigInteger('process_id')->unsigned()->nullable();
-            $table->string('ja3_hash');
-            $table->string('ja3s_hash');
+            $table->string('ja3_hash')->nullable();
+            $table->string('ja3s_hash')->nullable();
             $table->string('sni')->nullable();
             $table->string('hash_type')->nullable();
             $table->timestamps();

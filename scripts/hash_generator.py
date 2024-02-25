@@ -156,6 +156,7 @@ def check_useless_domain_name(packet):
         
     return False
 
+
 def is_in_black_list(sni, black_list):
     return sni in black_list
 
