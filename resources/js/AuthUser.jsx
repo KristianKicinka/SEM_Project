@@ -48,7 +48,14 @@ const AuthUser = () => {
         }
     });
 
-    return { setToken:saveToken, token, user, getToken, http, logout }
+    const http_file = axios.create({
+        baseURL: `/api`,
+        headers: {
+            "Authorization" : `Bearer ${token}`
+        }
+    });
+
+    return { setToken:saveToken, token, user, getToken, http, http_file, logout }
 }
 
 export default AuthUser;

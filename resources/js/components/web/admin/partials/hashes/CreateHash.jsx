@@ -14,13 +14,13 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const [appVersionPcap, setAppVersionPcap] = useState("");
     const [hashTypesText, setHashTypesText] = useState([]);
     const [hashTypesPcap, setHashTypesPcap] = useState([]);
-    const [pcapFile, setPcapFile] = useState("");
+    const [pcapFile, setPcapFile] = useState(null);
     const [isMalwareText, setIsMalwareText] = useState(false);
     const [isMalwarePcap, setIsMalwarePcap] = useState(false);
     const [hash, setHash] = useState("");
 
     const [errors, setErrors] = useState({});
-    const {http} = AuthUser();
+    const {http, http_file} = AuthUser();
 
     const checkboxChangePcap = (e) => {
 
@@ -82,8 +82,10 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         data.append("is_malware_pcap", isMalwarePcap);
         data.append("pcap_file", pcapFile);
 
+        console.log(data);
+
         try {
-            let resp = await http.post('/admin/hash/create/pcap-file', data);
+            let resp = await http_file.post('/admin/hash/create/pcap-file', data);
             console.log(resp);
             setFetchDataState(prevState => !prevState);
             clearInputs();

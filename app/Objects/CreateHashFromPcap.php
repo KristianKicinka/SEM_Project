@@ -76,24 +76,30 @@ class CreateHashFromPcap extends CreateHash {
 
         $db_file->save();
 
-        foreach($data['hashes'] as $hash_type => $hashes){
-            foreach($hashes as $hash){
+        foreach($data["hashes"] as $hash){
+           
 
-                $identifier = [
-                    'app_id' => $application->id,
-                    'hash' => $hash,
-                    'hash_type' => $hash_type,
-                ];
+            /*
+            $identifier = [
+                'app_id' => $application->id,
+                'hash' => $hash,
+                'hash_type' => $hash_type,
+            ];
+            */
 
-                $new_record = [
-                    'app_id' => $application->id,
-                    'hash' => $hash,
-                    'hash_type' => $hash_type,
-                    'is_malware' => $data['is_malware'],
-                ];
+            $new_record = [
+                'app_id' => $application->id,
+                'ja3_hash' => $hash->ja3_hash,
+                'ja3s_hash' => $hash->ja3s_hash,
+                'hash_type' => null,
+                'sni' => $hash->sni,
+                'is_malware' => $data['is_malware'],
+            ];
+    
+            $db_hash = Hash::create($new_record);
+            $db_hash->save();
 
-                Hash::firstOrCreate($identifier, $new_record);
-            }
+            //Hash::firstOrCreate($identifier, $new_record);
         }
     }
 

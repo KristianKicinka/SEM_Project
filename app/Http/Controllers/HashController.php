@@ -79,7 +79,6 @@ class HashController extends Controller {
         $validator = Validator::make($request->all(), [
             'app_name_pcap' => 'required|string',
             'package_name_pcap' => 'required|string',
-            'app_version_pcap' => 'required|string',
             'hash_types_pcap' => 'required',
             'pcap_file' => 'required|file',
             'is_malware_pcap' => 'required',
