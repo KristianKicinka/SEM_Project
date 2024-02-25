@@ -436,7 +436,8 @@ class ApiRequestController extends Controller {
         $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[8]);
 
         $validator = Validator::make($request->all(), [
-            'flowmon_file' => 'required|file',
+            'flowmon_file' => 'required|mimes:csv',
+            'hash_type' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -444,32 +445,67 @@ class ApiRequestController extends Controller {
         }
 
         $flowmon_file = $request->file('flowmon_file');
-        $file_content = file($flowmon_file->getPathname());
-        $hashes = [];
+        $file = fopen($flowmon_file->getPathname(), "r");
 
-        foreach ($file_content as $row){
-            $data = str_getcsv($row);
-            ($data[83] == 'NIL') ?: $hashes[] = strtolower($data[83]);
+        $rows = [];
+        $header = fgetcsv($file);
+        $header = array_map("trim", $header);
+
+        //return response()->json($header, 200);
+
+        while ($row = fgetcsv($file)) {
+            $rows[] = array_combine($header, $row);
         }
-
-        array_shift($hashes);
-        $hashes = array_unique($hashes);
+        
+        $data = [];
+        foreach ($rows as $row){
+            $obj = [
+                "ja3_hash" => ($row["TLS_JA3_FINGERPRINT"] == 'NIL') ?: strtolower($row["TLS_JA3_FINGERPRINT"]),
+                "sni" => ($row["TLS_SNI"] == 'NIL') ?: strtolower($row["TLS_SNI"])
+            ];
+            $data[] = $obj;
+        }
 
         $results = [];
 
-        foreach ($hashes as $hash){
-            $apps = DB::table('applications')
-            ->select(
-                'applications.name',
-                'applications.package_name',
-                'applications.version',
-                'applications.is_malware'
-                )
-            ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-            ->where('hashes.hash', '=', $hash)
-            ->get();
+        // Remove header
+        //$rows = array_shift($rows);
 
-            $results[$hash] = $apps;
+        foreach ($data as $item){
+
+            if($request->input("hash_type") == "JA3"){
+                $apps = DB::table('applications')
+                    ->select(
+                        'applications.name',
+                        'applications.package_name',
+                        'applications.version',
+                        'applications.is_malware'
+                        )
+                    ->distinct()
+                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
+                    ->where('hashes.ja3_hash', '=', $item["ja3_hash"])
+                    ->get();
+
+                $results[] = ["ja3_hash" => $item["ja3_hash"], "apps" => $apps];
+            }
+
+            if($request->input("hash_type") == "JA3_SNI"){
+                $apps = DB::table('applications')
+                    ->select(
+                        'applications.name',
+                        'applications.package_name',
+                        'applications.version',
+                        'applications.is_malware'
+                        )
+                    ->distinct()
+                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
+                    ->where('hashes.ja3_hash', '=', $item["ja3_hash"])
+                    ->where('hashes.sni', '=', $item["sni"])
+                    ->get();
+
+                $results[] = ["ja3_hash" => $item["ja3_hash"], "sni" => $item["sni"] ,"apps" => $apps];
+            }
+            
         }
 
         return response()->json($results, 200);
