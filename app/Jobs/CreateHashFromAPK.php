@@ -51,10 +51,13 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
 
             $this->addFileToFiles($this->apk_file_name, 'APK', $apk_path);
 
+            $emulator = $this->get_free_emulator();
+            $this->set_emulator_working_state($emulator, true);
+
             // Get information's about APK file
-            $package_name = trim($this->getAppPackageName($apk_path));
-            $version_name = trim($this->getAppVersionName($apk_path));
-            $application_name = trim($this->getAppName($apk_path));
+            $package_name = trim($this->getAppPackageName($emulator, $apk_path));
+            $version_name = trim($this->getAppVersionName($emulator, $apk_path));
+            $application_name = trim($this->getAppName($emulator, $apk_path));
 
             $pre_installed_apps = $this->getPreInstlledApps();
 
@@ -62,15 +65,17 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
             $this->hash_process_data->nextProcessPart();
 
             if (!in_array($package_name, $pre_installed_apps))
-                $this->installAppOnEmulator($apk_path);
+                $this->installAppOnEmulator($emulator, $apk_path);
 
             // Network analysis
             $this->hash_process_data->nextProcessPart();
-            $pcap_file_path = $this->createPcapFile($pcap_file_name, $apk_path);
+            $pcap_file_path = $this->createPcapFile($emulator, $pcap_file_name, $apk_path);
 
             // Clear android emulator
             if (!in_array($package_name, $pre_installed_apps))
-                $this->uninstallAppOnEmulator($package_name);
+                $this->uninstallAppOnEmulator($emulator, $package_name);
+
+            $this->set_emulator_working_state($emulator, false);
             
             // Create hashes
             $this->hash_process_data->nextProcessPart();
