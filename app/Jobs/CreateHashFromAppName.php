@@ -26,6 +26,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private string $package_name;
+    private $emulator;
 
     /**
      * Create a new job instance.
@@ -68,11 +69,15 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 
             $this->addFileToFiles($apk_file_name, 'APK', $apk_path);
 
+            $emulator = $this->get_free_emulator();
+            $this->emulator = $emulator;
+            $this->set_emulator_working_state($emulator, true);
+
             // Get information's about APK file
             $this->hash_process_data->nextProcessPart();
-            $package_name = trim($this->getAppPackageName($apk_path));
-            $version_name = trim($this->getAppVersionName($apk_path));
-            $application_name = trim($this->getAppName($apk_path));
+            $package_name = trim($this->getAppPackageName($emulator, $apk_path));
+            $version_name = trim($this->getAppVersionName($emulator, $apk_path));
+            $application_name = trim($this->getAppName($emulator, $apk_path));
 
             $pre_installed_apps = $this->getPreInstlledApps();
 
@@ -80,15 +85,17 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
             $this->hash_process_data->nextProcessPart();
 
             if (!in_array($package_name, $pre_installed_apps))
-                $this->installAppOnEmulator($apk_path);
+                $this->installAppOnEmulator($emulator, $apk_path);
 
             // Network analysis
             $this->hash_process_data->nextProcessPart();
-            $pcap_file_path = trim($this->createPcapFile($pcap_file_name, $apk_path));
+            $pcap_file_path = trim($this->createPcapFile($emulator, $pcap_file_name, $apk_path));
 
             // Clear android emulator
             if (!in_array($package_name, $pre_installed_apps))
-                $this->uninstallAppOnEmulator($package_name);
+                $this->uninstallAppOnEmulator($emulator, $package_name);
+
+            $this->set_emulator_working_state($emulator, false);
 
             // Create hashes
             $this->hash_process_data->nextProcessPart();
@@ -109,6 +116,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
     
         } catch(Exception $e){
             $this->hash_process_data->setFailed();
+            $this->set_emulator_working_state($emulator, false);
             throw new HashGenerationProcessFailed($e);
         }
     }

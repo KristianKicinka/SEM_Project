@@ -21,6 +21,7 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private string $apk_file_name;
+    private $emulator;
 
     /**
      * Create a new job instance.
@@ -52,6 +53,7 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
             $this->addFileToFiles($this->apk_file_name, 'APK', $apk_path);
 
             $emulator = $this->get_free_emulator();
+            $this->emulator = $emulator;
             $this->set_emulator_working_state($emulator, true);
 
             // Get information's about APK file
@@ -98,7 +100,7 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
 
         } catch(Exception $e){
             $this->hash_process_data->setFailed();
-            $this->set_emulator_working_state($emulator, false);
+            $this->set_emulator_working_state($this->emulator, false);
             throw new HashGenerationProcessFailed($e);
         }
     }
