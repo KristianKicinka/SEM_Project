@@ -24,6 +24,7 @@
         "match-sorter": "^6.3.1",
         "playwright": "^1.31.2",
         "prismjs": "^1.29.0",
+        "pusher-js": "^8.4.0-rc2",
         "react-bootstrap": "^2.5.0",
         "react-bootstrap-pagination-control": "^1.0.5",
         "react-error-boundary": "^4.0.12",
