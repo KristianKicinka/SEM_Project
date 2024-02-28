@@ -95,3 +95,4 @@ Route::get("/download", [TestController::class, 'download']);
 Route::get("/get_installed_apps", [TestController::class, 'getInstlledApps']);
 Route::get("/create_hashes", [TestController::class, 'createHashes']);
 
+Route::get("/pusher", [TestController::class, 'pusher']);

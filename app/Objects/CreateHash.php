@@ -34,17 +34,17 @@ class CreateHash {
     protected array $hashes = [];
     protected array $hash_types = [];
 
-    protected string $job_id;
+    protected string $process_id;
     protected string $ip_address;
 
     protected HashProcessData $hash_process_data;
 
-    public function __construct($hash_types, $input_type, $job_id, $ip_address) {
+    public function __construct($hash_types, $input_type, $process_id, $ip_address, $channel_id, $apk_file_name) {
 
         $this->hash_types = $hash_types;
-        $this->job_id = $job_id;
+        $this->process_id = $process_id;
         $this->ip_address = $ip_address;
-        $this->hash_process_data = new HashProcessData($job_id, $input_type, $ip_address);
+        $this->hash_process_data = new HashProcessData($process_id, $input_type, $ip_address, $channel_id, $apk_file_name);
     }
 
     /**
@@ -363,7 +363,7 @@ class CreateHash {
      */
     protected function saveHashes($data) : void {
 
-        $process_id = ProcessModel::where('job_id', '=', $this->job_id)->first()->id;
+        $process_id = ProcessModel::where('job_id', '=', $this->process_id)->first()->id;
 
         $identifier = [
             'name' => $data['app_name'],

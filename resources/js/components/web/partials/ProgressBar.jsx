@@ -6,7 +6,6 @@ const ProgressBar = ({ description, completed }) => {
     return (
         <div className='ProgressBar'>
             <div className='container'>
-                <div className='row'>{description}</div>
                 <div className='row'>
                     <div className='progress'>
                         <div

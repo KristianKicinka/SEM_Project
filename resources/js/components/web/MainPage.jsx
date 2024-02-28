@@ -41,17 +41,6 @@ const MainPage = () => {
                 setLoadingData={setLoadingData}
             />
 
-            <LoadingModal 
-                show={showLoading} 
-                handleClose={handleCloseLoading} 
-                loadingData={loadingData} 
-            />
-            <Results 
-                show={showResults} 
-                handleClose={handleCloseResults} 
-                results={results}
-                hashTypes={hashTypes} 
-            />
             <ToastContainer
                 position="bottom-right"
                 autoClose={5000}

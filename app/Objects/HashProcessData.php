@@ -4,6 +4,7 @@ namespace App\Objects;
 
 use App\Models\Process as ProcessModel;
 use Illuminate\Support\Facades\Log;
+use App\Events\ProcessUpdate;
 
 const APP_NAME_MESSAGES = [
     "Getting an application package name",
@@ -35,6 +36,8 @@ class HashProcessData {
 
     private int $process_part;
     private string $process_id;
+    private string $process_name;
+    private string $channel_id;
     private string $ip_address;
     private string $status;
     private int $progress;
@@ -42,8 +45,10 @@ class HashProcessData {
 
     private array $messages = [];
 
-    public function __construct($process_id, $type, $ip_address){
+    public function __construct($process_id, $type, $ip_address, $channel_id, $process_name){
         $this->process_id = $process_id;
+        $this->process_name = $process_name;
+        $this->channel_id = $channel_id;
         $this->ip_address = $ip_address;
         $this->preset();
         $this->setMessagesArray($type);
@@ -125,6 +130,10 @@ class HashProcessData {
             'message' => $this->message,
         ];
 
+        // Save process to DB
         ProcessModel::updateOrCreate($identifier, $data);
+
+        // Send process to pusher channel
+        ProcessUpdate::dispatch($this->channel_id, $this->process_id, $this->status, $this->progress, $this->message, $this->process_name);
     }
 }

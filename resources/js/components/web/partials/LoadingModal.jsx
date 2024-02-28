@@ -1,67 +1,112 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { Modal, Button, Spinner, ProgressBar } from "react-bootstrap";
+import { Modal, Button, Spinner } from "react-bootstrap";
 
-const LoadingModal = ({ show, handleClose, loadingData }) => {
+import ProgressBar from 'react-bootstrap/ProgressBar';
+import pusher from "../../../pusher";
+import Results from "../partials/Results";
 
-    const header = "Hash creation in progress...";
+const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
 
-    const loadingItem = (key, name, progress, message) => {
+    console.log(processes);
+    const [updatedProcesses, setUpdatedProcesses] = useState(processes);
+    const [showResults, setShowResults] = useState(false);
+    const [results, setResults] = useState([]);
+
+    useEffect(() => {
+
+        const channel = pusher.subscribe(`process-channel-${channel_id}`);
+        console.log(channel);
+        channel.bind('process-update', data => {
+
+            console.log(data);
+            setUpdatedProcesses(prevProcesses => {
+                const index = prevProcesses.findIndex(process => process.process_id === data.process_id);
+                
+                if (index !== -1){
+                    const updatedProcesses = [...prevProcesses];
+                    updatedProcesses[index] = { ...updatedProcesses[index], ...data };
+                    return updatedProcesses;
+                }else{
+                    return [...prevProcesses, data];
+                }
+            });
+        });
+
+        return () => {
+            pusher.unsubscribe(`process-channel-${channel_id}`);
+        };
+    }, [channel_id]);
+
+    const closeResults = () => {
+        setShowResults(false);
+    }
+
+    const getResults = async (process_id) => {
+        try {
+            const data = new FormData();
+            data.append("process_id", process_id);
+
+            let results = await axios.post('/api/get-process-results', data);
+            console.log(results.data);
+
+            setResults(results.data);
+            setShowResults(true);
+        } catch (error) {
+            onClose()
+            toast.error('Hash generation error!');
+            console.log(`ERROR: ${error}`);
+        }
+    }
+    
+
+    const loadingItem = (process) => {
         return (
-            <li key={key}>
-               <div className="container">
-                    <div className="row">
-                        <div className="col">
-                            <p>{name ? name+' :' : null}</p>
-                        </div>
-                    </div>
-                    <div className="row">
-                        <div className="col">
-                            <ProgressBar 
-                                now={progress} 
-                                label={`${progress}%`} 
-                            />
-                        </div>
-                    </div>
-                    <div className="row py-3">
-                        <div className="col" />
-                            <div className="col-auto">
-                                <b>{message}</b>
-                            </div>
-                        <div className="col" />
-                    </div> 
-               </div>
-            </li>
+            <tr key={process.process_id} className="align-middle gx-5">
+                <td className="col">{process.name}</td>
+                <td className="col-md-3 text-center"><ProgressBar now={process.progress} label={`${process.progress}%`} /></td>
+                <td className="col text-center">{process.message}</td>
+                <td className="col">{process.status}</td>
+                {process.status === 'failed' && <td className="col">Process failed</td>}
+                {process.status === 'finished' && (
+                    <td className="col text-center" ><button className="btn btn-sm btn-search text-light" onClick={() => getResults(process.process_id)}>Show Results</button></td>
+                )}
+            </tr>
         );
     }
 
     return (
         <div className="LoadingModal">
-            <Modal show={show}>
+            <Modal show={true} onHide={onClose} size="xl" dialogClassName="modal-85w">
+                <Modal.Header closeButton>
+                    <Modal.Title className="px-md-4">Hash creation process</Modal.Title>
+                </Modal.Header>
                 <Modal.Body>
-                    <div className="container p-4">
-                        <div className="row pb-4">
-                            <div className="col" />
-                            <div className="col-auto">
-                                <h3>{header}</h3>
-                            </div>
-                            <div className="col" />
-                        </div>
+                    <div className="container">
                         <div className="row">
                             <div className="container">
-                                <ul className="list-unstyled">
-                                    {Object.keys(loadingData).map((data_key, index) => 
-                                        loadingItem(
-                                            index, loadingData[data_key]?.name,
-                                            loadingData[data_key]?.progress,
-                                            loadingData[data_key]?.message)
-                                    )}
-                                </ul>
+                                <div className="table-responsive">
+                                <table className="table px-2">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th className="text-center">Progress</th>
+                                            <th className="text-center">Info</th>
+                                            <th>Status</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {updatedProcesses.map((process) => loadingItem(process))}
+                                    </tbody>
+                                </table>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </Modal.Body>
             </Modal>
+            {showResults && (<Results results={results} onClose={closeResults} hashTypes={hashTypes} />)}
         </div>
     );
 };

@@ -4,9 +4,11 @@ import ReactDOM from 'react-dom';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import axios from 'axios';
+import pusher from "../../../pusher"; 
 
-import { setNewActiveProcess } from '../../../processManagement';
+import { setNewActiveChannel, setNewActiveProcess } from '../../../processManagement';
 import { toast } from 'react-toastify';
+import LoadingModal from './LoadingModal';
 
 
 const ApkInput = ({
@@ -14,9 +16,10 @@ const ApkInput = ({
     setResults, hashTypes, setLoadingData
 }) => {
 
-    const [apkFile, setApkFile] = useState(null);
-    const [pollingInterval, setPollingInterval] = useState(null);
-    let process_id = null;
+    const [apkFiles, setApkFiles] = useState([]);
+    const [showLoading, setShowLoading] = useState(false);
+    const [channelID, setChannelID] = useState(false);
+    const [processes, setProcesses] = useState([]);
 
     const createHash = async (event) => {
         event.preventDefault();
@@ -26,50 +29,32 @@ const ApkInput = ({
             return;
         }
 
-        handleShowLoading();
-
-        process_id = setNewActiveProcess();
+        let channel_id = setNewActiveChannel();
+        console.log(channel_id);
+        setChannelID(channel_id);
 
         const data = new FormData();
-        data.append("apk_file", apkFile);
-        data.append("hash_types", JSON.stringify(hashTypes));
-        data.append("frontend_id", process_id);
-
-        try {
-            let results = await axios.post('/api/create-hash-apk', data);
-            console.log(results.data);
-            pollStatus();
-            setPollingInterval(setInterval(pollStatus, 2000));
-        } catch (error) {
-            clearInterval(pollingInterval);
-            setPollingInterval(null);
-
-            handleCloseLoading();
-            toast.error('Hash generation error!');
-            console.log(`ERROR: ${error}`);
-        }
-    }
-
-    const handleResults = async () => {
+        console.log(apkFiles);
+        apkFiles.map((apkFile) => {
+            data.append("files[]", apkFile);
+        });
         
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
+        data.append("hash_types", JSON.stringify(hashTypes));
+        data.append("channel_id", channel_id);
 
-        let identifiers = [process_id];
-        console.log(identifiers);
+        console.log(data);
 
         try {
-
-            const data = new FormData();
-            data.append("identifiers", JSON.stringify(identifiers));
-
-            let results = await axios.post('/api/get-process-results', data);
+            let results = await axios.post('/api/create-hash-apk', data, { 
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            });
             console.log(results.data);
 
-            setResults(results.data);
+            setProcesses(results.data.processes);
+            setShowLoading(true);
 
-            handleCloseLoading();
-            handleShowResults();
         } catch (error) {
             handleCloseLoading();
             toast.error('Hash generation error!');
@@ -77,43 +62,13 @@ const ApkInput = ({
         }
     }
 
-    const pollStatus = async () => {
-        let info = await getProcessInfo(process_id);
-
-        setLoadingData(info);
-        let process = info[process_id];
-
-        if(process.status === 'finished')
-            handleResults();
-
-        if(process.status === 'failed'){
-            handleCloseLoading();
-
-            clearInterval(pollingInterval);
-            setPollingInterval(null);
-
-            toast.error('Hash generation error!');
-            console.log(`ERROR: ${error}`);
-        }
-    }
-
-    const getProcessInfo = async (processID) => {
-        try {
-            const data = new FormData();
-            data.append("identifiers", JSON.stringify([processID]));
-
-            let results = await axios.post('/api/get-process-info', data);
-
-            return results.data;
-        } catch (error) {
-            toast.error('Hash generation error!');
-            console.log(`ERROR: ${error}`);
-        }
+    const closeLoading = () => {
+        setShowLoading(false);
     }
 
     useEffect(() => {
-        return () => clearInterval(pollingInterval);
-    }, [pollingInterval]);
+
+    }, []);
 
     return (
         <div className='bg-light text-dark p-3 rounded-3'>
@@ -121,10 +76,13 @@ const ApkInput = ({
                 <h3 className='pb-2'>Insert APK file</h3>
                 <Form.Group controlId="formFileAPK" className="row">
                     <Form.Control type="file" className='col'
-                        onChange={e=>{setApkFile(e.target.files[0])}} accept='.apk' required />
+                        onChange={e=>{setApkFiles(Array.from(e.target.files))}} accept='.apk' required multiple/>
                     <Button id="submit_apk_files" type='submit' className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
                 </Form.Group>
             </Form>
+            {showLoading && (
+                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} />
+            ) }
         </div>
     );
 }

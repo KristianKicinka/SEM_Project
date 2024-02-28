@@ -233,7 +233,7 @@ class ApiRequestController extends Controller {
 
         $apk_file_name = $this->saveApkFile($request->file('apk_file'));
         $apk_original_file_name = $request->file('apk_file')->getClientOriginalName();
-        $process_id = 'ext_api_'.Str::random(20);
+        $process_id = uniqid('ext_api_', true);
 
         $job_id = CreateHashFromAPK::dispatch(
             $apk_file_name,

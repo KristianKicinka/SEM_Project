@@ -70,6 +70,14 @@ return [
             'block_for' => null,
         ],
 
+        'process_queue' => [
+            'driver' => 'redis',
+            'connection' => 'pusher',
+            'queue' => env('PUSHER_QUEUE', 'pusher'),
+            'retry_after' => 90,
+            'block_for' => null,
+        ],
+
     ],
 
     /*

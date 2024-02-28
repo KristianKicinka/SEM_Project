@@ -4,60 +4,14 @@ import { Modal, Button } from "react-bootstrap";
 
 import CopyClipboard from "./CopyClipboard";
 
-const Results = ({ show, handleClose, results, hashTypes }) => {
+const Results = ({ results, onClose, hashTypes }) => {
 
     console.log(hashTypes);
 
-    const hashItems = (hashType, hashes) => {
-        return (
-            <li className="list-group-item" key={hashType}>
-                <b>{hashType} Hashes : </b>
-                <ul className="list-group list-group-flush">
-                    {hashes?.map((hash, id) => {
-                        return (
-                            <li className="list-group-item" key={id} >
-                                
-                            </li>
-                        );
-                    })}
-                </ul>
-            </li>
-        );
-    }
-
-    const resultItem = (key, data, hashTypes) => {
-        return (
-            <li key={key} >
-                {resultTable(data, hashTypes)}
-            </li>
-        );
-    }
-
-    const resultTable = (data, hashTypes) => {
-        console.log(hashTypes);
-        return (
-            <table className="table">
-                <thead>
-                    <tr>
-                        <th>App name</th>
-                        <th>Pcakage name</th>
-                        <th>Version</th>
-                        {(hashTypes.includes("JA3")) ? <th>JA3 hash</th> : null}
-                        <th>SNI</th>
-                        {(hashTypes.includes("JA3S")) ? <th>JA3S hash</th> : null}
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.map((row) => dataItem(row))}
-                </tbody>
-            </table>
-        );
-    }
-
-    const dataItem = (row) => {
+    const dataItem = (row, index) => {
         console.log(row.ja3_hash);
         return (
-            <tr>
+            <tr key={index}>
                 <td>{row.app_name}</td>
                 <td>{row.package_name}</td>
                 <td>{row.app_version}</td>
@@ -70,14 +24,26 @@ const Results = ({ show, handleClose, results, hashTypes }) => {
 
     return (
         <div className="Results">
-            <Modal size="xl" dialogClassName="modal-85w" show={show} onHide={handleClose} aria-labelledby="result-modal">
+            <Modal size="xl" dialogClassName="modal-85w" show={true} onHide={onClose} aria-labelledby="result-modal">
                 <Modal.Header closeButton>
                     <Modal.Title id="result-modal">Results</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <ul className="list-unstyled">
-                        {Object.keys(results).map((key, index) => resultItem(index, results[key], hashTypes))}
-                    </ul>
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th>App name</th>
+                                <th>Pcakage name</th>
+                                <th>Version</th>
+                                {(hashTypes.includes("JA3")) ? <th>JA3 hash</th> : null}
+                                <th>SNI</th>
+                                {(hashTypes.includes("JA3S")) ? <th>JA3S hash</th> : null}
+                            </tr>
+                        </thead>
+                    <tbody>
+                        {results.map((row) => dataItem(row))}
+                    </tbody>
+                </table>
                 </Modal.Body>
             </Modal>
         </div>

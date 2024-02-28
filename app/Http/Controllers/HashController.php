@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\ProcessUpdate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -34,8 +35,8 @@ class HashController extends Controller {
 
         $validator = Validator::make($request->all(), [
             'hash_types' => 'required',
-            'frontend_id' => 'required|string',
-            'apk_file' => 'required|file',
+            'channel_id' => 'required|string',
+            'files.*' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -43,18 +44,30 @@ class HashController extends Controller {
         }
 
         $ip_address = $request->ip();
-        $frontend_id = $request->input('frontend_id');
+        $channel_id = $request->input('channel_id');
         $hash_types = json_decode($request->input('hash_types'));
-        $apk_file_name = $this->saveApkFile($request->file('apk_file'));
 
-        $job_id = CreateHashFromAPK::dispatch(
-            $apk_file_name,
-            $hash_types,
-            $ip_address,
-            $frontend_id
-        )->onQueue('default');
 
-        return response()->json(['job_id' => $job_id], 200);
+        $apk_files = $request->file("files");
+        $processes = [];
+
+        foreach ($apk_files as $apk_file){
+            $apk_file_name = $this->saveApkFile($apk_file);
+            $process_id = uniqid('int_api_', true);
+
+            $job_id = CreateHashFromAPK::dispatch(
+                $apk_file_name,
+                $hash_types,
+                $ip_address,
+                $channel_id,
+                $process_id,
+            )->onQueue('process_queue');
+
+            $process = ["process_id" => $process_id, "name" => $apk_file_name, "message" => "Waiting in queue", "progress" => 0, "status" => "processing"];
+            $processes[] = $process;
+        }
+        
+        return response()->json(['processes' => $processes, "channel_id" => $request->input("channel_id")], 200);
     }
 
     /**
@@ -140,7 +153,7 @@ class HashController extends Controller {
             $request->hash_types,
             $ip_address,
             $frontend_id
-            )->onQueue('default');
+            )->onQueue('process_queue');
 
         return response()->json(['job_id' => $job_id], 200);
     }
@@ -248,18 +261,14 @@ class HashController extends Controller {
     public function getProcessResults(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
-            'identifiers' => 'required',
+            'process_id' => 'required',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $response = [];
-
-        foreach(json_decode($request->input('identifiers')) as $id){
-
-            $data = DB::table('processes')
+        $results = DB::table('processes')
             ->select(
                 'applications.name as app_name','applications.package_name as package_name',
                 'applications.version as app_version','hashes.ja3_hash as ja3_hash',
@@ -267,18 +276,16 @@ class HashController extends Controller {
             )
             ->join('hashes','processes.id','=','hashes.process_id')
             ->join('applications','applications.id','=','hashes.app_id')
-            ->where('processes.job_id','=',$id)
+            ->where('processes.job_id','=',$request->input("process_id"))
             ->get();
 
-            if(count($data) == 0){
-                return response()->json(['errors' => 'No hashes!'], 400);
-            }
-
-            $response[$id] = $data;
+        if(count($results) == 0){
+            return response()->json(['errors' => 'No hashes!'], 400);
         }
 
-        return response()->json($response, 200);
+        return response()->json($results, 200);
     }
+
 
     /**
      * @param Request $request
