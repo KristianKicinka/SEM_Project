@@ -116,7 +116,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
     
         } catch(Exception $e){
             $this->hash_process_data->setFailed();
-            $this->set_emulator_working_state($emulator, false);
+            $this->set_emulator_working_state($this->emulator, false);
             throw new HashGenerationProcessFailed($e);
         }
     }

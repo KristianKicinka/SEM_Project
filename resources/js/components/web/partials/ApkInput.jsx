@@ -82,7 +82,7 @@ const ApkInput = ({
             </Form>
             {showLoading && (
                 <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} />
-            ) }
+            )}
         </div>
     );
 }

@@ -1,2 +1,3 @@
-com.facebook.orca
+com.snapchat.android
 com.netflix.mediaclient
+org.telegram.messenger

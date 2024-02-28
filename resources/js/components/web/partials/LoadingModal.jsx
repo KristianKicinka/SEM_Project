@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { Modal, Button, Spinner } from "react-bootstrap";
+import { Modal, Button, Spinner, Badge } from "react-bootstrap";
 
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import pusher from "../../../pusher";
@@ -67,10 +67,10 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
                 <td className="col-md-3 text-center"><ProgressBar now={process.progress} label={`${process.progress}%`} /></td>
                 <td className="col text-center">{process.message}</td>
                 <td className="col">{process.status}</td>
-                {process.status === 'failed' && <td className="col">Process failed</td>}
-                {process.status === 'finished' && (
-                    <td className="col text-center" ><button className="btn btn-sm btn-search text-light" onClick={() => getResults(process.process_id)}>Show Results</button></td>
-                )}
+                <td className="col text-center">
+                    {process.status === 'failed' && <Badge bg="danger">Process failed!</Badge>}
+                    {process.status === 'finished' && ( <button className="btn btn-sm btn-search text-light" onClick={() => getResults(process.process_id)}>Show Results</button>)}
+                </td>
             </tr>
         );
     }

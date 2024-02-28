@@ -195,6 +195,7 @@ class HashController extends Controller {
         $validator = Validator::make($request->all(), [
             'text_file' => 'required|file|mimes:txt',
             'hash_types' => 'required',
+            'channel_id' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -203,22 +204,27 @@ class HashController extends Controller {
 
         $hash_types = json_decode($request->input('hash_types'));
         $ip_address = $request->ip();
+        $channel_id = $request->input("channel_id");
         $text_file_path = $this->saveTextFile($request->file('text_file'));
 
         $package_names = file($text_file_path);
 
-        $response = [];
-
         foreach($package_names as $package_name){
-            $frontend_id = 'int_api_'.Str::random(20);
-            $response[$package_name] = $frontend_id;
+            $process_id = uniqid('int_api_', true);
 
-            CreateHashFromAppName::dispatch(
-                $package_name, $hash_types, $ip_address, $frontend_id
-            )->onQueue('default');
+            $job_id = CreateHashFromAppName::dispatch(
+                trim($package_name),
+                $hash_types,
+                $ip_address,
+                $channel_id,
+                $process_id,
+                )->onQueue('process_queue');
+            
+            $process = ["process_id" => $process_id, "name" => $package_name, "message" => "Waiting in queue", "progress" => 0, "status" => "processing"];
+            $processes[] = $process;
         }
 
-        return response()->json($response, 200);
+        return response()->json(['processes' => $processes], 200);
     }
 
     /**

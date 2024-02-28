@@ -3,7 +3,10 @@ import ReactDOM from 'react-dom';
 
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
+
+import { setNewActiveChannel, setNewActiveProcess } from '../../../processManagement';
 import { toast } from 'react-toastify';
+import LoadingModal from './LoadingModal';
 
 const AppNamesInput = ({
     handleShowLoading, handleCloseLoading, handleShowResults,
@@ -11,14 +14,15 @@ const AppNamesInput = ({
 }) => {
 
     const [file, setFile] = useState(null);
-    const [pollingInterval, setPollingInterval] = useState(null);
-    const [identifiers, setIdentifiers] = useState(null);
+    const [showLoading, setShowLoading] = useState(false);
+    const [channelID, setChannelID] = useState(false);
+    const [processes, setProcesses] = useState([]);
 
     const handleChange = file => {
         setFile(file[0]);
     }
 
-    const saveFilesNames = (event) => {
+    const saveFilesNames = async (event) => {
         event.preventDefault();
 
         if(hashTypes.length === 0){
@@ -26,92 +30,37 @@ const AppNamesInput = ({
             return;
         }
 
+        let channel_id = setNewActiveChannel();
+        console.log(channel_id);
+        setChannelID(channel_id);
+
         const data = new FormData();
         data.append("text_file", file);
+        data.append("channel_id", channel_id);
         data.append("hash_types", JSON.stringify(hashTypes));
 
-        axios.post('/api/create-hash-textfile', data).then( res =>{
-            console.log(res.data);
-            setIdentifiers(res.data);
-        });
-    }
-
-    const handleResults = async () => {
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
-
         try {
-            const data = new FormData();
-            data.append("identifiers", JSON.stringify(identifiers));
-
-            let results = await axios.post('/api/get-process-results', data);
+            let results = await axios.post('/api/create-hash-textfile', data );
             console.log(results.data);
-            setResults(results.data);
 
-            handleCloseLoading();
-            handleShowResults();
+            setProcesses(results.data.processes);
+            setShowLoading(true);
+
         } catch (error) {
-            handleCloseLoading();
+            setShowLoading(false);
             toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
     }
 
-    const pollStatus = async () => {
-        let info = await getProcessInfo(identifiers);
-
-        Object.keys(identifiers).map((key) => {
-            let id = identifiers[key];
-            let process = info[id];
-
-            if(process.status === 'finished')
-                handleResults();
-
-            if(process.status === 'failed'){
-                handleCloseLoading();
-
-                clearInterval(pollingInterval);
-                setPollingInterval(null);
-
-                toast.error('Hash generation error!');
-                console.log(`ERROR: ${error}`);
-            }
-        });
-        
-        return;
-        setLoadingData(info);
-        let process = info[process_id];
-
-        if(info.status === 'finished')
-            handleResults();
-
-        if(info.status === 'failed'){
-            handleCloseLoading();
-            clearInterval(pollingInterval);
-            setPollingInterval(null);
-
-            toast.error('Hash generation error!');
-            console.log(`ERROR: ${error}`);
-        }
-    }
-
-    const getProcessInfo = async (identifiers) => {
-        try {
-            const data = new FormData();
-            data.append("identifiers", JSON.stringify([identifiers]));
-
-            let results = await axios.post('/api/get-process-info', data);
-            console.log(results.data);
-            return results.data;
-        } catch (error) {
-            toast.error('Hash generation error!');
-            console.log(`ERROR: ${error}`);
-        }
+   
+    const closeLoading = () => {
+        setShowLoading(false);
     }
 
     useEffect(() => {
-        return () => clearInterval(pollingInterval);
-    }, [pollingInterval]);
+
+    }, []);
 
     return (
         <div className='bg-light text-dark p-3 rounded-3'>
@@ -129,6 +78,9 @@ const AppNamesInput = ({
                     </Button>
                 </Form.Group>
             </Form>
+            {showLoading && (
+                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} />
+            )}
         </div>
     );
 }
