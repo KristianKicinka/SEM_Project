@@ -261,7 +261,7 @@ class CreateHash {
      */
     protected function getAppPackageName($emulator, $apk_file_path) : string {
 
-        $command = "aapt dump badging ".trim($apk_file_path)." | grep \"package: name\" | awk -F \"'\" '{print $2}'";
+        $command = "aapt dump badging ".trim($apk_file_path)." | grep 'package: name' | awk -F \"'\" '{print $2}'";
 
         if (env("ENVIRONMENT", "local") == "server"){
             $command = 'docker exec '.$emulator->name.' '.$command;
