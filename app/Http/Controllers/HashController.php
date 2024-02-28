@@ -136,7 +136,7 @@ class HashController extends Controller {
     public function createHashFromAppName(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
-            'frontend_id' => 'required|string',
+            'channel_id' => 'required|string',
             'package_name' => 'required|string',
             'hash_types' => 'required',
         ]);
@@ -146,16 +146,21 @@ class HashController extends Controller {
         }
 
         $ip_address = $request->ip();
-        $frontend_id = $request->input('frontend_id');
+        $channel_id = $request->input('channel_id');
+        $process_id = uniqid('int_api_', true);
 
         $job_id = CreateHashFromAppName::dispatch(
             $request->package_name, 
             $request->hash_types,
             $ip_address,
-            $frontend_id
+            $channel_id,
+            $process_id,
             )->onQueue('process_queue');
+        
+        $process = ["process_id" => $process_id, "name" => $request->package_name, "message" => "Waiting in queue", "progress" => 0, "status" => "processing"];
+        $processes[] = $process;
 
-        return response()->json(['job_id' => $job_id], 200);
+        return response()->json(['processes' => $processes], 200);
     }
 
     public function createHashFromTextInput(Request $request): JsonResponse {

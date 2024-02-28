@@ -56,7 +56,7 @@ const ApkInput = ({
             setShowLoading(true);
 
         } catch (error) {
-            handleCloseLoading();
+            setShowLoading(false);
             toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
