@@ -335,4 +335,9 @@ class HashController extends Controller {
 
         return response()->json($data, 200);
     }
+
+    public function deleteHashAdmin (Request $request): JsonResponse {
+        DB::table("hashes")->where("hashes.id", "=", $request->input("hash_id"))->delete();
+        return response()->json("Hash deleted", 200);
+    }
 }

@@ -8,6 +8,7 @@ import TableComponent from "../partials/TableComponent";
 import AuthUser from "../../../AuthUser";
 
 import CreateHash from "./partials/hashes/CreateHash";
+import DeleteHash from "./partials/hashes/DeleteHash";
 //import DeleteHash from "./partials/hashes/DeleteHash";
 
 const columnNames = ["ID", "JA3 hash", "SNI", "JA3S hash" ,"App Name", "Package name", "Version"];
@@ -20,6 +21,9 @@ const Hashes = () => {
 
     const [fetchDataState, setFetchDataState] = useState(false);
 
+    const [hashOnDelete, setHashOnDelete] = useState(null);
+    const [hashOnUpdate, setHashOnUpdate] = useState(null);
+
     const [createModalShow, setCreateModalShow] = useState(false);
     const [deleteModalShow, setDeleteModalShow] = useState(false);
 
@@ -29,7 +33,7 @@ const Hashes = () => {
 
     const handleDeleteClick = (hash) => {
         setHashOnDelete(hash);
-        setDeleteModalShow(true);  
+        setDeleteModalShow(true);
     }
 
     const buttons = new Map([
@@ -64,6 +68,12 @@ const Hashes = () => {
                             show={createModalShow}
                             setFetchDataState={setFetchDataState}
                             handleClose={() => setCreateModalShow(false)}
+                        />
+                        <DeleteHash 
+                            show={deleteModalShow} 
+                            hash={hashOnDelete}
+                            setFetchDataState={setFetchDataState}
+                            handleClose={() => setDeleteModalShow(false)}
                         />
                         <TableComponent 
                             data={hashes} 
