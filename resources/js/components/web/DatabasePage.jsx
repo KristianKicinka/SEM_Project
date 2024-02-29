@@ -23,22 +23,26 @@ const DatabasePage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [recordsPerPage] = useState(8);
 
-    const indexOfLastRecord = currentPage * recordsPerPage;
-    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-
-    const nPages = Math.ceil(data.length / recordsPerPage);
-
-    let filteredData = data.slice(indexOfFirstRecord, indexOfLastRecord);
+    console.log("data : "+data);
    
-    filteredData = filteredData.filter((item) => {
+    let filteredData = data.filter(item => {
+        console.log(item);
         let result = false;
         columns.map((col) => {
-            if(item[col].toString().toLowerCase().includes(filter.toLowerCase())){
+            if(item[col]?.toString().toLowerCase().includes(filter.toLowerCase())){
                 result = true;
             }
         });
         return result;
     });
+
+    console.log(filteredData);
+
+    const indexOfLastRecord = currentPage * recordsPerPage;
+    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+    const nPages = Math.ceil(filteredData.length / recordsPerPage);
+
+    filteredData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
 
     const getData = async () => {
         try {
@@ -104,14 +108,14 @@ const DatabasePage = () => {
                                         {filteredData.map((item, key) => {
                                             return (
                                                 <tr key={key}>
-                                                    <td>{item.id}</td>
-                                                    <td>{item.name}</td>
-                                                    <td>{item.package_name}</td>
-                                                    <td>{item.version}</td>
-                                                    <td><CopyClipboard  text={item.ja3_hash}/></td>
-                                                    <td><CopyClipboard  text={item.sni}/></td>
-                                                    <td><CopyClipboard  text={item.ja3s_hash}/></td>
-                                                    <td>{item.created_at}</td>
+                                                    <td>{item?.id}</td>
+                                                    <td>{item?.name}</td>
+                                                    <td>{item?.package_name}</td>
+                                                    <td>{item?.version}</td>
+                                                    <td><CopyClipboard  text={item?.ja3_hash}/></td>
+                                                    <td><CopyClipboard  text={item?.sni}/></td>
+                                                    <td><CopyClipboard  text={item?.ja3s_hash}/></td>
+                                                    <td>{item?.created_at}</td>
                                                 </tr>
                                             );
                                         })}
