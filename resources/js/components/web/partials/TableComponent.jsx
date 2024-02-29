@@ -11,24 +11,23 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
     const [filter, setFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [recordsPerPage] = useState(8);
-
-    const indexOfLastRecord = currentPage * recordsPerPage;
-    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-
-    const nPages = Math.ceil(data?.length / recordsPerPage);
-
-    let filteredData = data?.slice(indexOfFirstRecord, indexOfLastRecord);
-
-    filteredData = filteredData?.filter((item) => {
+   
+    let filteredData = data.filter(item => {
+        console.log(item);
         let result = false;
-        dataIndexes?.map((index) => {
-            if(item[index.toLowerCase()].toString().toLowerCase().includes(filter?.toLowerCase())){
+        dataIndexes.map((col) => {
+            if(item[col]?.toString().toLowerCase().includes(filter.toLowerCase())){
                 result = true;
             }
         });
         return result;
     });
 
+    const indexOfLastRecord = currentPage * recordsPerPage;
+    const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+    const nPages = Math.ceil(filteredData.length / recordsPerPage);
+
+    filteredData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
 
     return (
         <div className="TableComponent pt-md-3">

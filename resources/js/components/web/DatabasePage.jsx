@@ -22,8 +22,6 @@ const DatabasePage = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [recordsPerPage] = useState(8);
-
-    console.log("data : "+data);
    
     let filteredData = data.filter(item => {
         console.log(item);
@@ -35,8 +33,6 @@ const DatabasePage = () => {
         });
         return result;
     });
-
-    console.log(filteredData);
 
     const indexOfLastRecord = currentPage * recordsPerPage;
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
