@@ -7,6 +7,7 @@ use App\Exceptions\AppNameNotFoundException;
 use App\Exceptions\AppUninstalationFailException;
 use App\Exceptions\AppVersionNotFoundException;
 use App\Exceptions\CloseAppFailException;
+use App\Exceptions\CreateCommunicationOnEmulatorException;
 use App\Exceptions\HashGeneratorFailException;
 use App\Exceptions\LoadingPreinstalledAppsFailed;
 use App\Exceptions\PackageNameNotFoundException;
@@ -82,6 +83,7 @@ class CreateHash {
         $process->start();
 
         $this->runAppOnEmulator($emulator, $package_name);
+        //$this->createCommunicationOnEmulator($emulator, $package_name);
         sleep(env("NETWORK_ANALYSIS_TIME", 30));
         $this->closeAppOnEmulator($emulator, $package_name);
 
@@ -190,6 +192,28 @@ class CreateHash {
 
         if (!$process->isSuccessful()) {
             throw new RunAppFailException($process->getErrorOutput());
+        }
+    }
+
+    /**
+     * @param $package_name
+     * @return JsonResponse|void
+     */
+    private function createCommunicationOnEmulator($emulator, $package_name) {
+
+        $command = 'adb shell monkey -p '.trim($package_name).' -v 500';
+
+        if (env("ENVIRONMENT", "local") == "server"){
+            $command = 'docker exec '.$emulator->name.' '.$command;
+        }
+
+        Log::channel('devlog')->info('Run app command: {command}', ['command' => $command]);
+
+        $process = Process::fromShellCommandline($command);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            throw new CreateCommunicationOnEmulatorException($process->getErrorOutput());
         }
     }
 
