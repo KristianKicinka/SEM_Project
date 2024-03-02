@@ -234,13 +234,15 @@ class ApiRequestController extends Controller {
         $apk_file_name = $this->saveApkFile($request->file('apk_file'));
         $apk_original_file_name = $request->file('apk_file')->getClientOriginalName();
         $process_id = uniqid('ext_api_', true);
+        $channel_id = null;
 
         $job_id = CreateHashFromAPK::dispatch(
             $apk_file_name,
             $hash_types,
             $request->ip(),
+            $channel_id,
             $process_id,
-        )->onQueue('default');
+        )->onQueue('process_queue');
 
         return response()
             ->json('Task for create hashes from APK ('.$apk_original_file_name.') was added to queue.', 200);

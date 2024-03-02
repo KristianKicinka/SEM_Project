@@ -134,6 +134,7 @@ class HashProcessData {
         ProcessModel::updateOrCreate($identifier, $data);
 
         // Send process to pusher channel
-        ProcessUpdate::dispatch($this->channel_id, $this->process_id, $this->status, $this->progress, $this->message, $this->process_name);
+        if($this->channel_id)
+            ProcessUpdate::dispatch($this->channel_id, $this->process_id, $this->status, $this->progress, $this->message, $this->process_name);
     }
 }
