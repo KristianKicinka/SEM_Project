@@ -279,13 +279,15 @@ class ApiRequestController extends Controller {
 
         $process_id = 'ext_api_'.Str::random(20);
         $hash_types = ["JA3"];
+        $channel_id = null;
 
         $job = CreateHashFromAppName::dispatch(
             $request->input('package_name'),
             $hash_types,
             $request->ip(),
+            $channel_id,
             $process_id,
-        )->onQueue('default');
+        )->onQueue('process_queue');
 
         return response()->json('Task was added to queue succesfully.', 200);
     }
@@ -470,8 +472,6 @@ class ApiRequestController extends Controller {
         $header = fgetcsv($file);
         $header = array_map("trim", $header);
 
-        //return response()->json($header, 200);
-
         while ($row = fgetcsv($file)) {
             $rows[] = array_combine($header, $row);
         }
@@ -486,9 +486,6 @@ class ApiRequestController extends Controller {
         }
 
         $results = [];
-
-        // Remove header
-        //$rows = array_shift($rows);
 
         foreach ($data as $item){
 
