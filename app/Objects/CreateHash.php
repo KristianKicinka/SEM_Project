@@ -431,7 +431,9 @@ class CreateHash {
                 'ja3_hash' => $hash->ja3_hash,
                 'ja3s_hash' => $hash->ja3s_hash,
                 'hash_type' => null,
-                'sni' => $hash->sni
+                'sni' => $hash->sni,
+                'ja4_hash' => $hash->ja4_hash,
+                'ja4s_hash' => $hash->ja4s_hash,
             ];
 
             $db_hash = Hash::create($new_record);
