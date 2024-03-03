@@ -10,8 +10,8 @@ import AuthUser from "../../../AuthUser";
 //import CreateHash from "./partials/hashes/CreateHash";
 //import DeleteHash from "./partials/hashes/DeleteHash";
 
-const columnNames = ["ID","User", "IP address", "Request type"];
-const dataIndexes = ["id", "email", "ip_address", "type"];
+const columnNames = ["ID","User", "IP address", "Request type", "Status"];
+const dataIndexes = ["id", "email", "ip_address", "type", "status"];
 
 const API = () => {
 
@@ -35,7 +35,7 @@ const API = () => {
     const buttons = new Map([
         //["createButton", handleCreateClick],
         ["deleteButton", handleDeleteClick],
-      ]);
+    ]);
 
     const fetchData = async () => {
         try {

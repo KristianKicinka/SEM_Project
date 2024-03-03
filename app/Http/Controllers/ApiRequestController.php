@@ -59,6 +59,7 @@ class ApiRequestController extends Controller {
                 'api_requests.id AS id',
                 'users.email AS email',
                 'api_requests.type AS type',
+                'api_requests.status AS status',
                 'api_requests.ip_address AS ip_address',
             )
             ->join('api_requests', 'users.id', '=', 'api_requests.user_id')

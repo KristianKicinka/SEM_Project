@@ -9,15 +9,18 @@ import AuthUser from "../../../AuthUser";
 
 const API = () => {
 
-    const columnNames = ["ID","User", "IP address", "Request type"];
-    const dataIndexes = ["id", "email", "ip_address", "type"];
+    const columnNames = ["ID","User", "IP address", "Request type", "Status"];
+    const dataIndexes = ["id", "email", "ip_address", "type", "status"];
 
     const [apiRequests, setApiRequests] = useState([]);
     const { http, token, user } = AuthUser();
 
     const [fetchDataState, setFetchDataState] = useState(false);
 
-    const buttons = null;
+    const buttons = new Map([
+        //["createButton", handleCreateClick],
+        //["deleteButton", handleDeleteClick],
+    ]);
 
     const fetchData = async () => {
         try {
@@ -41,7 +44,7 @@ const API = () => {
                 <Sidebar sidebarType="basic_user" />
                 <div className="col-md-10 px-0">
                     <Navbar />
-                    <div className="container">
+                    <div className="container-fluid">
                         <TableComponent 
                             data={apiRequests} 
                             dataIndexes={dataIndexes} 
