@@ -11,6 +11,7 @@ const Sidebar = ({sidebarType}) => {
         {id:3, text: "Hashes" , url: "/admin/hashes", icon_class: "fa-solid fa-hashtag pe-2"},
         {id:4, text: "Settings" , url: "/admin/settings", icon_class: "fa-solid fa-gear pe-2"},
         {id:5, text: "Users" , url: "/admin/users", icon_class: "fa-solid fa-users pe-2"},
+        {id:6, text: "Files" , url: "/admin/files", icon_class: "fa-solid fa-file pe-2"},
     ];
 
     const sidebar_items_user = [

@@ -38,10 +38,14 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                     </div>
                     <div className="col"/>
                     <div className="col-md-5">
-                        <button 
+                        {buttons.has("createButton") ? (<button 
                             className="btn btn-search text-white float-end d-inline mx-3"
                             onClick={() => buttons.get('createButton')()} 
-                        >New item</button>
+                        >New item</button>): (<button 
+                        disabled
+                        className="btn btn-search text-white float-end d-inline mx-3"
+                        onClick={() => buttons.get('createButton')()} 
+                    >New item</button>)}
                         <input 
                             type="text" 
                             className="form-control d-inline w-auto float-end" 

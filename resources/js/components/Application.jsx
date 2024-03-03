@@ -16,6 +16,7 @@ import AdminHashes from './web/admin/Hashes';
 import AdminSettings from './web/admin/Settings';
 import AdminAPI from './web/admin/API';
 import AdminDashboard from './web/admin/Dashboard';
+import AdminFiles from './web/admin/Files';
 
 import BasicUserDashboard from './web/user/Dashboard';
 import BasicUserAPI from './web/user/API';
@@ -43,6 +44,7 @@ const Application = () => {
                     <Route path='/admin/hashes' element={<ProtectedRoute userType='admin'><AdminHashes/></ProtectedRoute>} />
                     <Route path='/admin/settings' element={<ProtectedRoute userType='admin'><AdminSettings/></ProtectedRoute>} />
                     <Route path='/admin/api' element={<ProtectedRoute userType='admin'><AdminAPI/></ProtectedRoute>} />
+                    <Route path='/admin/files' element={<ProtectedRoute userType='admin'><AdminFiles/></ProtectedRoute>} />
 
                     <Route path='/user/dashboard' element={<ProtectedRoute userType='basic_user'><BasicUserDashboard/></ProtectedRoute>} />
                     <Route path='/user/api' element={<ProtectedRoute userType='basic_user'><BasicUserAPI/></ProtectedRoute>} />

@@ -48,12 +48,13 @@ Route::group(['middleware' => ['auth:api', 'admin']], function () {
     Route::post('/admin/user/update/data', [UserController::class, 'updateUserData']);
     Route::post('/admin/user/update/password', [UserController::class, 'updateUserPassword']);
     Route::post('/admin/user/delete', [UserController::class, 'deleteUser']);
+    Route::post('/admin/files', [FileController::class, 'getFilesForAdmin']);
+    Route::post('/admin/file/delete', [FileController::class, 'deleteFile']);
     Route::post('/admin/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
     Route::post('/admin/get-api-key', [ApiRequestController::class, 'getApiKey']);
     Route::post('/admin/requests', [ApiRequestController::class, 'getRequests']);
 
     //Route::post('/settings', [HashesController::class, 'getHashesforAdmin']);
-    //Route::post('/files', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/processes', [HashesController::class, 'getHashesforAdmin']);
 });
 
