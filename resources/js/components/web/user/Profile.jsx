@@ -24,6 +24,8 @@ const Profile = () => {
 
     const [errors, setErrors] = useState({});
     const [fetchDataState, setFetchDataState] = useState(false);
+
+    console.log(user);
     
     const editProfile = async (e) => {
         e.preventDefault();

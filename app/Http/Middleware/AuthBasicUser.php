@@ -26,7 +26,7 @@ class AuthBasicUser {
             $user = JWTAuth::parseToken()->authenticate();
 
             // Check if the user has the "admin" role
-            if ($user->hasRole('basic_user')) {
+            if ($user->role === 'basic_user') {
                 return $next($request);
             }
 
