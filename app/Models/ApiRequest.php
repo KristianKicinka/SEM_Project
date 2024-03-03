@@ -13,7 +13,8 @@ class ApiRequest extends Model {
         'user_id',
         'ip_address',
         'type',
-        'description'
+        'description',
+        'status',
     ];
     
 }

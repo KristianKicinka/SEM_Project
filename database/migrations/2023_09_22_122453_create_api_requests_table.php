@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('ip_address');
             $table->string('type')->default('request_data');
             $table->text('description')->nullable();
+            $table->text('status')->nullable();
             $table->timestamps();
         });
     }

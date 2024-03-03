@@ -4,8 +4,11 @@ import pyshark as pyshark
 from scapy.all import *
 from scapy.layers.tls.record import TLS
 from scapy.layers.tls.extensions import TLS_Ext_SupportedGroups
+from scapy.layers.tls.extensions import TLS_Ext_SupportedVersion_CH, TLS_Ext_SupportedVersion_SH
+from scapy.layers.tls.extensions import TLS_Ext_ALPN
 from scapy.layers.tls.extensions import TLS_Ext_SupportedPointFormat
 from scapy.layers.tls.extensions import TLS_Ext_ServerName
+from scapy.layers.tls.extensions import TLS_Ext_SignatureAlgorithms
 from scapy.layers.inet import IP , TCP
 
 from scapy.layers.tls.handshake import TLSClientHello
@@ -119,6 +122,43 @@ def get_supported_groups(packet):
     supported_groups = remove_reserved_grease_values(supported_groups)                
     return supported_groups
 
+def get_supported_versions_CH(packet):
+    supported_versions = []
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLS_Ext_SupportedVersion_CH):
+            supported_versions_field = tls_layers[TLS_Ext_SupportedVersion_CH].versions
+            if supported_versions_field:
+                for version in supported_versions_field:
+                    
+                    supported_versions.append(version)
+
+    supported_versions = remove_reserved_grease_values(supported_versions)                
+    return supported_versions
+
+def get_supported_version_SH(packet):
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLS_Ext_SupportedVersion_SH):
+            supported_versions_field = tls_layers[TLS_Ext_SupportedVersion_SH].version
+            if supported_versions_field:
+                return supported_versions_field
+                              
+    return None
+
+def get_signature_algorithms(packet):
+    signature_algorithms = []
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLS_Ext_SignatureAlgorithms):
+            signature_algorithms_field = tls_layers[TLS_Ext_SignatureAlgorithms].sig_algs
+            if signature_algorithms_field:
+                for sig_alg in signature_algorithms_field:
+                    signature_algorithms.append(sig_alg)
+
+    signature_algorithms = remove_reserved_grease_values(signature_algorithms)                
+    return signature_algorithms
+
 # Get EC point formats
 def get_ec_point_formats(packet):
     ec_point_formats = []
@@ -182,6 +222,89 @@ def add_to_string(full_string, items):
         index += 1
     return full_string
 
+def create_JA4_hash(packet, ciphers, extensions, sni):
+    tls_version = "00"
+    tls_versions = get_supported_versions_CH(packet)
+    if(tls_versions):
+        tls_version = process_version(tls_versions[0])
+    
+    sni = "d" if sni else "i"
+    cip_cnt = format(len(ciphers), "02d")
+    ext_cnt = format(len(extensions), "02d")
+    ja4_a = "t"+tls_version+sni+cip_cnt+ext_cnt+get_alpn(packet)
+
+    hex_ciphers = [format(cipher, "04X").lower() for cipher in ciphers]
+    hex_ciphers.sort()
+    cipher_in = ','.join(str(c) for c in hex_ciphers)
+
+    hex_extensions = [format(extension, "04X").lower() for extension in extensions]
+    hex_extensions.sort()
+
+    if "0000" in hex_extensions:
+        hex_extensions.remove("0000")
+    if "0010" in hex_extensions:
+        hex_extensions.remove("0010")
+
+    ext_in = ','.join(str(e) for e in hex_extensions)
+
+    signature_algorithms  = get_signature_algorithms(packet)
+    hex_sig_algorithms = [format(sig_alg, "04X").lower() for sig_alg in signature_algorithms]
+    signature_algorithms_str = ','.join(str(s) for s in hex_sig_algorithms)
+    ext_in = ext_in+"_"+ signature_algorithms_str
+
+    #print(cipher_in.encode())
+    #print(ext_in.encode())
+
+    ja4_b = hashlib.sha256(cipher_in.encode()).hexdigest()[0:12]
+    ja4_c = hashlib.sha256(ext_in.encode()).hexdigest()[0:12]
+
+    return ja4_a+"_"+ja4_b+"_"+ja4_c
+
+def create_JA4S_hash(packet, ciphers, extensions):
+    tls_version = process_version(get_supported_version_SH(packet))
+    ext_cnt = format(len(extensions), "02d")
+
+    ja4s_a = "t"+tls_version+ext_cnt+get_alpn(packet)
+    ja4s_b = format(ciphers, "04X").lower()
+
+    hex_extensions = [format(extension, "04X").lower() for extension in extensions]
+    ext_in = ','.join(str(e) for e in hex_extensions)
+    
+    ja4s_c = hashlib.sha256(ext_in.encode()).hexdigest()[0:12]
+
+    return ja4s_a+"_"+ja4s_b+"_"+ja4s_c
+
+def process_protocol():
+    pass
+
+def process_version(version):
+    if version == 772:
+        return "13"
+    elif version == 771:
+        return "12"
+    elif version == 770:
+        return "11"
+    elif version == 769:
+        return "10"
+    elif version == 768:
+        return "s3"
+    elif version == 767:
+        return "s2"
+    elif version == 766:
+        return "s1"   
+    return "00"
+
+def get_alpn(packet):
+    alpn = "00"
+    if packet.haslayer(TLS):
+        tls_layers = packet[TLS]
+        if tls_layers.haslayer(TLS_Ext_ALPN):
+            alpn_field = tls_layers[TLS_Ext_ALPN].protocols
+            if alpn_field:
+                alpn = alpn_field[0].protocol.decode()
+                alpn = alpn[0]+alpn[-1]
+            
+    return alpn
 
 def create_JA3_string(version, ciphers, extensions, supported_groups, point_format):
     full_string = "" + str(version) + ","
@@ -234,17 +357,21 @@ if __name__ == '__main__':
                 full_string = create_JA3_string(version, ciphers, extensions, supported_groups, point_format)
                 ja3_hash = create_hash(full_string)
 
+                ja4_hash = create_JA4_hash(packet, ciphers, extensions, sni)
+
                 key = (ip_src, port_src, ip_dest, port_dest)
 
                 if key not in results:
                     results[key] = {
                         "ip_src" : ip_src, "port_src":port_src, 
                         "ip_dest":ip_dest, "port_dest":port_dest, 
-                        "ja3_hash": ja3_hash, "sni": sni, "ja3s_hash": None
+                        "ja3_hash": ja3_hash, "sni": sni, "ja3s_hash": None,
+                        "ja4_hash": ja4_hash, "ja4s_hash": None
                     }
                 else:
                     results[key]["ja3_hash"] = ja3_hash
                     results[key]["sni"] = sni
+                    results[key]["ja4_hash"] = ja4_hash
 
             if tls_layers.haslayer(TLSServerHello):
                 version = get_server_hello_version(packet)
@@ -254,16 +381,20 @@ if __name__ == '__main__':
                 full_string = create_JA3S_string(version, ciphers, extensions)
                 ja3s_hash = create_hash(full_string)
 
+                ja4s_hash = create_JA4S_hash(packet, ciphers, extensions)
+
                 key = (ip_dest, port_dest, ip_src, port_src)
 
                 if key not in results:
                     results[key] = {
                         "ip_src" : ip_src, "port_src":port_src, 
                         "ip_dest":ip_dest, "port_dest":port_dest, 
-                        "ja3_hash": None, "sni": None, "ja3s_hash": ja3s_hash
+                        "ja3_hash": None, "sni": None, "ja3s_hash": ja3s_hash,
+                        "ja4_hash": None, "ja4s_hash": ja4s_hash
                     }
                 else:
                     results[key]["ja3s_hash"] = ja3s_hash
+                    results[key]["ja4s_hash"] = ja4s_hash
 
         packet_count += 1
 
@@ -274,6 +405,8 @@ if __name__ == '__main__':
             "ja3_hash": results[key]["ja3_hash"],
             "sni": results[key]["sni"],
             "ja3s_hash": results[key]["ja3s_hash"],
+            "ja4_hash": results[key]["ja4_hash"],
+            "ja4s_hash": results[key]["ja4s_hash"],
         }
         array_results.append(obj)
 
