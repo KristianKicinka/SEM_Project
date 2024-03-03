@@ -283,7 +283,8 @@ class HashController extends Controller {
             ->select(
                 'applications.name as app_name','applications.package_name as package_name',
                 'applications.version as app_version','hashes.ja3_hash as ja3_hash',
-                'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash'
+                'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash', 
+                'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash'
             )
             ->join('hashes','processes.id','=','hashes.process_id')
             ->join('applications','applications.id','=','hashes.app_id')
@@ -329,7 +330,7 @@ class HashController extends Controller {
         // ["id", "hash", "hash_type", "app_name", "package_name", "version"];
         $data = DB::table('applications')
             ->join('hashes','applications.id','=','hashes.app_id')
-            ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash', 'name AS app_name', 'package_name', 'version')
+            ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash','ja4_hash','ja4s_hash','name AS app_name', 'package_name', 'version')
             ->distinct()
             ->get();
 

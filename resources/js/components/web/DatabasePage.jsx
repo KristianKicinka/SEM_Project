@@ -86,17 +86,19 @@ const DatabasePage = () => {
                                     </InputGroup>
                                 </div>
                             </div>
-                            <div className="row px-4 py-2">
-                                <Table>
+                            <div className="row px-1 py-2 table-responsive">
+                                <Table className="table table-sm">
                                     <thead>
                                         <tr>
                                             <th>ID</th>
                                             <th>App name</th>
                                             <th>Package name</th>
                                             <th>Version</th>
-                                            <th>JA3 hash</th>
                                             <th>SNI</th>
+                                            <th>JA3 hash</th>
                                             <th>JA3S hash</th>
+                                            <th>JA4 hash</th>
+                                            <th>JA4S hash</th>
                                             <th>Created at</th>
                                         </tr>
                                     </thead>
@@ -108,9 +110,11 @@ const DatabasePage = () => {
                                                     <td>{item?.name}</td>
                                                     <td>{item?.package_name}</td>
                                                     <td>{item?.version}</td>
-                                                    <td><CopyClipboard  text={item?.ja3_hash}/></td>
-                                                    <td><CopyClipboard  text={item?.sni}/></td>
-                                                    <td><CopyClipboard  text={item?.ja3s_hash}/></td>
+                                                    <td>{item?.sni}</td>
+                                                    <td><b>{item?.ja3_hash}</b></td>
+                                                    <td><b>{item?.ja3s_hash}</b></td>
+                                                    <td><b>{item?.ja4_hash}</b></td>
+                                                    <td><b>{item?.ja4s_hash}</b></td>
                                                     <td>{item?.created_at}</td>
                                                 </tr>
                                             );

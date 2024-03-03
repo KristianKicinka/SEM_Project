@@ -100,7 +100,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                         </Table>
                     </div>
                 </div>
-                <div className="row px-3">
+                <div className="row px-2">
                     <div className="col"></div>
                     <div className="col"></div>
                     <div className="col">

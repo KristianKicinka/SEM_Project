@@ -24,7 +24,7 @@ const Sidebar = ({sidebarType}) => {
     let sidebar_items = (sidebarType == "admin") ? sidebar_items_admin : sidebar_items_user;
 
     return (
-        <div className="p-3 text-white bg-dark col-md-2 vh-100">
+        <div className="p-3 text-white bg-dark col vh-100">
             <Link className="d-flex align-items-center px-3 mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
                 <div className="sidebar-brand-icon">
                     <i className="fa-brands fa-android"></i>

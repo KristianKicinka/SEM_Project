@@ -33,7 +33,7 @@ const API = () => {
     }
 
     const buttons = new Map([
-        ["createButton", handleCreateClick],
+        //["createButton", handleCreateClick],
         ["deleteButton", handleDeleteClick],
       ]);
 
