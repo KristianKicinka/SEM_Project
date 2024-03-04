@@ -13,7 +13,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
     const [recordsPerPage] = useState(8);
    
     let filteredData = data.filter(item => {
-        console.log(item);
+        //console.log(item);
         let result = false;
         dataIndexes.map((col) => {
             if(item[col]?.toString().toLowerCase().includes(filter.toLowerCase())){

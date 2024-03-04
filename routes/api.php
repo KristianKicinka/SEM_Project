@@ -43,6 +43,7 @@ Route::group(['middleware' => ['auth:api', 'admin']], function () {
     Route::post('/admin/hash/create/text-input', [HashController::class, 'createHashAdmin']);
     Route::post('/admin/hash/create/pcap-file', [HashController::class, 'createHashFromPcap']);
     Route::post('/admin/hash/delete', [HashController::class, 'deleteHashAdmin']);
+    Route::post('/admin/hash/update', [HashController::class, 'updateHashAdmin']);
     Route::post('/admin/users', [UserController::class, 'getUsersForAdmin']);
     Route::post('/admin/user/create', [UserController::class, 'createUser']);
     Route::post('/admin/user/update/data', [UserController::class, 'updateUserData']);

@@ -9,7 +9,7 @@ import AuthUser from "../../../AuthUser";
 
 import CreateHash from "./partials/hashes/CreateHash";
 import DeleteHash from "./partials/hashes/DeleteHash";
-//import DeleteHash from "./partials/hashes/DeleteHash";
+import UpdateHash from "./partials/hashes/UpdateHash";
 
 const columnNames = ["ID", "SNI", "JA3 hash", "JA3S hash", "JA4 hash", "JA4S hash", "App Name", "Package name", "Version"];
 const dataIndexes = ["id", "sni", "ja3_hash", "ja3s_hash", "ja4_hash", "ja4s_hash", "app_name", "package_name", "version"];
@@ -25,6 +25,7 @@ const Hashes = () => {
     const [hashOnUpdate, setHashOnUpdate] = useState(null);
 
     const [createModalShow, setCreateModalShow] = useState(false);
+    const [updateModalShow, setUpdateModalShow] = useState(false);
     const [deleteModalShow, setDeleteModalShow] = useState(false);
 
     const handleCreateClick = () => {
@@ -36,15 +37,22 @@ const Hashes = () => {
         setDeleteModalShow(true);
     }
 
+    const handleUpdateClick = (hash) => {
+        setHashOnUpdate(hash);
+        setUpdateModalShow(true);
+        //console.log(hash);
+    }
+
     const buttons = new Map([
         ["createButton", handleCreateClick],
         ["deleteButton", handleDeleteClick],
+        ["updateButton", handleUpdateClick]
       ]);
 
     const fetchData = async () => {
         try {
             let resp = await http.post('/admin/hashes');
-            console.log(resp.data)
+            //console.log(resp.data)
             setHashes(resp.data);
         } catch (error) {
             console.log(error);
@@ -74,6 +82,12 @@ const Hashes = () => {
                             hash={hashOnDelete}
                             setFetchDataState={setFetchDataState}
                             handleClose={() => setDeleteModalShow(false)}
+                        />
+                        <UpdateHash 
+                            show={updateModalShow} 
+                            hash={hashOnUpdate}
+                            setFetchDataState={setFetchDataState}
+                            handleClose={() => setUpdateModalShow(false)}
                         />
                         <TableComponent 
                             data={hashes} 

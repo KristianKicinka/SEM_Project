@@ -338,7 +338,7 @@ class HashController extends Controller {
         // ["id", "hash", "hash_type", "app_name", "package_name", "version"];
         $data = DB::table('applications')
             ->join('hashes','applications.id','=','hashes.app_id')
-            ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash','ja4_hash','ja4s_hash','name AS app_name', 'package_name', 'version')
+            ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash','ja4_hash','ja4s_hash','name AS app_name', 'package_name', 'version', 'is_dangerous', 'is_malware')
             ->distinct()
             ->get();
 
@@ -348,5 +348,38 @@ class HashController extends Controller {
     public function deleteHashAdmin (Request $request): JsonResponse {
         DB::table("hashes")->where("hashes.id", "=", $request->input("hash_id"))->delete();
         return response()->json("Hash deleted", 200);
+    }
+
+    public function updateHashAdmin (Request $request): JsonResponse {
+        $validator = Validator::make($request->all(), [
+            'hash_id' => 'required',
+            'app_name' => 'required|string',
+            'package_name' => 'required|string',
+            'version' => 'required|string',
+            'is_malware' => 'required|bool',
+            'is_dangerous' => 'required|bool',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $hash = DB::table("hashes")
+        ->where('hashes.id','=',$request->hash_id)
+        ->join("applications", "applications.id","=","hashes.app_id")
+        ->update([
+            'applications.name' => $request->app_name,
+            'applications.package_name' => $request->package_name,
+            'applications.version' => $request->version,
+            'hashes.sni' => $request->sni,
+            'hashes.ja3_hash' => $request->ja3_hash,
+            'hashes.ja3s_hash' => $request->ja3s_hash,
+            'hashes.ja4_hash' => $request->ja4_hash,
+            'hashes.ja4s_hash' => $request->ja4s_hash,
+            'applications.is_malware' => $request->is_malware,
+            'applications.is_dangerous' => $request->is_dangerous,
+        ]);
+
+        return response()->json(['status' => 'success'], 200);
     }
 }
