@@ -43,6 +43,7 @@ class CreateHashFromPcap extends CreateHash {
             'pcap_file_path' => $pcap_file_path,
             'pcap_file_type' => 'PCAP',
             'is_malware' => $app_data['is_malware'],
+            'is_dangerous' => $app_data['is_dangerous'],
             'hashes' => $this->hashes,
         ];
 
@@ -91,9 +92,12 @@ class CreateHashFromPcap extends CreateHash {
                 'app_id' => $application->id,
                 'ja3_hash' => $hash->ja3_hash,
                 'ja3s_hash' => $hash->ja3s_hash,
+                'ja4_hash' => $hash->ja4_hash,
+                'ja4s_hash' => $hash->ja4s_hash,
                 'hash_type' => null,
                 'sni' => $hash->sni,
                 'is_malware' => $data['is_malware'],
+                'is_dangerous' => $data['is_dangerous'],
             ];
     
             $db_hash = Hash::create($new_record);

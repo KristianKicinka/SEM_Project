@@ -14,16 +14,16 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const [ja3sHash, setJa3sHash] = useState("");
     const [ja4Hash, setJa4Hash] = useState("");
     const [ja4sHash, setJa4sHash] = useState("");
-    const [isMalwareText, setIsMalwareText] = useState(false);
-    const [isDangerousText, setIsDangerousText] = useState(false);
+    const [isMalwareText, setIsMalwareText] = useState(0);
+    const [isDangerousText, setIsDangerousText] = useState(0);
 
 
     const [appNamePcap, setAppNamePcap] = useState("");
     const [packageNamePcap, setPackageNamePcap] = useState("");
     const [appVersionPcap, setAppVersionPcap] = useState("");
     const [pcapFile, setPcapFile] = useState(null);
-    const [isMalwarePcap, setIsMalwarePcap] = useState(false);
-    const [isDangerousPcap, setIsDangerousPcap] = useState(false);
+    const [isMalwarePcap, setIsMalwarePcap] = useState(0);
+    const [isDangerousPcap, setIsDangerousPcap] = useState(0);
 
     const [errors, setErrors] = useState({});
     const {http, http_file} = AuthUser();
@@ -44,7 +44,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
             let resp = await http.post('/admin/hash/create/text-input', data);
             console.log(resp);
             setFetchDataState(prevState => !prevState);
-            clearInputs();
+            //clearInputs();
             handleClose();
         } catch (error) {
             console.log(error);
@@ -70,7 +70,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
             let resp = await http_file.post('/admin/hash/create/pcap-file', data);
             console.log(resp);
             setFetchDataState(prevState => !prevState);
-            clearInputs();
+            //clearInputs();
             handleClose();
         } catch (error) {
             console.log(error);
@@ -196,8 +196,8 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                         value={isMalwareText}
                                         onChange={(e) => setIsMalwareText(e.target.value)}
                                     >
-                                        <option value={false}>is not malware</option>
-                                        <option value={true}>malware</option>
+                                        <option value={0}>is not malware</option>
+                                        <option value={1}>malware</option>
                                     </select>
                                     {errors.is_malware && <span className="error text-danger">{errors.is_malware[0]}</span>}
                                 </div>
@@ -209,8 +209,8 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                         value={isDangerousText}
                                         onChange={(e) => setIsDangerousText(e.target.value)}
                                     >
-                                        <option value={false}>is not dangerous</option>
-                                        <option value={true}>dangerous</option>
+                                        <option value={0}>is not dangerous</option>
+                                        <option value={1}>dangerous</option>
                                     </select>
                                     {errors.is_dangerous && <span className="error text-danger">{errors.is_dangerous[0]}</span>}
                                 </div>
@@ -272,8 +272,8 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                         aria-label="Select if is a malware" 
                                         onChange={(e) => setIsMalwarePcap(e.target.value)}
                                     >
-                                        <option value={false}>is not malware</option>
-                                        <option value={true}>malware</option>
+                                        <option value={0}>is not malware</option>
+                                        <option value={1}>malware</option>
                                     </select>
                                 </div>
                                 <div className="form-group py-2">
@@ -283,8 +283,8 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                         aria-label="Select if is a malware" 
                                         onChange={(e) => setIsDangerousPcap(e.target.value)}
                                     >
-                                        <option value={false}>is not dangerous</option>
-                                        <option value={true}>dangerous</option>
+                                        <option value={0}>is not dangerous</option>
+                                        <option value={1}>dangerous</option>
                                     </select>
                                 </div>
                                 <div className="form-group py-2">
