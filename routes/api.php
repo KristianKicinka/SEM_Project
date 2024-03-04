@@ -78,8 +78,6 @@ Route::group(['middleware' => ['external']], function () {
     Route::post('/create-hash-from-pcap', [ApiRequestController::class, 'createHashFromPcap']);
     Route::post('/analyze-flowmon-file', [ApiRequestController::class, 'analyzeFlowMonFile']);
     Route::post('/analyze-pcap-file', [ApiRequestController::class, 'analyzePcapFile']);
-
-    
 });
 
 

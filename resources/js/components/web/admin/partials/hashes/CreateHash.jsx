@@ -17,6 +17,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const [pcapFile, setPcapFile] = useState(null);
     const [isMalwareText, setIsMalwareText] = useState(false);
     const [isMalwarePcap, setIsMalwarePcap] = useState(false);
+    const [isDangerousPcap, setIsDangerousPcap] = useState(false);
     const [hash, setHash] = useState("");
 
     const [errors, setErrors] = useState({});
@@ -78,8 +79,8 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         data.append("app_name_pcap", appNamePcap);
         data.append("package_name_pcap", packageNamePcap);
         data.append("app_version_pcap", appVersionPcap);
-        data.append("hash_types_pcap", JSON.stringify(hashTypesPcap));
         data.append("is_malware_pcap", isMalwarePcap);
+        data.append("is_dangerous_pcap", isDangerousPcap);
         data.append("pcap_file", pcapFile);
 
         console.log(data);
@@ -184,6 +185,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                 </div>
                                 <div className="form-group pt-3 text-center">
                                     <input 
+                                        disabled
                                         type="submit" 
                                         name="submit" 
                                         className="btn btn-search text-light btn-md col-md-10" 
@@ -242,16 +244,21 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                     </select>
                                 </div>
                                 <div className="form-group py-2">
+                                    <label htmlFor="is_dangerous" className="text-dark">Is dangerous:</label><br/>
+                                    <select 
+                                        className="form-select" 
+                                        aria-label="Select if is a malware" 
+                                        onChange={(e) => setIsDangerousPcap(e.target.value)}
+                                    >
+                                        <option value={false}>is not dangerous</option>
+                                        <option value={true}>dangerous</option>
+                                    </select>
+                                </div>
+                                <div className="form-group py-2">
                                     <label htmlFor="hash" className="text-dark">Pcap file:</label><br/>
                                     <Form.Control type="file" className='col'
                                         onChange={e=>{setPcapFile(e.target.files[0])}} accept='.pcap' required />
                                     {errors.pcap_file && <span className="error text-danger">{errors.pcap_file[0]}</span>}
-                                </div>
-                                <div className="form-group py-2">
-                                    <label htmlFor="hash_type_pcap" className="text-dark">Select hash types:</label><br/>
-                                    <Form.Check onChange={checkboxChangePcap} inline label="JA3" name="JA3_checkbox" type='checkbox' id='JA3' />
-                                    <Form.Check onChange={checkboxChangePcap} inline label="JA3S" name="JA3S_checkbox" type='checkbox' id='JA3S' />
-                                    <Form.Check disabled onChange={checkboxChangePcap} inline label="Flowmon" name="NetFlow_checkbox" type='checkbox' id='NetFlow' />
                                 </div>
                                 <div className="form-group pt-3 text-center">
                                     <input 

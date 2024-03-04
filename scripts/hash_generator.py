@@ -335,7 +335,7 @@ if __name__ == '__main__':
     packet_count = 1
     for packet in scapy_cap:
 
-        if packet.haslayer(TLS):
+        if packet.haslayer(TLS) and packet.haslayer(TCP):
 
             ip_src = packet[IP].src
             ip_dest = packet[IP].dst

@@ -92,9 +92,9 @@ class HashController extends Controller {
         $validator = Validator::make($request->all(), [
             'app_name_pcap' => 'required|string',
             'package_name_pcap' => 'required|string',
-            'hash_types_pcap' => 'required',
             'pcap_file' => 'required|file',
             'is_malware_pcap' => 'required',
+            'is_dangerous_pcap' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -105,11 +105,12 @@ class HashController extends Controller {
             'app_name' => $request->input('app_name_pcap'),
             'package_name' => $request->input('package_name_pcap'),
             'app_version' => $request->input('app_version_pcap'),
-            'is_malware' => $request->input('is_malware_pcap')
+            'is_malware' => $request->input('is_malware_pcap'),
+            'is_dangerous' => $request->input('is_dangerous_pcap')
         ];
 
         $pcap_file_name = $this->savePcapFile($request->file('pcap_file'));
-        $hash_types = json_decode($request->input('hash_types_pcap'));
+        $hash_types = ["JA3"];
 
         $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types);
         $hashes = $pcap_hash->createAndSave($app_data);
@@ -174,15 +175,22 @@ class HashController extends Controller {
 
         $identifier = [
             'app_id' => $application->id,
-            'hash' => $request->hash,
-            'hash_type' => $request->hash_type,
+            'ja3_hash' => $request->ja3_hash,
+            'ja3s_hash' => $request->ja3_hash,
+            'sni' => $request->sni,
+            'ja4_hash' => $request->ja4_hash,
+            'ja4s_hash' => $request->ja4s_hash,
         ];
 
         $new_record = [
             'app_id' => $application->id,
-            'hash' => $request->hash,
-            'hash_type' => $request->hash_type,
+            'ja3_hash' => $request->ja3_hash,
+            'ja3s_hash' => $request->ja3_hash,
+            'sni' => $request->sni,
+            'ja4_hash' => $request->ja4_hash,
+            'ja4s_hash' => $request->ja4s_hash,
             'is_malware' => $request->is_malware,
+            'is_dangerous' => $request->is_dangerous,
         ];
 
         Hash::firstOrCreate($identifier, $new_record);

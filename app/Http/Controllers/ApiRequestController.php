@@ -19,9 +19,9 @@ use App\Models\Hash;
 use App\Objects\CreateHashFromPcap;
 
 const REQUEST_TYPES = [
-    'data_request', 'create_hash_APK', 'create_hash_PCAP',
-    'create_hash_PNAME', 'insert_hashes', 'get_apps_by_hashes',
-    'get_apps_hashes', 'analyze_pcap_file', 'analyze_flowmon_file',
+    "get_app_hashes", "get_apps_from_hashes", "create_hash_from_apk",
+    "create_hash_from_package_name", "create_hash_from_pcap",
+    "analyze_flowmon_file", "analyze_pcap_file",
 ];
 
 class ApiRequestController extends Controller {
@@ -85,12 +85,12 @@ class ApiRequestController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[1]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[0]);
         $results = [];
 
         foreach (json_decode($request->input('apps')) as $app){
             $hashes =  DB::table('applications')
-                ->select('hashes.ja3_hash', 'hashes.ja3s_hash', 'hashes.sni')
+                ->select('hashes.ja3_hash', 'hashes.ja3s_hash', 'hashes.sni', 'hashes.ja4_hash', 'hashes.ja4s_hash')
                 ->join('hashes','hashes.app_id','=','applications.id');
 
             if($app->package_name != null)
@@ -119,7 +119,7 @@ class ApiRequestController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[5]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[1]);
         $results = [];
 
         foreach (json_decode($request->input('data')) as $item){
@@ -230,7 +230,7 @@ class ApiRequestController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[6]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[2]);
 
         $apk_file_name = $this->saveApkFile($request->file('apk_file'));
         $apk_original_file_name = $request->file('apk_file')->getClientOriginalName();
@@ -306,19 +306,22 @@ class ApiRequestController extends Controller {
             'app_version' => 'required|string',
             'pcap_file' => 'required|file',
             'is_malware' => 'required',
+            'is_dangerous' => 'required',
+
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[2]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[4]);
 
         $app_data = [
             'app_name' => $request->input('app_name'),
             'package_name' => $request->input('package_name'),
             'app_version' => $request->input('app_version'),
-            'is_malware' => $request->input('is_malware')
+            'is_malware' => $request->input('is_malware'),
+            'is_dangerous' => $request->input('is_dangerous')
         ];
 
         $pcap_file_name = $this->savePcapFile($request->file('pcap_file'));
@@ -338,7 +341,6 @@ class ApiRequestController extends Controller {
 
         $validator = Validator::make($request->all(), [
             'auth_key' => 'required|string',
-            'hash_types' => 'required',
             'pcap_file' => 'required|file',
         ]);
 
@@ -346,10 +348,10 @@ class ApiRequestController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[7]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[6]);
 
         $pcap_file_name = $this->savePcapFile($request->file('pcap_file'));
-        $hash_types = json_decode($request->input('hash_types'));
+        $hash_types = ["JA3"];
 
         $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types);
         $pcap_hashes = $pcap_hash->create();
@@ -455,7 +457,7 @@ class ApiRequestController extends Controller {
      */
     public function analyzeFlowMonFile(Request $request): JsonResponse {
 
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[8]);
+        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[5]);
 
         $validator = Validator::make($request->all(), [
             'flowmon_file' => 'required|mimes:csv',
@@ -466,8 +468,76 @@ class ApiRequestController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $flowmon_file = $request->file('flowmon_file');
-        $file = fopen($flowmon_file->getPathname(), "r");
+        $netflow_data = $this->getNetflowData($request->file('flowmon_file'));
+
+        $results = [];
+        
+        $query = DB::table('applications')->select()->distinct()
+        ->join('hashes', 'hashes.app_id', '=', 'applications.id');
+
+        foreach ($netflow_data as $item){
+            
+            if (!is_string($item["ja3_hash"])){
+                continue;
+            }
+
+            if($request->input("hash_type") == "JA3"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja3_hash', $item["ja3_hash"]);
+                });
+                $results[] = ["ja3_hash" => $item["ja3_hash"], "apps" => []];
+            }
+
+            if($request->input("hash_type") == "JA3_SNI"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja3_hash', $item["ja3_hash"])
+                    ->where('hashes.sni', $item["sni"]);
+                });
+                $results[] = ["ja3_hash" => $item["ja3_hash"], "sni" => $item["sni"], "apps" => []];
+            }
+        }
+
+        $data = $query->get();
+
+        foreach ($data as $item){
+            foreach($results as &$result){
+                if ($request->input("hash_type") == "JA3"){
+                    if($item->ja3_hash == $result["ja3_hash"]){
+                        array_push($result["apps"], [
+                            "app_name" => $item->name, 
+                            "package_name" => $item->package_name,
+                            "app_version" => $item->version,
+                            "is_malware" => $item->is_malware,
+                            "is_dangerous" => $item->is_dangerous,
+                        ]);
+                    }
+                }
+                if ($request->input("hash_type") == "JA3_SNI"){
+                    if($item->ja3_hash == $result["ja3_hash"] && $item->sni == $result["sni"]){
+                        array_push($result["apps"], [
+                            "app_name" => $item->name, 
+                            "package_name" => $item->package_name,
+                            "app_version" => $item->version,
+                            "is_malware" => $item->is_malware,
+                            "is_dangerous" => $item->is_dangerous,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        foreach($results as &$result){
+            $apps = collect($result["apps"])->unique();
+            $result["apps"] = $apps->values()->all();
+        }
+
+        return response()->json($results, 200);
+    }
+
+
+    protected function getNetflowData($netflow_file){
+
+        $file = fopen($netflow_file->getPathname(), "r");
 
         $rows = [];
         $header = fgetcsv($file);
@@ -486,45 +556,6 @@ class ApiRequestController extends Controller {
             $data[] = $obj;
         }
 
-        $results = [];
-
-        foreach ($data as $item){
-
-            if($request->input("hash_type") == "JA3"){
-                $apps = DB::table('applications')
-                    ->select(
-                        'applications.name',
-                        'applications.package_name',
-                        'applications.version',
-                        'applications.is_malware'
-                        )
-                    ->distinct()
-                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-                    ->where('hashes.ja3_hash', '=', $item["ja3_hash"])
-                    ->get();
-
-                $results[] = ["ja3_hash" => $item["ja3_hash"], "apps" => $apps];
-            }
-
-            if($request->input("hash_type") == "JA3_SNI"){
-                $apps = DB::table('applications')
-                    ->select(
-                        'applications.name',
-                        'applications.package_name',
-                        'applications.version',
-                        'applications.is_malware'
-                        )
-                    ->distinct()
-                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-                    ->where('hashes.ja3_hash', '=', $item["ja3_hash"])
-                    ->where('hashes.sni', '=', $item["sni"])
-                    ->get();
-
-                $results[] = ["ja3_hash" => $item["ja3_hash"], "sni" => $item["sni"] ,"apps" => $apps];
-            }
-            
-        }
-
-        return response()->json($results, 200);
+        return $data;
     }
 }
