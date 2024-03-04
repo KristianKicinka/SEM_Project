@@ -37,7 +37,7 @@ class HashProcessData {
     private int $process_part;
     private string $process_id;
     private string $process_name;
-    private string $channel_id;
+    private $channel_id;
     private string $ip_address;
     private string $status;
     private int $progress;

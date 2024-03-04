@@ -113,6 +113,7 @@ class ApiRequestController extends Controller {
         $validator = Validator::make($request->all(), [
             'auth_key' => 'required|string',
             'data' => 'required',
+            'input_type' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -122,93 +123,114 @@ class ApiRequestController extends Controller {
         $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[1]);
         $results = [];
 
+        $query = DB::table('applications')->select(
+            'applications.name',
+            'applications.package_name',
+            'applications.version',
+            'applications.is_malware',
+            'applications.is_dangerous',
+            'hashes.ja3_hash',
+            'hashes.ja3s_hash',
+            'hashes.ja4_hash',
+            'hashes.ja4s_hash',
+            'hashes.sni',
+            )
+            ->distinct()
+            ->join('hashes', 'hashes.app_id', '=', 'applications.id');
+
         foreach (json_decode($request->input('data')) as $item){
 
-            if($request->input('input_type') == "JA3"){
-
-                $apps = DB::table('applications')->select(
-                    'applications.name',
-                    'applications.package_name',
-                    'applications.version',
-                    'applications.is_malware'
-                    )
-                    ->distinct()
-                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-                    ->where('hashes.ja3_hash', '=', $item->ja3_hash)
-                    ->get();
-
-                $res_obj = [ "ja3_hash" => $item->ja3_hash, "apps" => $apps];
-                $results[] = $res_obj;
+            if($request->input("input_type") == "JA3"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja3_hash', $item->ja3_hash);
+                });
+                $results[] = ["ja3_hash" => $item->ja3_hash, "apps" => []];
             }
 
-            if($request->input('input_type') == "JA3S"){
-                $apps = DB::table('applications')->select(
-                    'applications.name',
-                    'applications.package_name',
-                    'applications.version',
-                    'applications.is_malware'
-                    )
-                    ->distinct()
-                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-                    ->where('hashes.ja3s_hash', '=', $item->ja3s_hash)
-                    ->get();
-
-                $res_obj = [ "ja3s_hash" => $item->ja3s_hash, "apps" => $apps];
-                $results[] = $res_obj;
+            if($request->input("input_type") == "JA3_JA3S"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja3_hash', $item->ja3_hash);
+                    $query->where('hashes.ja3s_hash', $item->ja3s_hash);
+                });
+                $results[] = ["ja3_hash" => $item->ja3_hash, "ja3s_hash" => $item->ja3s_hash, "apps" => []];
             }
 
-            if($request->input('input_type') == "JA3_JA3S"){
-                $apps = DB::table('applications')->select(
-                    'applications.name',
-                    'applications.package_name',
-                    'applications.version',
-                    'applications.is_malware'
-                    )
-                    ->distinct()
-                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-                    ->where('hashes.ja3_hash', '=', $item->ja3_hash)
-                    ->where('hashes.ja3s_hash', '=', $item->ja3s_hash)
-                    ->get();
-
-                $res_obj = [ "ja3_hash" => $item->ja3_hash, "ja3s_hash" => $item->ja3s_hash, "apps" => $apps];
-                $results[] = $res_obj;
+            if($request->input("input_type") == "JA3_SNI"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja3_hash', $item->ja3_hash);
+                    $query->where('hashes.sni', $item->sni);
+                });
+                $results[] = ["ja3_hash" => $item->ja3_hash, "sni" => $item->sni, "apps" => []];
             }
 
-            if($request->input('input_type') == "JA3_SNI"){
-                $apps = DB::table('applications')->select(
-                    'applications.name',
-                    'applications.package_name',
-                    'applications.version',
-                    'applications.is_malware'
-                    )
-                    ->distinct()
-                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-                    ->where('hashes.ja3_hash', '=', $item->ja3_hash)
-                    ->where('hashes.sni', '=', $item->sni)
-                    ->get();
-
-                $res_obj = [ "ja3_hash" => $item->ja3_hash, "sni" => $item->sni, "apps" => $apps];
-                $results[] = $res_obj;
+            if($request->input("input_type") == "JA3_JA3S_SNI"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja3_hash', $item->ja3_hash);
+                    $query->where('hashes.ja3s_hash', $item->ja3s_hash);
+                    $query->where('hashes.sni', $item->sni);
+                });
+                $results[] = ["ja3_hash" => $item->ja3_hash, "ja3s_hash" => $item->ja3s_hash, "sni" => $item->sni, "apps" => []];
             }
+            
+        }
 
-            if($request->input('input_type') == "JA3_JA3S_SNI"){
-                $apps = DB::table('applications')->select(
-                    'applications.name',
-                    'applications.package_name',
-                    'applications.version',
-                    'applications.is_malware'
-                    )
-                    ->distinct()
-                    ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-                    ->where('hashes.ja3_hash', '=', $item->ja3_hash)
-                    ->where('hashes.ja3s_hash', '=', $item->ja3s_hash)
-                    ->where('hashes.sni', '=', $item->sni)
-                    ->get();
-                
-                $res_obj = [ "ja3_hash" => $item->ja3_hash, "sni" => $item->sni, "ja3s_hash" => $item->ja3s_hash, "apps" => $apps];
-                $results[] = $res_obj;
+        $data = $query->get();
+
+        foreach ($data as $item){
+            foreach($results as &$result){
+                if ($request->input("input_type") == "JA3"){
+                    if($item->ja3_hash == $result["ja3_hash"]){
+                        array_push($result["apps"], [
+                            "app_name" => $item->name, 
+                            "package_name" => $item->package_name,
+                            "app_version" => $item->version,
+                            "is_malware" => $item->is_malware,
+                            "is_dangerous" => $item->is_dangerous,
+                        ]);
+                    }
+                }
+                if ($request->input("input_type") == "JA3_JA3S"){
+                    if($item->ja3_hash == $result["ja3_hash"] && $item->ja3s_hash == $result["ja3s_hash"]){
+                        array_push($result["apps"], [
+                            "app_name" => $item->name, 
+                            "package_name" => $item->package_name,
+                            "app_version" => $item->version,
+                            "is_malware" => $item->is_malware,
+                            "is_dangerous" => $item->is_dangerous,
+                        ]);
+                    }
+                }
+                if ($request->input("input_type") == "JA3_SNI"){
+                    if($item->ja3_hash == $result["ja3_hash"] && $item->sni == $result["sni"]){
+                        array_push($result["apps"], [
+                            "app_name" => $item->name, 
+                            "package_name" => $item->package_name,
+                            "app_version" => $item->version,
+                            "is_malware" => $item->is_malware,
+                            "is_dangerous" => $item->is_dangerous,
+                        ]);
+                    }
+                }
+
+                if ($request->input("input_type") == "JA3_JA3S_SNI"){
+                    if($item->ja3_hash == $result["ja3_hash"] && $item->ja3s_hash == $result["ja3s_hash"] && $item->sni == $result["sni"]){
+                        array_push($result["apps"], [
+                            "app_name" => $item->name, 
+                            "package_name" => $item->package_name,
+                            "app_version" => $item->version,
+                            "is_malware" => $item->is_malware,
+                            "is_dangerous" => $item->is_dangerous,
+                        ]);
+                    }
+                }
             }
         }
+
+        foreach($results as &$result){
+            $apps = collect($result["apps"])->unique();
+            $result["apps"] = $apps->values()->all();
+        }
+
 
         return response()->json($results, 200);
     }
@@ -224,8 +246,6 @@ class ApiRequestController extends Controller {
             'apk_file' => 'required|file',
         ]);
 
-        $hash_types = ["JA3"];
-
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 400);
         }
@@ -236,6 +256,7 @@ class ApiRequestController extends Controller {
         $apk_original_file_name = $request->file('apk_file')->getClientOriginalName();
         $process_id = uniqid('ext_api_', true);
         $channel_id = null;
+        $hash_types = ["JA3"];
 
         $job_id = CreateHashFromAPK::dispatch(
             $apk_file_name,
