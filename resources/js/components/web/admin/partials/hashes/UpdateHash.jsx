@@ -16,8 +16,8 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
     const [ja3sHash, setJa3sHash] = useState('');
     const [ja4Hash, setJa4Hash] = useState('');
     const [ja4sHash, setJa4sHash] = useState('');
-    const [isDangerous, setIsDangerous] = useState(false);
-    const [isMalware, setIsMalware] = useState(false);
+    const [isDangerous, setIsDangerous] = useState(0);
+    const [isMalware, setIsMalware] = useState(0);
 
     const [errors, setErrors] = useState({});
     const {http} = AuthUser();
@@ -31,6 +31,8 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
             ja4_hash:ja4Hash, ja4s_hash:ja4sHash, is_dangerous:isDangerous,
             is_malware:isMalware,
         };
+
+        console.log(isDangerous);
 
         try {
             let resp = await http.post('/admin/hash/update', hashData);
@@ -173,8 +175,8 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
                                         value={isMalware}
                                         onChange={(e) => setIsMalware(e.target.value)}
                                     >
-                                        <option value={false}>is not malware</option>
-                                        <option value={true}>malware</option>
+                                        <option value={0}>is not malware</option>
+                                        <option value={1}>malware</option>
                                     </select>
                                     {errors.is_malware && <span className="error text-danger">{errors.is_malware[0]}</span>}
                                 </div>
@@ -186,8 +188,8 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
                                         value={isDangerous}
                                         onChange={(e) => setIsDangerous(e.target.value)}
                                     >
-                                        <option value={false}>is not dangerous</option>
-                                        <option value={true}>dangerous</option>
+                                        <option value={0}>is not dangerous</option>
+                                        <option value={1}>dangerous</option>
                                     </select>
                                     {errors.is_dangerous && <span className="error text-danger">{errors.is_dangerous[0]}</span>}
                                 </div>
