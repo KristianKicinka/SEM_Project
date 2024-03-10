@@ -145,31 +145,61 @@ class ApiRequestController extends Controller {
                     $query->where('hashes.ja3_hash', $item->ja3_hash);
                 });
                 $results[] = ["ja3_hash" => $item->ja3_hash, "apps" => []];
-            }
-
-            if($request->input("input_type") == "JA3_JA3S"){
+            }else if($request->input("input_type") == "JA4"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja4_hash', $item->ja4_hash);
+                });
+                $results[] = ["ja4_hash" => $item->ja4_hash, "apps" => []];
+            }else if($request->input("input_type") == "JA3_JA3S"){
                 $query->orWhere(function ($query) use ($item) {
                     $query->where('hashes.ja3_hash', $item->ja3_hash);
                     $query->where('hashes.ja3s_hash', $item->ja3s_hash);
                 });
                 $results[] = ["ja3_hash" => $item->ja3_hash, "ja3s_hash" => $item->ja3s_hash, "apps" => []];
-            }
-
-            if($request->input("input_type") == "JA3_SNI"){
+            }else if($request->input("input_type") == "JA4_JA4S"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja4_hash', $item->ja4_hash);
+                    $query->where('hashes.ja4s_hash', $item->ja4s_hash);
+                });
+                $results[] = ["ja4_hash" => $item->ja4_hash, "ja4s_hash" => $item->ja4s_hash, "apps" => []];
+            }else if($request->input("input_type") == "JA3_SNI"){
                 $query->orWhere(function ($query) use ($item) {
                     $query->where('hashes.ja3_hash', $item->ja3_hash);
                     $query->where('hashes.sni', $item->sni);
                 });
                 $results[] = ["ja3_hash" => $item->ja3_hash, "sni" => $item->sni, "apps" => []];
-            }
-
-            if($request->input("input_type") == "JA3_JA3S_SNI"){
+            }else if($request->input("input_type") == "JA4_SNI"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja4_hash', $item->ja4_hash);
+                    $query->where('hashes.sni', $item->sni);
+                });
+                $results[] = ["ja4_hash" => $item->ja4_hash, "sni" => $item->sni, "apps" => []];
+            }else if($request->input("input_type") == "JA3_JA3S_SNI"){
                 $query->orWhere(function ($query) use ($item) {
                     $query->where('hashes.ja3_hash', $item->ja3_hash);
                     $query->where('hashes.ja3s_hash', $item->ja3s_hash);
                     $query->where('hashes.sni', $item->sni);
                 });
                 $results[] = ["ja3_hash" => $item->ja3_hash, "ja3s_hash" => $item->ja3s_hash, "sni" => $item->sni, "apps" => []];
+            }else if($request->input("input_type") == "JA4_JA4S_SNI"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja4_hash', $item->ja4_hash);
+                    $query->where('hashes.ja4s_hash', $item->ja4s_hash);
+                    $query->where('hashes.sni', $item->sni);
+                });
+                $results[] = ["ja4_hash" => $item->ja4_hash, "ja4s_hash" => $item->ja4s_hash, "sni" => $item->sni, "apps" => []];
+            }else if($request->input("input_type") == "JA3_JA3S_SNI_JA4_JA4S"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.ja3_hash', $item->ja3_hash);
+                    $query->where('hashes.ja3s_hash', $item->ja3s_hash);
+                    $query->where('hashes.sni', $item->sni);
+                    $query->where('hashes.ja4_hash', $item->ja4_hash);
+                    $query->where('hashes.ja4s_hash', $item->ja4s_hash);
+                });
+                $results[] = [
+                    "ja3_hash" => $item->ja3_hash, "ja3s_hash" => $item->ja3s_hash, "sni" => $item->sni, 
+                    "ja4_hash" => $item->ja4_hash, "ja4s_hash" => $item->ja4s_hash, "apps" => [], 
+                ];
             }
             
         }
@@ -177,50 +207,49 @@ class ApiRequestController extends Controller {
         $data = $query->get();
 
         foreach ($data as $item){
+            $app_data = [
+                "app_name" => $item->name, "package_name" => $item->package_name,
+                "app_version" => $item->version, "is_malware" => $item->is_malware,
+                "is_dangerous" => $item->is_dangerous,
+            ];
             foreach($results as &$result){
+            
                 if ($request->input("input_type") == "JA3"){
                     if($item->ja3_hash == $result["ja3_hash"]){
-                        array_push($result["apps"], [
-                            "app_name" => $item->name, 
-                            "package_name" => $item->package_name,
-                            "app_version" => $item->version,
-                            "is_malware" => $item->is_malware,
-                            "is_dangerous" => $item->is_dangerous,
-                        ]);
+                        array_push($result["apps"], $app_data);
                     }
-                }
-                if ($request->input("input_type") == "JA3_JA3S"){
+                }else if ($request->input("input_type") == "JA4"){
+                    if($item->ja4_hash == $result["ja4_hash"]){
+                        array_push($result["apps"], $app_data);
+                    }
+                }else if ($request->input("input_type") == "JA3_JA3S"){
                     if($item->ja3_hash == $result["ja3_hash"] && $item->ja3s_hash == $result["ja3s_hash"]){
-                        array_push($result["apps"], [
-                            "app_name" => $item->name, 
-                            "package_name" => $item->package_name,
-                            "app_version" => $item->version,
-                            "is_malware" => $item->is_malware,
-                            "is_dangerous" => $item->is_dangerous,
-                        ]);
+                        array_push($result["apps"], $app_data);
                     }
-                }
-                if ($request->input("input_type") == "JA3_SNI"){
+                }else if ($request->input("input_type") == "JA4_JA4S"){
+                    if($item->ja4_hash == $result["ja4_hash"] && $item->ja4s_hash == $result["ja4s_hash"]){
+                        array_push($result["apps"], $app_data);
+                    }
+                }else if ($request->input("input_type") == "JA3_SNI"){
                     if($item->ja3_hash == $result["ja3_hash"] && $item->sni == $result["sni"]){
-                        array_push($result["apps"], [
-                            "app_name" => $item->name, 
-                            "package_name" => $item->package_name,
-                            "app_version" => $item->version,
-                            "is_malware" => $item->is_malware,
-                            "is_dangerous" => $item->is_dangerous,
-                        ]);
+                        array_push($result["apps"], $app_data);
                     }
-                }
-
-                if ($request->input("input_type") == "JA3_JA3S_SNI"){
+                }else if ($request->input("input_type") == "JA4_SNI"){
+                    if($item->ja4_hash == $result["ja4_hash"] && $item->sni == $result["sni"]){
+                        array_push($result["apps"], $app_data);
+                    }
+                }else if ($request->input("input_type") == "JA3_JA3S_SNI"){
                     if($item->ja3_hash == $result["ja3_hash"] && $item->ja3s_hash == $result["ja3s_hash"] && $item->sni == $result["sni"]){
-                        array_push($result["apps"], [
-                            "app_name" => $item->name, 
-                            "package_name" => $item->package_name,
-                            "app_version" => $item->version,
-                            "is_malware" => $item->is_malware,
-                            "is_dangerous" => $item->is_dangerous,
-                        ]);
+                        array_push($result["apps"], $app_data);
+                    }
+                }else if ($request->input("input_type") == "JA4_JA4S_SNI"){
+                    if($item->ja4_hash == $result["ja4_hash"] && $item->ja4s_hash == $result["ja4s_hash"] && $item->sni == $result["sni"]){
+                        array_push($result["apps"], $app_data);
+                    }
+                }else if ($request->input("input_type") == "JA3_JA3S_SNI_JA4_JA4S"){
+                    if($item->ja3_hash == $result["ja3_hash"] && $item->ja3s_hash == $result["ja3s_hash"] && 
+                    $item->sni == $result["sni"] && $item->ja4_hash == $result["ja4_hash"] && $item->ja4s_hash == $result["ja4s_hash"]){
+                        array_push($result["apps"], $app_data);
                     }
                 }
             }
