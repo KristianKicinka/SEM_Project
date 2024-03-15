@@ -68,6 +68,36 @@ class ApiRequestController extends Controller {
         return response()->json($requests, 200);
     }
 
+    /**
+     * @return JsonResponse
+     */
+    public function getRequestsUser(Request $request): JsonResponse {
+
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+
+        $requests = DB::table('users')
+            ->select(
+                'api_requests.id AS id',
+                'users.email AS email',
+                'api_requests.type AS type',
+                'api_requests.status AS status',
+                'api_requests.ip_address AS ip_address',
+            )
+            ->join('api_requests', 'users.id', '=', 'api_requests.user_id')
+            ->where('users.id', '=', $request->user_id)
+            ->get();
+
+        return response()->json($requests, 200);
+    }
+
+
     // External API
 
     /**

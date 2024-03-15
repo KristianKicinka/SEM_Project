@@ -44,7 +44,7 @@ const Users = () => {
     }
 
     const buttons = new Map([
-        ["createButton", handleCreateClick],
+        ["createButton", {name:"Create user", funct_call:handleCreateClick}],
         ["deleteButton", handleDeleteClick],
         ["updateButton", handleUpdateClick]
       ]);

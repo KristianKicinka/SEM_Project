@@ -40,17 +40,19 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                     <div className="col-md-5">
                         {buttons.has("createButton") ? (<button 
                             className="btn btn-search text-white float-end d-inline mx-3"
-                            onClick={() => buttons.get('createButton')()} 
-                        >New item</button>): (<button 
-                        disabled
-                        className="btn btn-search text-white float-end d-inline mx-3"
-                        onClick={() => buttons.get('createButton')()} 
-                    >New item</button>)}
-                        <input 
+                            onClick={() => buttons.get('createButton').funct_call()} 
+                        >{buttons.get('createButton').name}</button>): null}
+
+                        <div class="input-group flex-nowrap w-50 float-end">
+                            <input 
                             type="text" 
-                            className="form-control d-inline w-auto float-end" 
+                            className="form-control d-inline float-end" 
                             placeholder="search" 
                             onChange={e=>setFilter(e.target.value)}/>
+                            <span class="input-group-text bg-orange text-white">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <div className="row px-3">

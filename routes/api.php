@@ -9,6 +9,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ApiRequestController;
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\LikedAppController;
 use App\Http\Controllers\TestController;
 
 /*
@@ -63,11 +64,15 @@ Route::group(['middleware' => ['auth:api', 'admin']], function () {
 Route::group(['middleware' => ['auth:api', 'user']], function () {
     //Route::post('/hashes', [HashesController::class, 'getHashesforAdmin']);
     //Route::post('/settings', [HashesController::class, 'getHashesforAdmin']);
-    Route::post('/user/api-requests', [ApiRequestController::class, 'getRequests']);
+    Route::post('/user/api-requests', [ApiRequestController::class, 'getRequestsUser']);
     Route::post('/user/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
     Route::post('/user/get-api-key', [ApiRequestController::class, 'getApiKey']);
     Route::post('/user/edit', [UserController::class, 'updateUserData']);
     Route::post('/user/change-password', [UserController::class, 'updateUserPassword']);
+
+    Route::post('/user/get-liked-apps-hashes', [LikedAppController::class, 'getLikedAppsHashes']);
+    Route::post('/user/get-liked-apps', [LikedAppController::class, 'index']);
+    Route::post('/user/edit-liked-apps', [LikedAppController::class, 'editLikedApps']);
 });
 
 // External API routes

@@ -24,7 +24,7 @@ const API = () => {
 
     const fetchData = async () => {
         try {
-            let resp = await http.post('/user/api-requests');
+            let resp = await http.post('/user/api-requests', {user_id: user.id});
             console.log(resp.data)
             setApiRequests(resp.data);
         } catch (error) {

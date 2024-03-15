@@ -44,7 +44,7 @@ const Hashes = () => {
     }
 
     const buttons = new Map([
-        ["createButton", handleCreateClick],
+        ["createButton", {name:"Create hash", funct_call:handleCreateClick}],
         ["deleteButton", handleDeleteClick],
         ["updateButton", handleUpdateClick]
       ]);
