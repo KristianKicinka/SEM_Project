@@ -82,10 +82,13 @@ class CreateHash {
         $process = Process::fromShellCommandline($command);
         $process->start();
 
-        $this->runAppOnEmulator($emulator, $package_name);
-        //$this->createCommunicationOnEmulator($emulator, $package_name);
-        sleep(env("NETWORK_ANALYSIS_TIME", 30));
-        $this->closeAppOnEmulator($emulator, $package_name);
+        for($index = 0; $index < env("ANALYSIS_COUNT", 10); $index ++){
+            $this->runAppOnEmulator($emulator, $package_name);
+            $this->createCommunicationOnEmulator($emulator, $package_name);
+            sleep(env("NETWORK_ANALYSIS_TIME", 10));
+            $this->closeAppOnEmulator($emulator, $package_name);
+        }
+        
 
         $process->stop();
 
@@ -201,7 +204,7 @@ class CreateHash {
      */
     private function createCommunicationOnEmulator($emulator, $package_name) {
 
-        $command = 'adb shell monkey -p '.trim($package_name).' -v 500';
+        $command = 'adb shell monkey -p '.trim($package_name).' --ignore-crashes -v 500';
 
         if (env("ENVIRONMENT", "local") == "server"){
             $command = 'docker exec '.$emulator->name.' '.$command;
