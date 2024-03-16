@@ -90,7 +90,7 @@ class CreateHash {
         }
         
 
-        $process->stop();
+        $process->stop(0);
 
         return $pcap_out_path;
     }
