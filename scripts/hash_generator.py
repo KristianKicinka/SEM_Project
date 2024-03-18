@@ -1,7 +1,5 @@
 import sys
 
-import pandas as pd
-
 import pyshark as pyshark
 from scapy.all import *
 from scapy.layers.tls.record import TLS
