@@ -1,6 +1,5 @@
 import sys
 
-import pyshark as pyshark
 from scapy.all import *
 from scapy.layers.tls.record import TLS
 from scapy.layers.tls.extensions import TLS_Ext_SupportedGroups
@@ -60,7 +59,7 @@ def process_JA3S_ciphers(packet):
             ciphers_field = tls_layers[TLSServerHello].cipher
             if ciphers_field not in RESERVED_GREASE_VALUES:
                 return ciphers_field
-                    
+
     return None
 
 def get_client_hello_version(packet):
@@ -119,7 +118,7 @@ def get_supported_groups(packet):
                 for group in supported_groups_field:
                     supported_groups.append(group)
 
-    supported_groups = remove_reserved_grease_values(supported_groups)                
+    supported_groups = remove_reserved_grease_values(supported_groups)
     return supported_groups
 
 def get_supported_versions_CH(packet):
@@ -134,7 +133,7 @@ def get_supported_versions_CH(packet):
         if tls_layers.version:
             supported_versions.append(tls_layers.version)
 
-    supported_versions = remove_reserved_grease_values(supported_versions)                
+    supported_versions = remove_reserved_grease_values(supported_versions)
     return supported_versions
 
 def get_supported_version_SH(packet):
@@ -146,7 +145,7 @@ def get_supported_version_SH(packet):
                 return supported_versions_field
         if tls_layers.version:
             return tls_layers.version
-                              
+
     return None
 
 def get_signature_algorithms(packet):
@@ -159,7 +158,7 @@ def get_signature_algorithms(packet):
                 for sig_alg in signature_algorithms_field:
                     signature_algorithms.append(sig_alg)
 
-    signature_algorithms = remove_reserved_grease_values(signature_algorithms)                
+    signature_algorithms = remove_reserved_grease_values(signature_algorithms)
     return signature_algorithms
 
 # Get EC point formats
@@ -196,7 +195,7 @@ def check_useless_domain_name(packet):
             for line in file:
                 if sni.strip().lower() == line.strip().lower():
                     return True
-        
+
     return False
 
 def is_in_black_list(sni, black_list):
@@ -210,7 +209,7 @@ def remove_adds(res_array):
             domain_names = file.read().splitlines()
 
             filtered = [res for res in res_array if not is_in_black_list(res["sni"], domain_names)]
-                        
+
     return filtered
 
 def add_to_string(full_string, items):
@@ -231,7 +230,7 @@ def create_JA4_hash(packet, sni):
     tls_versions = get_supported_versions_CH(packet)
     if(tls_versions):
         tls_version = process_version(max(tls_versions))
-    
+
     sni = "d" if sni else "i"
     cip_cnt = format(len(ciphers), "02d")
     ext_cnt = format(len(extensions), "02d")
@@ -280,7 +279,7 @@ def create_JA4S_hash(packet):
         hex_extensions.remove("0010")
 
     ext_in = ','.join(str(e) for e in hex_extensions)
-    
+
     ja4s_c = hashlib.sha256(ext_in.encode()).hexdigest()[0:12]
 
     return ja4s_a+"_"+ja4s_b+"_"+ja4s_c
@@ -303,7 +302,7 @@ def process_version(version):
     elif version == 767:
         return "s2"
     elif version == 766:
-        return "s1"   
+        return "s1"
     return "00"
 
 def get_alpn(packet):
@@ -315,10 +314,10 @@ def get_alpn(packet):
             if alpn_field:
                 alpn = alpn_field[0].protocol.decode()
                 alpn = alpn[0]+alpn[-1]
-            
+
     return alpn
 
-    
+
 def create_JA3_string(version, ciphers, extensions, supported_groups, point_format):
     full_string = "" + str(version) + ","
     full_string = add_to_string(full_string, ciphers) + ","
@@ -388,8 +387,8 @@ if __name__ == '__main__':
 
                 if key not in results:
                     results[key] = {
-                        "ip_src" : ip_src, "port_src":port_src, 
-                        "ip_dest":ip_dest, "port_dest":port_dest, 
+                        "ip_src" : ip_src, "port_src":port_src,
+                        "ip_dest":ip_dest, "port_dest":port_dest,
                         "ja3_hash": ja3_hash, "sni": sni, "ja3s_hash": None,
                         "ja4_hash": ja4_hash, "ja4s_hash": None
                     }
@@ -407,8 +406,8 @@ if __name__ == '__main__':
 
                 if key not in results:
                     results[key] = {
-                        "ip_src" : ip_src, "port_src":port_src, 
-                        "ip_dest":ip_dest, "port_dest":port_dest, 
+                        "ip_src" : ip_src, "port_src":port_src,
+                        "ip_dest":ip_dest, "port_dest":port_dest,
                         "ja3_hash": None, "sni": None, "ja3s_hash": ja3s_hash,
                         "ja4_hash": None, "ja4s_hash": ja4s_hash
                     }
@@ -418,7 +417,7 @@ if __name__ == '__main__':
 
 
         packet_count += 1
-        
+
     array_results = []
 
     for key in results:
