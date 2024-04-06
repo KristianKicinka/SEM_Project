@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\HashGeneratorFailException;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -15,10 +16,9 @@ use App\Jobs\CreateHashFromAPK;
 use App\Jobs\CreateHashFromAppName;
 use App\Models\ApiRequest;
 
-use App\Models\Application;
-use App\Models\Hash;
 use App\Objects\CreateHashFromPcap;
 
+// API request types
 const REQUEST_TYPES = [
     "get_app_hashes", "get_apps_from_hashes", "create_hash_from_apk",
     "create_hash_from_package_name", "create_hash_from_pcap",
@@ -385,8 +385,6 @@ class ApiRequestController extends Controller {
      */
     public function createHashFromAPK(Request $request): JsonResponse {
 
-        //return response()->json($request->file("apk_file")->getMimeType(), 200);
-
         // Validator rules
         $rules = [
             'auth_key' => 'required|string',
@@ -480,13 +478,16 @@ class ApiRequestController extends Controller {
             $request->ip(), $channel_id, $process_id,
         )->onQueue('process_queue');
 
-        return response()->json('Task was added to queue successfully.', 200);
+        $response = "Task for create hashes from package name (";
+        $response = $response.$request->input("package_name").") was added to queue.";
+        return response()->json($response, 200);
     }
 
     /**
      * @brief The function ensures the creation of hashes from PCAP file
      * @param Request $request HTTP request data
      * @return JsonResponse API response
+     * @throws HashGeneratorFailException Hash generator fail exception
      */
     public function createHashFromPcap(Request $request): JsonResponse {
 
@@ -533,6 +534,7 @@ class ApiRequestController extends Controller {
      * @brief The function ensures PCAP file analysis
      * @param Request $request HTTP request data
      * @return JsonResponse Analysis output
+     * @throws HashGeneratorFailException Hash generator fail exception
      */
     public function analyzePcapFile(Request $request): JsonResponse {
 
@@ -616,8 +618,6 @@ class ApiRequestController extends Controller {
             'ip_address' => $ip_address,
             'type' => $type,
         ]);
-
-        //TODO: Description column of api request
 
         $api_request->save();
     }

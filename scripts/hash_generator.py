@@ -1,4 +1,5 @@
 import sys
+import subprocess
 
 from scapy.all import *
 from scapy.layers.tls.record import TLS
@@ -12,6 +13,10 @@ from scapy.layers.inet import IP , TCP, UDP
 
 from scapy.layers.tls.handshake import TLSClientHello
 from scapy.layers.tls.handshake import TLSServerHello
+
+from cryptography import x509
+from cryptography.x509.oid import ExtensionOID, NameOID
+from hashlib import sha256
 
 import hashlib
 import os
@@ -36,11 +41,30 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 hash_strings = []
 hashes = []
 
-def remove_reserved_grease_values(array):
-    return [item for item in array if item not in RESERVED_GREASE_VALUES]
+def remove_reserved_grease_values(data):
+    """
+    The function ensures removing reserved grease values from data list
+
+    Parameters:
+    data (list): list of values to process.
+
+    Returns:
+    list: data list without grease values.
+    """
+    return [item for item in data if item not in RESERVED_GREASE_VALUES]
 
 def process_JA3_ciphers(packet):
+    """
+    The function ensures extraction of ciphers from client hello packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    list: ciphers values list.
+    """
     ciphers = []
+
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLSClientHello):
@@ -53,6 +77,15 @@ def process_JA3_ciphers(packet):
     return ciphers
 
 def process_JA3S_ciphers(packet):
+    """
+    The function ensures extraction of ciphers from server hello packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    string: ciphers field value.
+    """
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLSServerHello):
@@ -63,6 +96,15 @@ def process_JA3S_ciphers(packet):
     return None
 
 def get_client_hello_version(packet):
+    """
+    The function ensures extraction of version from client hello packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    string: client hello version.
+    """
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLSClientHello):
@@ -72,6 +114,15 @@ def get_client_hello_version(packet):
     return None
 
 def get_server_hello_version(packet):
+    """
+    The function ensures extraction of version from server hello packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    string: server hello version.
+    """
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLSServerHello):
@@ -80,9 +131,18 @@ def get_server_hello_version(packet):
 
     return None
 
-
 def get_client_hello_extensions(packet):
+    """
+    The function ensures extraction of extensions from client hello packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    list: list of extensions.
+    """
     extensions = []
+
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLSClientHello):
@@ -95,7 +155,17 @@ def get_client_hello_extensions(packet):
     return extensions
 
 def get_server_hello_extensions(packet):
+    """
+    The function ensures extraction of extensions from server hello packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    list: list of extensions.
+    """
     extensions = []
+
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLSServerHello):
@@ -107,9 +177,18 @@ def get_server_hello_extensions(packet):
     extensions = remove_reserved_grease_values(extensions)
     return extensions
 
-# Get supported groups
 def get_supported_groups(packet):
+    """
+    The function ensures extraction of supported groups from packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    list: list of supported groups.
+    """
     supported_groups = []
+
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLS_Ext_SupportedGroups):
@@ -122,7 +201,17 @@ def get_supported_groups(packet):
     return supported_groups
 
 def get_supported_versions_CH(packet):
+    """
+    The function ensures extraction of supported versions from client hello packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    list: list of supported versions.
+    """
     supported_versions = []
+
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLS_Ext_SupportedVersion_CH):
@@ -137,6 +226,15 @@ def get_supported_versions_CH(packet):
     return supported_versions
 
 def get_supported_version_SH(packet):
+    """
+    The function ensures extraction of supported versions from server hello packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    list: list of supported versions.
+    """
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLS_Ext_SupportedVersion_SH):
@@ -149,7 +247,17 @@ def get_supported_version_SH(packet):
     return None
 
 def get_signature_algorithms(packet):
+    """
+    The function ensures extraction of signature alorithms values from packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    list: list of signature algorithms values.
+    """
     signature_algorithms = []
+
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLS_Ext_SignatureAlgorithms):
@@ -161,9 +269,18 @@ def get_signature_algorithms(packet):
     signature_algorithms = remove_reserved_grease_values(signature_algorithms)
     return signature_algorithms
 
-# Get EC point formats
 def get_ec_point_formats(packet):
+    """
+    The function ensures ec point format extraction from packet
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    list: list of ec point formats values.
+    """
     ec_point_formats = []
+
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLS_Ext_SupportedPointFormat):
@@ -174,55 +291,79 @@ def get_ec_point_formats(packet):
 
     return ec_point_formats
 
-# Get SNI
 def get_sni(packet):
+    """
+    The function ensures server name indicator extraction
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    string: server name indicator.
+    """
     sni = None
+
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
         if tls_layers.haslayer(TLS_Ext_ServerName):
             sni_field = tls_layers[TLS_Ext_ServerName].servernames
             if sni_field:
                 sni = sni_field[0].servername.decode()
+
     return sni
 
-
-def check_useless_domain_name(packet):
-    # row from : https://github.com/hsouna/tls-servername/blob/main/get_servername_from_tls.py
-    sni = get_sni(packet)
-
-    for black_list_file in black_list_files:
-        with open(os.path.join(script_dir, black_list_file), "r") as file:
-            for line in file:
-                if sni.strip().lower() == line.strip().lower():
-                    return True
-
-    return False
-
-def is_in_black_list(sni, black_list):
-    return sni in black_list
-
 def remove_adds(res_array):
+    """
+    The function ensures removing hashes of advertisements servers
+
+    Parameters:
+    res_array (list): list of mobile apps hashes.
+
+    Returns:
+    list: list of mobile apps hashes without ad servers.
+    """
     filtered = []
 
     for black_list_file in black_list_files:
         with open(os.path.join(script_dir, black_list_file), "r") as file:
             domain_names = file.read().splitlines()
 
-            filtered = [res for res in res_array if not is_in_black_list(res["sni"], domain_names)]
+            filtered = [res for res in res_array if not (res["sni"] in domain_names)]
 
     return filtered
 
 def add_to_string(full_string, items):
+    """
+    The function ensures adding items to full string
+
+    Parameters:
+    full_string (string): full string intended for hash creation.
+    items (list): list of items intended for add to full string.
+
+    Returns:
+    string: full string.
+    """
     index = 0
+
     for item in items:
         full_string = full_string + str(item)
         if index != len(items) - 1:
             full_string = full_string + "-"
         index += 1
+
     return full_string
 
 def create_JA4_hash(packet, sni):
+    """
+    The function ensures creation JA4 hashes
 
+    Parameters:
+    packet (Packet): TLS Client hello packet.
+    sni (string): Server name indicator.
+
+    Returns:
+    string: JA4 hash.
+    """
     ciphers = process_JA3_ciphers(packet)
     extensions = get_client_hello_extensions(packet)
 
@@ -261,7 +402,15 @@ def create_JA4_hash(packet, sni):
     return ja4_a+"_"+ja4_b+"_"+ja4_c
 
 def create_JA4S_hash(packet):
+    """
+    The function ensures creation JA4S hashes
 
+    Parameters:
+    packet (Packet): TLS Server hello packet.
+
+    Returns:
+    string: JA4S hash.
+    """
     extensions = get_server_hello_extensions(packet)
     ciphers = process_JA3S_ciphers(packet)
 
@@ -284,11 +433,16 @@ def create_JA4S_hash(packet):
 
     return ja4s_a+"_"+ja4s_b+"_"+ja4s_c
 
-def process_protocol():
-    pass
-
 def process_version(version):
+    """
+    The function ensures processing TLS handshake version for JA4 and JA4S fingerprints
 
+    Parameters:
+    version (int): TLS handshake version.
+
+    Returns:
+    string: version intended for JA4 and JA4S format.
+    """
     if version == 772:
         return "13"
     elif version == 771:
@@ -303,9 +457,19 @@ def process_version(version):
         return "s2"
     elif version == 766:
         return "s1"
+
     return "00"
 
 def get_alpn(packet):
+    """
+    The function ensures getting alpn number value
+
+    Parameters:
+    packet (Packet): packet to process.
+
+    Returns:
+    string: alpn number value.
+    """
     alpn = "00"
     if packet.haslayer(TLS):
         tls_layers = packet[TLS]
@@ -317,23 +481,57 @@ def get_alpn(packet):
 
     return alpn
 
-
 def create_JA3_string(version, ciphers, extensions, supported_groups, point_format):
+    """
+    The function ensures processing TLS handshake version for JA4 and JA4S fingerprints
+
+    Parameters:
+    version (int): Client hello version value.
+    ciphers (int): Client hello ciphers.
+    extensions (int): Client hello extensions.
+    supported_groups (array): Client hello supported groups.
+    point_format (array): Client hello EC point format.
+
+    Returns:
+    string: JA3 full string.
+    """
     full_string = "" + str(version) + ","
     full_string = add_to_string(full_string, ciphers) + ","
     full_string = add_to_string(full_string, extensions) + ","
     full_string = add_to_string(full_string, supported_groups) + ","
     full_string = add_to_string(full_string, point_format)
+
     return full_string
 
 def create_JA3S_string(version, ciphers, extensions):
+    """
+    The function ensures JA3S full string creation
+
+    Parameters:
+    version (int): Server hello version value.
+    ciphers (int): Server hello ciphers.
+    extensions (int): Server hello extensions.
+
+    Returns:
+    string: JA3S full string.
+    """
     full_string = "" + str(version) + ","
     full_string = full_string + str(ciphers) + ","
     full_string = add_to_string(full_string, extensions)
+
     return full_string
 
 
 def create_JA3_hash(packet):
+    """
+    The function ensures JA3 hash generation
+
+    Parameters:
+    packet (Packet): Client hello packet.
+
+    Returns:
+    string: JA3 hash.
+    """
     version = get_client_hello_version(packet)
     extensions = get_client_hello_extensions(packet)
     ciphers = process_JA3_ciphers(packet)
@@ -347,6 +545,15 @@ def create_JA3_hash(packet):
     return result.hexdigest()
 
 def create_JA3S_hash(packet):
+    """
+    The function ensures JA3S hash generation
+
+    Parameters:
+    packet (Packet): Server hello packet.
+
+    Returns:
+    string: JA3S hash.
+    """
     version = get_server_hello_version(packet)
     extensions = get_server_hello_extensions(packet)
     ciphers = process_JA3S_ciphers(packet)
@@ -357,18 +564,159 @@ def create_JA3S_hash(packet):
 
     return result.hexdigest()
 
+#source: https://github.com/FoxIO-LLC/ja4/blob/main/python/ja4x.py#L16
+def encode_variable_length_quantity(v):
+    m = 0x00
+    output = []
+    while v >= 0x80:
+        output.insert(0, (v & 0x7F) | m)
+        v = v >> 7
+        m = 0x80
+    output.insert(0, v | m)
+    return output
+
+#source: https://github.com/FoxIO-LLC/ja4/blob/main/python/ja4x.py#L26
+def oid_to_hex(oid):
+    a = [int(x) for x in oid.split(".")]
+    oid = [a[0] * 40 + a[1]]
+    for n in a[2:]:
+        oid.extend(encode_variable_length_quantity(n))
+    oid.insert(0, len(oid))
+    oid.insert(0, 0x06)
+    return "".join("{:02x}".format(num) for num in oid)[4:]
+
+def get_cert_extensions(cert):
+    """
+    The function ensures getting extension values from tls certificate
+
+    Parameters:
+    cert (Certificate): X509 certificate object.
+
+    Returns:
+    string: SHA256 hash of extensions items.
+    """
+    extensions = []
+    for ext in cert.extensions:
+        extensions.append(oid_to_hex(ext.oid.dotted_string))
+
+    extensions_hash = sha256(','.join(extensions).encode('utf8')).hexdigest()[:12]
+    return extensions_hash
+
+def get_cert_issuer_rdns(cert):
+    """
+    The function ensures getting subject rdns values from tls certificate
+
+    Parameters:
+    cert (Certificate): X509 certificate object.
+
+    Returns:
+    string: SHA256 hash of issuer rdns items.
+    """
+    issuers = []
+
+    for rdn in cert.issuer:
+       issuers.append(oid_to_hex(rdn.oid.dotted_string))
+
+    issuer_hash = sha256(','.join(issuers).encode('utf8')).hexdigest()[:12]
+    return issuer_hash
+
+def get_cert_subject_rdns(cert):
+    """
+    The function ensures getting subject rdns values from tls certificate
+
+    Parameters:
+    cert (Certificate): X509 certificate object.
+
+    Returns:
+    string: SHA256 hash of subject rdns items.
+    """
+    subjects = []
+
+    for rdn in cert.subject:
+       subjects.append(oid_to_hex(rdn.oid.dotted_string))
+
+    subject_hash = sha256(','.join(subjects).encode('utf8')).hexdigest()[:12]
+    return subject_hash
+
+def create_ja4X_hash(cert):
+    """
+    The function ensures ja4x hashes creation
+
+    Parameters:
+    cert (Certificate): X509 certificate object.
+
+    Returns:
+    string: JA4X hash.
+    """
+    ja4x_a_hash = get_cert_issuer_rdns(cert)
+    ja4x_b_hash = get_cert_subject_rdns(cert)
+    ja4x_c_hash = get_cert_extensions(cert)
+
+    ja4x = f"{ja4x_a_hash}_{ja4x_b_hash}_{ja4x_c_hash}"
+    return ja4x
+
+def get_results_with_ja4x(pcap_file, results):
+    """
+    The function ensures tls certificate processing
+
+    Parameters:
+    pcap_file (file): captured pcap file.
+    results (list): list of mobile apps hashes.
+
+    Returns:
+    list: results list.
+    """
+    command = [
+        "tshark", "-2", "-R", "tls.handshake.certificates", "-T", "json",
+        "-e", "ip.src", "-e", "ip.dst", "-e", "tcp.srcport", "-e", "tcp.dstport",
+        "-e", "tls.handshake.certificate", "-r", pcap_file,
+    ]
+
+    result = subprocess.run(command, capture_output=True, text=True, check=True, encoding="utf-8")
+    json_string = re.sub(r'(in tap )?pkt\[\d+\]:.*\n', '', result.stdout)
+
+    packets = json.loads(json_string)
+
+    for packet in packets:
+        layers = packet["_source"]["layers"]
+
+        try:
+            certs = layers["tls.handshake.certificate"]
+
+            for cert_str in certs:
+                certificate_bytes = bytes.fromhex(cert_str.replace(":", "").replace(" ", ""))
+                cert = x509.load_der_x509_certificate(certificate_bytes)
+
+                ja4x = create_ja4X_hash(cert)
+
+                ip_src = layers["ip.src"][0]
+                port_src = int(layers["tcp.srcport"][0])
+                ip_dest = layers["ip.dst"][0]
+                port_dest = int(layers["tcp.dstport"][0])
+
+                key = (ip_dest, port_dest, ip_src, port_src)
+
+                if key in results:
+                    results[key]["ja4x_hash"].append(ja4x)
+
+        except Exception as e:
+            print(f"Error extracting certificate: {e}")
+
+    return results
+
 if __name__ == '__main__':
     load_layer('tls')
 
-    scapy_cap = rdpcap(sys.argv[1])
+    pcap_file = sys.argv[1]
+    scapy_cap = rdpcap(pcap_file)
 
     results = {}
-    packet_count = 1
 
+    # Process all packets in pcap file
     for packet in scapy_cap:
-
+        # Process TLS layer
         if packet.haslayer(TLS) and packet.haslayer(TCP):
-
+            # Get source/destination port and IP address
             ip_src = packet[IP].src
             ip_dest = packet[IP].dst
             port_src = packet[TCP].sport
@@ -376,6 +724,7 @@ if __name__ == '__main__':
 
             tls_layers = packet[TLS]
 
+            # Process ClientHello packets
             if tls_layers.haslayer(TLSClientHello):
 
                 sni = get_sni(packet)
@@ -385,18 +734,20 @@ if __name__ == '__main__':
 
                 key = (ip_src, port_src, ip_dest, port_dest)
 
+                # Insert from client hello packets data to results
                 if key not in results:
                     results[key] = {
                         "ip_src" : ip_src, "port_src":port_src,
                         "ip_dest":ip_dest, "port_dest":port_dest,
                         "ja3_hash": ja3_hash, "sni": sni, "ja3s_hash": None,
-                        "ja4_hash": ja4_hash, "ja4s_hash": None
+                        "ja4_hash": ja4_hash, "ja4s_hash": None, "ja4x_hash": []
                     }
                 else:
                     results[key]["ja3_hash"] = ja3_hash
                     results[key]["sni"] = sni
                     results[key]["ja4_hash"] = ja4_hash
 
+            # Process ServerHello packets
             if tls_layers.haslayer(TLSServerHello):
 
                 ja3s_hash = create_JA3S_hash(packet)
@@ -404,22 +755,23 @@ if __name__ == '__main__':
 
                 key = (ip_dest, port_dest, ip_src, port_src)
 
+                # Insert from server hello packets data to results
                 if key not in results:
                     results[key] = {
                         "ip_src" : ip_src, "port_src":port_src,
                         "ip_dest":ip_dest, "port_dest":port_dest,
                         "ja3_hash": None, "sni": None, "ja3s_hash": ja3s_hash,
-                        "ja4_hash": None, "ja4s_hash": ja4s_hash
+                        "ja4_hash": None, "ja4s_hash": ja4s_hash, "ja4x_hash": []
                     }
                 else:
                     results[key]["ja3s_hash"] = ja3s_hash
                     results[key]["ja4s_hash"] = ja4s_hash
 
-
-        packet_count += 1
-
+    # Add ja4x hashes to results
+    results = get_results_with_ja4x(pcap_file, results)
     array_results = []
 
+    # get final list of mobile app hash items
     for key in results:
         obj = {
             "ja3_hash": results[key]["ja3_hash"],
@@ -427,14 +779,15 @@ if __name__ == '__main__':
             "ja3s_hash": results[key]["ja3s_hash"],
             "ja4_hash": results[key]["ja4_hash"],
             "ja4s_hash": results[key]["ja4s_hash"],
+            "ja4x_hash": results[key]["ja4x_hash"]
         }
         array_results.append(obj)
 
-
+    # Remove advertisements servers
     array_results = remove_adds(array_results)
 
     # Remove duplicities
-    tuple_of_results = [tuple(sorted(res.items())) for res in array_results]
+    tuple_of_results = [tuple(sorted((k, tuple(v) if isinstance(v, list) else v) for k, v in res.items())) for res in array_results]
     unique_tuples = set(tuple_of_results)
     array_results = [dict(tp) for tp in unique_tuples]
 

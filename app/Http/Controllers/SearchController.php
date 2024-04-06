@@ -4,17 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-
-use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 use Illuminate\Support\Facades\Http;
 
 class SearchController extends Controller {
 
     /**
-     * @param Request $request
-     * @return JsonResponse
+     * @brief The function ensures the return of the app data from SerpApi
+     * @param Request $request HTTP request data
+     * @return JsonResponse Applications data
      */
     public function index(Request $request): JsonResponse {
         $url = "https://serpapi.com/search.json";
@@ -28,8 +25,10 @@ class SearchController extends Controller {
             "api_key" => $api_key,
         ];
 
+        // API response
         $response = Http::withHeaders(['Accept'=>'application/json'])->get($url, $query)->json();
 
+        // Process first item returned from SerpApi
         if(array_key_exists('app_highlight', $response)){
             $results[] = [
                 'app_name' => $response['app_highlight']['title'],
@@ -38,6 +37,7 @@ class SearchController extends Controller {
             ];
         }
 
+        // Process the others items in separate data object
         if(array_key_exists('organic_results', $response)){
             foreach ($response['organic_results'][0]['items'] as $item){
                 $results[] = [

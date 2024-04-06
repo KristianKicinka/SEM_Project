@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
-import { Modal, Button, Spinner, Badge } from "react-bootstrap";
+import { Modal, Badge } from "react-bootstrap";
+import { toast } from 'react-toastify';
 
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import pusher from "../../../pusher";
 import Results from "../partials/Results";
 
+
 const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
 
-    console.log(processes);
     const [updatedProcesses, setUpdatedProcesses] = useState(processes);
     const [showResults, setShowResults] = useState(false);
     const [results, setResults] = useState([]);
@@ -19,7 +20,6 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
         console.log(channel);
         channel.bind('process-update', data => {
 
-            console.log(data);
             setUpdatedProcesses(prevProcesses => {
                 const index = prevProcesses.findIndex(process => process.process_id === data.process_id);
                 
@@ -38,17 +38,23 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
         };
     }, [channel_id]);
 
+    /**
+     * @brief The function
+     */
     const closeResults = () => {
         setShowResults(false);
     }
 
+    /**
+     * @brief 
+     * @param {*} process_id 
+     */
     const getResults = async (process_id) => {
         try {
             const data = new FormData();
             data.append("process_id", process_id);
 
             let results = await axios.post('/api/get-process-results', data);
-            console.log(results.data);
 
             setResults(results.data);
             setShowResults(true);
@@ -59,7 +65,11 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
         }
     }
     
-
+    /**
+     * @brief The function ensures 
+     * @param {*} process 
+     * @returns 
+     */
     const loadingItem = (process) => {
         return (
             <tr key={process.process_id} className="align-middle gx-5">

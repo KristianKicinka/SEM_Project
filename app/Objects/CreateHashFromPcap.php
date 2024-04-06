@@ -2,11 +2,10 @@
 
 namespace App\Objects;
 
-use App\Objects\CreateHash;
-
 use App\Models\Application;
 use App\Models\File;
 use App\Models\Hash;
+use \App\Exceptions\HashGeneratorFailException;
 
 const INPUT_TYPE = "PCAP_FILE";
 const PCAP_INSERTED_DIR = 'app/public/uploads/pcap_inserted/';
@@ -21,19 +20,29 @@ class CreateHashFromPcap extends CreateHash {
         $this->hash_types = $hash_types;
     }
 
-    public function create(){
-        $pcap_file_path = storage_path(PCAP_INSERTED_DIR).$this->pcap_file_name;
+    /**
+     * @brief
+     * @return array
+     * @throws HashGeneratorFailException
+     */
+    public function create(): array {
 
-        $this->hashes = $this->createHashes($this->hash_types, $this->pcap_file_name, $pcap_file_path);
+        $pcap_file_path = storage_path(PCAP_INSERTED_DIR).$this->pcap_file_name;
+        $this->hashes = $this->createHashes($this->pcap_file_name, $pcap_file_path);
 
         return $this->hashes;
     }
 
+    /**
+     * @brief
+     * @param array $app_data
+     * @return array
+     * @throws HashGeneratorFailException
+     */
+    public function createAndSave(array $app_data): array {
 
-    public function createAndSave($app_data){
         $pcap_file_path = storage_path(PCAP_INSERTED_DIR).$this->pcap_file_name;
-        
-        $this->hashes = $this->createHashes($this->hash_types, $this->pcap_file_name, $pcap_file_path);
+        $this->hashes = $this->createHashes($this->pcap_file_name, $pcap_file_path);
 
         $db_data = [
             'app_name' => $app_data['app_name'],
@@ -52,14 +61,19 @@ class CreateHashFromPcap extends CreateHash {
         return $this->hashes;
     }
 
-    private function save_hashes($data){
+    /**
+     * @brief
+     * @param $data
+     * @return void
+     */
+    private function save_hashes($data): void {
 
         $identifier = [
             'name' => $data['app_name'],
             'package_name' => $data['package_name'],
             'version' => $data['version'],
         ];
-    
+
         $new_application = [
             'name' => $data['app_name'],
             'package_name' => $data['package_name'],
@@ -78,15 +92,6 @@ class CreateHashFromPcap extends CreateHash {
         $db_file->save();
 
         foreach($data["hashes"] as $hash){
-           
-
-            /*
-            $identifier = [
-                'app_id' => $application->id,
-                'hash' => $hash,
-                'hash_type' => $hash_type,
-            ];
-            */
 
             $new_record = [
                 'app_id' => $application->id,
@@ -94,16 +99,15 @@ class CreateHashFromPcap extends CreateHash {
                 'ja3s_hash' => $hash->ja3s_hash,
                 'ja4_hash' => $hash->ja4_hash,
                 'ja4s_hash' => $hash->ja4s_hash,
+                'ja4x_hash' => json_encode($hash->ja4x_hash),
                 'hash_type' => null,
                 'sni' => $hash->sni,
                 'is_malware' => $data['is_malware'],
                 'is_dangerous' => $data['is_dangerous'],
             ];
-    
+
             $db_hash = Hash::create($new_record);
             $db_hash->save();
-
-            //Hash::firstOrCreate($identifier, $new_record);
         }
     }
 

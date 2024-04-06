@@ -29,10 +29,13 @@ const AuthUser = () => {
         setToken(token);
         setUser(user);
 
+        handleTokenExpiry();
+
         if(user.role == 'admin')
             navigate('/admin/dashboard');
         if(user.role == 'basic_user')
             navigate('/user/dashboard');
+        
     };
 
     const logout = () => {
@@ -40,6 +43,26 @@ const AuthUser = () => {
         navigate('/login');
     }
 
+    const isTokenExpired = (token) => {
+        if (!token) return true;
+      
+        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        const expiryTime = decodedToken.exp * 1000;
+        const currentTime = Date.now();
+      
+        return currentTime > expiryTime;
+    };
+
+    const handleTokenExpiry = () => {
+        const token = sessionStorage.getItem('auth_token');
+        
+        if (token && !isTokenExpired(token)) {
+          setTimeout(handleTokenExpiry, 60000);
+        } else {
+          logout();
+        }
+    };
+      
     const http = axios.create({
         baseURL: `/api`,
         headers: {

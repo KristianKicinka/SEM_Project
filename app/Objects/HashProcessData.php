@@ -3,9 +3,9 @@
 namespace App\Objects;
 
 use App\Models\Process as ProcessModel;
-use Illuminate\Support\Facades\Log;
 use App\Events\ProcessUpdate;
 
+// Status messages for processing creation hashes from app name
 const APP_NAME_MESSAGES = [
     "Getting an application package name",
     "Downloading APK file",
@@ -15,6 +15,7 @@ const APP_NAME_MESSAGES = [
     "Uploading fingerprints to the database system",
 ];
 
+// Status messages for processing creation hashes from APK file
 const APK_FILE_MESSAGES = [
     "Getting an APK file",
     "Installing an application in a virtual environment",
@@ -23,6 +24,7 @@ const APK_FILE_MESSAGES = [
     "Uploading fingerprints to the database system",
 ];
 
+// Status messages for processing creation hashes from app names file
 const APPS_NAMES_FILE_MESSAGES = [
     "Loading app parameters from file",
     "Downloading APK files",
@@ -37,15 +39,23 @@ class HashProcessData {
     private int $process_part;
     private string $process_id;
     private string $process_name;
-    private $channel_id;
+    private string $channel_id;
     private string $ip_address;
     private string $status;
     private int $progress;
     private string $message;
-
     private array $messages = [];
 
-    public function __construct($process_id, $type, $ip_address, $channel_id, $process_name){
+    /**
+     * @param string $process_id Hash process ID
+     * @param string $type Hash process type
+     * @param string $ip_address Client IP address
+     * @param string $channel_id Pusher channel ID
+     * @param string $process_name Name of currently processing hash process
+     */
+    public function __construct(
+        string $process_id, string $type, string $ip_address, string $channel_id, string $process_name){
+
         $this->process_id = $process_id;
         $this->process_name = $process_name;
         $this->channel_id = $channel_id;
@@ -57,6 +67,7 @@ class HashProcessData {
     }
 
     /**
+     * @brief The function ensures the presetting of class values
      * @return void
      */
     private function preset(): void {
@@ -67,10 +78,11 @@ class HashProcessData {
     }
 
     /**
-     * @param $type
+     * @brief The function ensures the setting of status messages array values
+     * @param string $type Process creation type
      * @return void
      */
-    private function setMessagesArray($type): void {
+    private function setMessagesArray(string $type): void {
         if($type == "APP_NAME")
             $this->messages = APP_NAME_MESSAGES;
         if($type == "APK_FILE")
@@ -80,6 +92,7 @@ class HashProcessData {
     }
 
     /**
+     * @brief The function ensures the setting of processing state value
      * @return void
      */
     public function setProcessing(): void {
@@ -88,6 +101,7 @@ class HashProcessData {
     }
 
     /**
+     * @brief The function ensures the setting of finished state value
      * @return void
      */
     public function setFinished(): void {
@@ -96,6 +110,7 @@ class HashProcessData {
     }
 
      /**
+     * @brief The function ensures the setting of failed state value
      * @return void
      */
     public function setFailed(): void {
@@ -104,6 +119,7 @@ class HashProcessData {
     }
 
     /**
+     * @brief The function ensures the setting of next part of process
      * @return void
      */
     public function nextProcessPart(): void {
@@ -116,6 +132,7 @@ class HashProcessData {
     }
 
     /**
+     * @brief The function ensures saving data to database and send process notification to pusher channel
      * @return void
      */
     private function store(): void {
@@ -135,6 +152,9 @@ class HashProcessData {
 
         // Send process to pusher channel
         if($this->channel_id)
-            ProcessUpdate::dispatch($this->channel_id, $this->process_id, $this->status, $this->progress, $this->message, $this->process_name);
+            ProcessUpdate::dispatch(
+                $this->channel_id, $this->process_id, $this->status,
+                $this->progress, $this->message, $this->process_name
+            );
     }
 }

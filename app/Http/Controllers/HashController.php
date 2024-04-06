@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\ProcessUpdate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -14,25 +13,22 @@ use App\Jobs\CreateHashFromAPK;
 use App\Jobs\CreateHashFromAppName;
 use App\Objects\CreateHashFromPcap;
 use App\Models\Process as ProcessModel;
-use PhpParser\Node\Stmt\TryCatch;
-use App\Objects\CreateHash;
 
 use App\Models\Application;
-use App\Models\File;
 use App\Models\Hash;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Process;
+use \App\Exceptions\HashGeneratorFailException;
 
 const PCAP_PATH = 'app/public/uploads/pcap_inserted/';
 
 class HashController extends Controller {
 
     /**
-     * @param Request $request
-     * @return JsonResponse
+     * @brief The function ensures hash creation from apk files
+     * @param Request $request HTTP request data
+     * @return JsonResponse New processes and pusher channel ID
      */
     public function createHashFromAPK(Request $request): JsonResponse {
-
+        // Request data validator
         $validator = Validator::make($request->all(), [
             'hash_types' => 'required',
             'channel_id' => 'required|string',
@@ -55,7 +51,7 @@ class HashController extends Controller {
             $apk_file_name = $this->saveApkFile($apk_file);
             $process_id = uniqid('int_api_', true);
 
-            $job_id = CreateHashFromAPK::dispatch(
+            CreateHashFromAPK::dispatch(
                 $apk_file_name,
                 $hash_types,
                 $ip_address,
@@ -63,18 +59,23 @@ class HashController extends Controller {
                 $process_id,
             )->onQueue('process_queue');
 
-            $process = ["process_id" => $process_id, "name" => $apk_file_name, "message" => "Waiting in queue", "progress" => 0, "status" => "processing"];
+            $process = [
+                "process_id" => $process_id, "name" => $apk_file_name,
+                "message" => "Waiting in queue", "progress" => 0, "status" => "processing"
+            ];
             $processes[] = $process;
         }
-        
-        return response()->json(['processes' => $processes, "channel_id" => $request->input("channel_id")], 200);
+
+        return response()->json([
+            'processes' => $processes, "channel_id" => $request->input("channel_id")], 200);
     }
 
     /**
-     * @param $file
-     * @return string
+     * @brief The function ensures saving apk files
+     * @param UploadedFile $file APK file
+     * @return string APK file name
      */
-    private function saveApkFile($file): string {
+    private function saveApkFile(UploadedFile $file): string {
         $file_name = $file->getClientOriginalName();
         $final_name = date('his') .'_'. $file_name;
         $file->storeAs('uploads/apk_inserted',$final_name,'public');
@@ -82,13 +83,14 @@ class HashController extends Controller {
         return $final_name;
     }
 
-
     /**
-     * @param Request $request
-     * @return JsonResponse
+     * @brief The function ensures hash creation from pcap files
+     * @param Request $request HTTP request data
+     * @return JsonResponse Created hashes
+     * @throws HashGeneratorFailException Hash generator exception
      */
     public function createHashFromPcap(Request $request): JsonResponse {
-
+        // Request data validator
         $validator = Validator::make($request->all(), [
             'app_name_pcap' => 'required|string',
             'package_name_pcap' => 'required|string',
@@ -119,10 +121,11 @@ class HashController extends Controller {
     }
 
     /**
-     * @param $file
-     * @return string
+     * @brief The function ensures saving pcap files to local storage
+     * @param UploadedFile $file Pcap file
+     * @return string Saved file path
      */
-    private function savePcapFile($file): string {
+    private function savePcapFile(UploadedFile $file): string {
         $file_name = $file->getClientOriginalName();
         $final_name = date('his') .'_'. $file_name;
         $file->storeAs('uploads/pcap_inserted',$final_name,'public');
@@ -131,11 +134,12 @@ class HashController extends Controller {
     }
 
     /**
-     * @param Request $request
-     * @return JsonResponse
+     * @brief The function ensures hash creation from app name
+     * @param Request $request HTTP request data
+     * @return JsonResponse Hash generator processes
      */
     public function createHashFromAppName(Request $request): JsonResponse {
-
+        // Request data validator
         $validator = Validator::make($request->all(), [
             'channel_id' => 'required|string',
             'package_name' => 'required|string',
@@ -150,21 +154,48 @@ class HashController extends Controller {
         $channel_id = $request->input('channel_id');
         $process_id = uniqid('int_api_', true);
 
-        $job_id = CreateHashFromAppName::dispatch(
-            $request->package_name, 
+        CreateHashFromAppName::dispatch(
+            $request->package_name,
             $request->hash_types,
             $ip_address,
             $channel_id,
             $process_id,
             )->onQueue('process_queue');
-        
-        $process = ["process_id" => $process_id, "name" => $request->package_name, "message" => "Waiting in queue", "progress" => 0, "status" => "processing"];
+
+        $process = [
+            "process_id" => $process_id, "name" => $request->package_name,
+            "message" => "Waiting in queue", "progress" => 0, "status" => "processing"
+        ];
         $processes[] = $process;
 
         return response()->json(['processes' => $processes], 200);
     }
 
+    /**
+     * @brief The function ensures hash creation from text input
+     * @param Request $request HTTP request data
+     * @return JsonResponse Operation status message
+     */
     public function createHashFromTextInput(Request $request): JsonResponse {
+        // Request data validator
+        $validator = Validator::make($request->all(), [
+            'app_name' => 'required|string',
+            'package_name' => 'required|string',
+            'app_version' => 'required|string',
+            'ja3_hash' => 'required|string',
+            'ja3s_hash' => 'required|string',
+            'sni' => 'required|string',
+            'ja4_hash' => 'required|string',
+            'ja4s_hash' => 'required|string',
+            'ja4x_hash' => 'required|json',
+            'is_malware' => 'required|bool',
+            'is_dangerous' => 'required|bool',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
         $application = Application::create([
             'name' => $request->app_name,
             'package_name' => $request->package_name,
@@ -180,6 +211,7 @@ class HashController extends Controller {
             'sni' => $request->sni,
             'ja4_hash' => $request->ja4_hash,
             'ja4s_hash' => $request->ja4s_hash,
+            'ja4x_hash' => $request->ja4x_hash,
         ];
 
         $new_record = [
@@ -189,6 +221,7 @@ class HashController extends Controller {
             'sni' => $request->sni,
             'ja4_hash' => $request->ja4_hash,
             'ja4s_hash' => $request->ja4s_hash,
+            'ja4x_hash' => $request->ja4x_hash,
             'is_malware' => $request->is_malware,
             'is_dangerous' => $request->is_dangerous,
         ];
@@ -198,8 +231,13 @@ class HashController extends Controller {
         return response()->json('process success!', 200);
     }
 
+    /**
+     * @brief The function ensures creating apps hashes from text file
+     * @param Request $request HTTP request data
+     * @return JsonResponse Hash generator processes
+     */
     public function createHashFromTextFile(Request $request): JsonResponse {
-
+        // Request data validator
         $validator = Validator::make($request->all(), [
             'text_file' => 'required|file|mimes:txt',
             'hash_types' => 'required',
@@ -220,15 +258,18 @@ class HashController extends Controller {
         foreach($package_names as $package_name){
             $process_id = uniqid('int_api_', true);
 
-            $job_id = CreateHashFromAppName::dispatch(
+            CreateHashFromAppName::dispatch(
                 trim($package_name),
                 $hash_types,
                 $ip_address,
                 $channel_id,
                 $process_id,
                 )->onQueue('process_queue');
-            
-            $process = ["process_id" => $process_id, "name" => $package_name, "message" => "Waiting in queue", "progress" => 0, "status" => "processing"];
+
+            $process = [
+                "process_id" => $process_id, "name" => $package_name,
+                "message" => "Waiting in queue", "progress" => 0, "status" => "processing"
+            ];
             $processes[] = $process;
         }
 
@@ -236,25 +277,25 @@ class HashController extends Controller {
     }
 
     /**
-     * @param $file
-     * @return string
+     * @brief The function ensures saving text files to local storage
+     * @param UploadedFile $file Text file
+     * @return string Saved file path
      */
-    private function saveTextFile($file): string {
+    private function saveTextFile(UploadedFile $file): string {
         $file_name = $file->getClientOriginalName();
         $final_name = date('his') .'_'. $file_name;
 
         $file->storeAs('uploads/text_inserted',$final_name,'public');
-        $file_path = storage_path('app/public/uploads/text_inserted/').$final_name;
-
-        return $file_path;
+        return storage_path('app/public/uploads/text_inserted/').$final_name;
     }
 
     /**
-     * @param Request $request
-     * @return JsonResponse
+     * @brief The function ensures getting hash generation process info
+     * @param Request $request HTTP request data
+     * @return JsonResponse Process info
      */
     public function getProcessInfo(Request $request): JsonResponse {
-
+        // Request data validator
         $validator = Validator::make($request->all(), [
             'identifiers' => 'required',
         ]);
@@ -274,11 +315,12 @@ class HashController extends Controller {
     }
 
     /**
-     * @param Request $request
-     * @return JsonResponse
+     * @brief The function ensures getting hash generation process results
+     * @param Request $request HTTP request data
+     * @return JsonResponse Process results
      */
     public function getProcessResults(Request $request): JsonResponse {
-
+        // Request data validator
         $validator = Validator::make($request->all(), [
             'process_id' => 'required',
         ]);
@@ -291,8 +333,8 @@ class HashController extends Controller {
             ->select(
                 'applications.name as app_name','applications.package_name as package_name',
                 'applications.version as app_version','hashes.ja3_hash as ja3_hash',
-                'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash', 
-                'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash'
+                'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash',
+                'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash', 'hashes.ja4x_hash as ja4x_hash'
             )
             ->join('hashes','processes.id','=','hashes.process_id')
             ->join('applications','applications.id','=','hashes.app_id')
@@ -306,56 +348,50 @@ class HashController extends Controller {
         return response()->json($results, 200);
     }
 
-
     /**
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function getAppHashAPI(Request $request): JsonResponse {
-
-        $validator = Validator::make($request->all(), [
-            'params' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
-
-        $app_name = $request->input('params')['app_name'];
-        $hash_types = $request->input('params')['hash_types'];
-
-        //FIX: app hashes
-        $response = (new DatabaseController)->getAppHashes($app_name, $hash_types);
-
-        return response()->json($response, 200);
-    }
-
-    /**
-     * @param Request $request
-     * @return JsonResponse
+     * @brief The function ensures getting hash data in admin panel
+     * @return JsonResponse Hashes from database
      */
     public function getHashesForAdmin(): JsonResponse {
-        // ["id", "hash", "hash_type", "app_name", "package_name", "version"];
+
         $data = DB::table('applications')
             ->join('hashes','applications.id','=','hashes.app_id')
-            ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash','ja4_hash','ja4s_hash','name AS app_name', 'package_name', 'version', 'is_dangerous', 'is_malware')
+            ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash','ja4_hash','ja4s_hash', 'ja4x_hash',
+                'name AS app_name', 'package_name', 'version', 'is_dangerous', 'is_malware')
             ->distinct()
             ->get();
 
         return response()->json($data, 200);
     }
 
+    /**
+     * @brief The function ensures deleting hash data in admin panel
+     * @param Request $request HTTP request data
+     * @return JsonResponse Operation status message
+     */
     public function deleteHashAdmin (Request $request): JsonResponse {
         DB::table("hashes")->where("hashes.id", "=", $request->input("hash_id"))->delete();
         return response()->json("Hash deleted", 200);
     }
 
+    /**
+     * @brief The function ensures updating hash data in admin panel
+     * @param Request $request HTTP request data
+     * @return JsonResponse Operation status message
+     */
     public function updateHashAdmin (Request $request): JsonResponse {
+        // Request data validator
         $validator = Validator::make($request->all(), [
             'hash_id' => 'required',
             'app_name' => 'required|string',
             'package_name' => 'required|string',
             'version' => 'required|string',
+            'sni' => 'required|string',
+            'ja3_hash' => 'required|string',
+            'ja3s_hash' => 'required|string',
+            'ja4_hash' => 'required|string',
+            'ja4s_hash' => 'required|string',
+            'ja4x_hash' => 'required|string',
             'is_malware' => 'required|bool',
             'is_dangerous' => 'required|bool',
         ]);
@@ -364,7 +400,7 @@ class HashController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $hash = DB::table("hashes")
+        DB::table("hashes")
         ->where('hashes.id','=',$request->hash_id)
         ->join("applications", "applications.id","=","hashes.app_id")
         ->update([
@@ -376,6 +412,7 @@ class HashController extends Controller {
             'hashes.ja3s_hash' => $request->ja3s_hash,
             'hashes.ja4_hash' => $request->ja4_hash,
             'hashes.ja4s_hash' => $request->ja4s_hash,
+            'hashes.ja4x_hash' => $request->ja4x_hash,
             'applications.is_malware' => $request->is_malware,
             'applications.is_dangerous' => $request->is_dangerous,
         ]);

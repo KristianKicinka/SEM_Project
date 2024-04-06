@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('sni')->nullable();
             $table->string('ja4_hash')->nullable();
             $table->string('ja4s_hash')->nullable();
+            $table->json('ja4x_hash')->nullable();
             $table->string('hash_type')->nullable();
             $table->timestamps();
             $table->foreign('app_id')->references('id')->on('applications');

@@ -7,26 +7,27 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ApplicationController extends Controller {
-    //
 
     /**
-     * @return JsonResponse
+     * @brief The function ensures getting applications data for main website
+     * @return JsonResponse Applications data
      */
     public function getApplicationDataForWeb(): JsonResponse {
         $applications = DB::table('applications')
-                    ->distinct()
-                    ->join('hashes','applications.id','=','hashes.app_id')
-                    ->get();
+            ->distinct()
+            ->join('hashes','applications.id','=','hashes.app_id')
+            ->get();
 
         return response()->json($applications);
     }
 
     /**
-     * @param $app_name
-     * @param $hash_types
-     * @return array
+     * @brief The function ensures getting applications hashes for main website
+     * @param string $app_name Application name
+     * @param array $hash_types Hash types
+     * @return array Hash objects
      */
-    public function getAppHashes($app_name, $hash_types): array {
+    public function getAppHashes(string $app_name, array $hash_types): array {
         $response = [];
         $hashes = [];
 
@@ -48,27 +49,33 @@ class ApplicationController extends Controller {
         return $response;
     }
 
-    private function getApplicationVersions($app_name): Collection {
+    /**
+     * @brief The function ensures getting application versions
+     * @param string $app_name Application name
+     * @return Collection Application versions
+     */
+    private function getApplicationVersions(string $app_name): Collection {
         return DB::table('applications')
-                    ->select('applications.version')
-                    ->where('applications.name','=',$app_name)
-                    ->distinct()
-                    ->pluck('version');
+            ->select('applications.version')
+            ->where('applications.name','=',$app_name)
+            ->distinct()
+            ->pluck('version');
     }
 
     /**
-     * @param $hash_type
-     * @param $app_name
-     * @param $app_version
-     * @return Collection
+     * @brief The function ensures getting application hashes
+     * @param string $hash_type Hash type
+     * @param string $app_name Application name
+     * @param string $app_version Application version
+     * @return Collection App hashes
      */
-    private function getApplicationHashes($hash_type, $app_name, $app_version): Collection {
+    private function getApplicationHashes(string $hash_type, string $app_name, string $app_version): Collection {
         return DB::table('applications')
-                    ->join('hashes','applications.id','=','hashes.app_id')
-                    ->select('hashes.hash')
-                    ->where('applications.name','=',$app_name)
-                    ->where('hashes.hash_type','=', $hash_type)
-                    ->where('applications.version','=',$app_version)
-                    ->pluck('hash');
+            ->join('hashes','applications.id','=','hashes.app_id')
+            ->select('hashes.hash')
+            ->where('applications.name','=',$app_name)
+            ->where('hashes.hash_type','=', $hash_type)
+            ->where('applications.version','=',$app_version)
+            ->pluck('hash');
     }
 }

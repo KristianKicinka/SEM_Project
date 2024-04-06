@@ -6,17 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Process extends Model {
-    
+
     use HasFactory;
 
      /**
+     * @brief The name of table which is connected with this model
      * @var string $table
      */
     protected $table = 'processes';
 
      /**
-     * The attributes that are mass assignable.
-     *
+     * @brief The attributes that are mass assignable
      * @var array
      */
     protected $fillable = [

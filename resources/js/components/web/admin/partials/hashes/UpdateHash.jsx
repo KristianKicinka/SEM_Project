@@ -16,6 +16,7 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
     const [ja3sHash, setJa3sHash] = useState('');
     const [ja4Hash, setJa4Hash] = useState('');
     const [ja4sHash, setJa4sHash] = useState('');
+    const [ja4xHash, setJa4xHash] = useState('');
     const [isDangerous, setIsDangerous] = useState(0);
     const [isMalware, setIsMalware] = useState(0);
 
@@ -28,11 +29,9 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
         const hashData = {
             hash_id:hash.id, app_name:appName, package_name:packageName,
             version:version, sni:sni, ja3_hash:ja3Hash, ja3s_hash:ja3sHash,
-            ja4_hash:ja4Hash, ja4s_hash:ja4sHash, is_dangerous:isDangerous,
-            is_malware:isMalware,
+            ja4_hash:ja4Hash, ja4s_hash:ja4sHash, ja4x_hash:ja4xHash, 
+            is_dangerous:isDangerous, is_malware:isMalware,
         };
-
-        console.log(isDangerous);
 
         try {
             let resp = await http.post('/admin/hash/update', hashData);
@@ -46,8 +45,6 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
         }
     }
 
-    
-
     useEffect(() => {
         setAppName(hash?.app_name);
         setPackageName(hash?.package_name);
@@ -57,6 +54,7 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
         setJa3sHash(hash?.ja3s_hash);
         setJa4Hash(hash?.ja4_hash);
         setJa4sHash(hash?.ja4s_hash);
+        setJa4xHash(hash?.ja4x_hash);
         setIsDangerous(hash?.is_dangerous);
         setIsMalware(hash?.is_malware);
     },[hash]);
@@ -166,6 +164,18 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
                                         onChange={(e) => setJa4sHash(e.target.value)}
                                         className="form-control"/>
                                     {errors.ja4s_hash && <span className="error text-danger">{errors.ja4s_hash[0]}</span>}
+                                </div>
+                                <div className="form-group py-2">
+                                    <label htmlFor="ja4x_hash" className="text-dark">JA4X hash:</label><br/>
+                                    <input 
+                                        type="text" 
+                                        name="ja4x_hash" 
+                                        id="ja4x_hash"
+                                        placeholder="ja4x_hash" 
+                                        value={ja4xHash}
+                                        onChange={(e) => setJa4xHash(e.target.value)}
+                                        className="form-control"/>
+                                    {errors.ja4x_hash && <span className="error text-danger">{errors.ja4x_hash[0]}</span>}
                                 </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="is_malware" className="text-dark">Is malware:</label><br/>

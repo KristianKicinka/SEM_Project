@@ -11,9 +11,7 @@ use App\Exceptions\CreateCommunicationOnEmulatorException;
 use App\Exceptions\HashGeneratorFailException;
 use App\Exceptions\LoadingPreinstalledAppsFailed;
 use App\Exceptions\PackageNameNotFoundException;
-use App\Exceptions\PcapFileNotFoundException;
 use App\Exceptions\RunAppFailException;
-use App\Objects\ProcessData;
 
 use App\Models\Application;
 use App\Models\Emulator;
@@ -22,11 +20,13 @@ use App\Models\Hash;
 use App\Models\Process as ProcessModel;
 use Exception;
 use Illuminate\Support\Facades\Log;
-use PhpParser\Lexer\TokenEmulator\TokenEmulator;
 use Symfony\Component\Process\Process;
 
+// Hash generator python script path
 const HASH_SCRIPT_PATH = 'scripts/hash_generator.py';
+// Path to pcap directory in server storage
 const PCAP_PATH = 'app/public/pcaps/';
+// Path to preinstalled apps list file
 const PRE_INSTALLED_APPS_FILE = 'scripts/pre_installed_apps.txt';
 
 class CreateHash {
@@ -34,10 +34,8 @@ class CreateHash {
     protected array $files = [];
     protected array $hashes = [];
     protected array $hash_types = [];
-
     protected string $process_id;
     protected string $ip_address;
-
     protected HashProcessData $hash_process_data;
 
     public function __construct($hash_types, $input_type, $process_id, $ip_address, $channel_id, $process_name) {
@@ -49,12 +47,13 @@ class CreateHash {
     }
 
     /**
-     * @param $name
-     * @param $type
-     * @param $path
+     * @brief
+     * @param string $name
+     * @param string $type
+     * @param string $path
      * @return void
      */
-    protected function addFileToFiles($name, $type, $path) : void {
+    protected function addFileToFiles(string $name, string $type, string $path) : void {
 
         $file = [
             'name' => $name,
@@ -62,15 +61,21 @@ class CreateHash {
             'path' => $path,
         ];
 
-        array_push($this->files, $file);
+        $this->files[] = $file;
     }
 
     /**
-     * @param $pcap_file_name
-     * @param $apk_path
+     * @brief
+     * @param Emulator $emulator
+     * @param string $pcap_file_name
+     * @param string $apk_path
      * @return string
+     * @throws CloseAppFailException
+     * @throws CreateCommunicationOnEmulatorException
+     * @throws PackageNameNotFoundException
+     * @throws RunAppFailException
      */
-    public function createPcapFile($emulator, $pcap_file_name, $apk_path) : string {
+    public function createPcapFile(Emulator $emulator, string $pcap_file_name, string $apk_path) : string {
 
         $package_name = trim($this->getAppPackageName($emulator, $apk_path));
         $pcap_out_path = storage_path(PCAP_PATH).$pcap_file_name;
@@ -88,7 +93,6 @@ class CreateHash {
             sleep(env("NETWORK_ANALYSIS_TIME", 10));
             $this->closeAppOnEmulator($emulator, $package_name);
         }
-        
 
         $process->stop(0.2);
 
@@ -96,32 +100,16 @@ class CreateHash {
     }
 
     /**
-     * @param $pcap_file_path
-     * @param $pcap_file_name
+     * @brief
+     * @param string $pcap_file_path
+     * @param string $pcap_file_name
      * @return array
+     * @throws HashGeneratorFailException
      */
-    private function createJA3hash($pcap_file_path, $pcap_file_name) : array {
+    private function createHashSniJa3Ja3S(string $pcap_file_path, string $pcap_file_name) : array {
 
-        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$pcap_file_path." JA3";
-
-        $process = Process::fromShellCommandline($command);
-        $process->run();
-
-        if (!$process->isSuccessful()) {
-            throw new HashGeneratorFailException($process->getErrorOutput());
-        }
-
-        $ja3_hashes = json_decode($process->getOutput(), true);
-
-        Log::channel('devlog')->info('JA3 hashes : {hashes}', ['hashes' => $ja3_hashes]);
-
-        return json_decode($process->getOutput());
-    }
-
-
-    private function createHashSniJa3Ja3S($pcap_file_path, $pcap_file_name) : array {
-
-        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$pcap_file_path;
+        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH);
+        $command = $command." ".$pcap_file_path;
 
         $process = Process::fromShellCommandline($command);
         $process->run();
@@ -132,55 +120,26 @@ class CreateHash {
 
         return json_decode($process->getOutput());
     }
-
-     /**
-     * @param $pcap_file_path
-     * @param $pcap_file_name
-     * @return array
-     */
-    private function createJA3Shash($pcap_file_path, $pcap_file_name) : array {
-
-
-        $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH)." ".$pcap_file_path." JA3S";
-
-        $process = Process::fromShellCommandline($command);
-        $process->run();
-
-        if (!$process->isSuccessful()) {
-            throw new HashGeneratorFailException($process->getErrorOutput());
-        }
-
-        return json_decode($process->getOutput());
-    }
-
-    
-    public function createHashes($hash_types, $pcap_file_name, $pcap_file_path){
-        //$hashes = [];
-
-        /*
-        if(in_array('JA3', $hash_types)){
-            $JA3_hashes = $this->createJA3hash($pcap_file_path, $pcap_file_name);
-            $hashes['JA3'] = $JA3_hashes;
-        }
-
-        if(in_array('JA3S', $hash_types)){
-            $JA3S_hashes = $this->createJA3Shash($pcap_file_path, $pcap_file_name);
-            $hashes['JA3S'] = $JA3S_hashes;
-        }
-
-        */
-
-        $hashes = $this->createHashSniJa3Ja3S($pcap_file_path, $pcap_file_name);
-
-        return $hashes;
-    }
-
 
     /**
-     * @param $package_name
-     * @return JsonResponse|void
+     * @brief
+     * @param string $pcap_file_name
+     * @param string $pcap_file_path
+     * @return array
+     * @throws HashGeneratorFailException
      */
-    private function runAppOnEmulator($emulator, $package_name) {
+    public function createHashes(string $pcap_file_name, string $pcap_file_path): array {
+        return $this->createHashSniJa3Ja3S($pcap_file_path, $pcap_file_name);
+    }
+
+    /**
+     * @brief
+     * @param Emulator $emulator
+     * @param string $package_name
+     * @return void
+     * @throws RunAppFailException
+     */
+    private function runAppOnEmulator(Emulator $emulator, string $package_name): void {
 
         $command = 'adb shell monkey -p '.trim($package_name).' -c android.intent.category.LAUNCHER 1';
 
@@ -199,10 +158,12 @@ class CreateHash {
     }
 
     /**
-     * @param $package_name
-     * @return JsonResponse|void
+     * @param Emulator $emulator
+     * @param string $package_name
+     * @return void
+     * @throws CreateCommunicationOnEmulatorException
      */
-    private function createCommunicationOnEmulator($emulator, $package_name) {
+    private function createCommunicationOnEmulator(Emulator $emulator, string $package_name): void {
 
         $command = 'adb shell monkey -p '.trim($package_name).' --ignore-crashes -v 500';
 
@@ -221,10 +182,13 @@ class CreateHash {
     }
 
     /**
-     * @param $package_name
+     * @brief
+     * @param Emulator $emulator
+     * @param string $package_name
      * @return void
+     * @throws CloseAppFailException
      */
-    private function closeAppOnEmulator($emulator, $package_name) : void {
+    private function closeAppOnEmulator(Emulator $emulator, string $package_name) : void {
 
         $command = 'adb shell pm clear '.$package_name;
 
@@ -241,10 +205,13 @@ class CreateHash {
     }
 
     /**
-     * @param $apk_file_path
+     * @brief
+     * @param Emulator $emulator
+     * @param string $apk_file_path
      * @return void
+     * @throws AppInstalationFailException
      */
-    protected function installAppOnEmulator($emulator, $apk_file_path) : void {
+    protected function installAppOnEmulator(Emulator $emulator, string $apk_file_path) : void {
 
         $command = 'adb install '.$apk_file_path;
 
@@ -263,10 +230,13 @@ class CreateHash {
     }
 
     /**
-     * @param $package_name
+     * @brief
+     * @param Emulator $emulator
+     * @param string $package_name
      * @return void
+     * @throws AppUninstalationFailException
      */
-    protected function uninstallAppOnEmulator($emulator, $package_name) : void {
+    protected function uninstallAppOnEmulator(Emulator $emulator, string $package_name) : void {
 
         $command = 'adb uninstall '.$package_name;
 
@@ -283,10 +253,12 @@ class CreateHash {
     }
 
     /**
-     * @param $apk_file_path
+     * @param Emulator $emulator
+     * @param string $apk_file_path
      * @return string
+     * @throws PackageNameNotFoundException
      */
-    protected function getAppPackageName($emulator, $apk_file_path) : string {
+    protected function getAppPackageName(Emulator $emulator, string $apk_file_path) : string {
 
         $command = "aapt dump badging ".trim($apk_file_path)." | grep 'package: name' | awk -F \"'\" '{print $2}'";
 
@@ -309,12 +281,16 @@ class CreateHash {
     }
 
     /**
-     * @param $apk_file_path
+     * @brief
+     * @param Emulator $emulator
+     * @param string $apk_file_path
      * @return string
+     * @throws AppVersionNotFoundException
      */
-    protected function getAppVersionName($emulator, $apk_file_path) : string {
+    protected function getAppVersionName(Emulator $emulator, string $apk_file_path) : string {
 
-        $command = 'aapt dump badging '.trim($apk_file_path).' | grep package | awk \'{print $4}\' | sed s/versionName=//g | sed s/\\\'//g';
+        $command = 'aapt dump badging '.trim($apk_file_path);
+        $command = $command.' | grep package | awk \'{print $4}\' | sed s/versionName=//g | sed s/\\\'//g';
 
         if (env("ENVIRONMENT", "local") == "server"){
             $command = 'docker exec '.$emulator->name.' '.$command;
@@ -331,10 +307,13 @@ class CreateHash {
     }
 
     /**
-     * @param $apk_file_path
+     * @brief
+     * @param Emulator $emulator
+     * @param string $apk_file_path
      * @return string
+     * @throws AppNameNotFoundException
      */
-    protected function getAppName($emulator, $apk_file_path) : string {
+    protected function getAppName(Emulator $emulator, string $apk_file_path) : string {
 
         $command = 'aapt dump badging '.trim($apk_file_path).' | sed -n "s/^application-label:\'\(.*\)\'/\1/p"';
 
@@ -352,28 +331,32 @@ class CreateHash {
         return $process->getOutput();
     }
 
-    protected function getPreInstlledApps(){
+    /**
+     * @brief
+     * @return array
+     * @throws LoadingPreinstalledAppsFailed
+     */
+    protected function getPreInstalledApps(): array {
 
         try {
-        
             $file = base_path(PRE_INSTALLED_APPS_FILE);
             $packages = [];
-    
+
             $file_handle = fopen($file, "r");
-    
+
             if($file_handle){
-    
+
                 while(($line = fgets($file_handle)) !== false){
                     $packages[] = trim($line);
                 }
-    
+
                 fclose($file_handle);
                 $response = [];
-    
+
                 foreach($packages as $package){
                     $response[] = str_replace("package:", "", $package);
                 }
-        
+
                 return $response;
             }else {
                 throw new Exception("Error opening file!");
@@ -385,10 +368,11 @@ class CreateHash {
     }
 
     /**
-     * @param $results
+     * @brief The function ensures
+     * @param array $data
      * @return void
      */
-    protected function saveHashes($data) : void {
+    protected function saveHashes(array $data) : void {
 
         $process_id = ProcessModel::where('job_id', '=', $this->process_id)->first()->id;
 
@@ -397,7 +381,7 @@ class CreateHash {
             'package_name' => $data['package_name'],
             'version' => $data['version'],
         ];
-    
+
         $new_application = [
             'name' => $data['app_name'],
             'package_name' => $data['package_name'],
@@ -416,17 +400,9 @@ class CreateHash {
            $db_file->save();
         }
 
-
         foreach($data["hashes"] as $hash){
 
             Log::channel('devlog')->info('Hashes : {name}', ['name' => $hash]);
-
-                /*
-                $identifier = [
-                    'app_id' => $application->id,
-                    'hash' => $hash,
-                    'hash_type' => $hash_type,
-                ];*/
 
             $new_record = [
                 'app_id' => $application->id,
@@ -437,22 +413,30 @@ class CreateHash {
                 'sni' => $hash->sni,
                 'ja4_hash' => $hash->ja4_hash,
                 'ja4s_hash' => $hash->ja4s_hash,
+                'ja4x_hash' => json_encode($hash->ja4x_hash),
             ];
 
             $db_hash = Hash::create($new_record);
             $db_hash->save();
-
-            //Hash::firstOrCreate($identifier, $new_record);
         }
     }
 
 
-    protected function get_free_emulator(){
-        $emulator = Emulator::where("is_working", "=", false)->first();
-        return $emulator;
+    /**
+     * @brief The function ensures the getting free emulator from database
+     * @return mixed
+     */
+    protected function get_free_emulator(): mixed {
+        return Emulator::where("is_working", "=", false)->first();
     }
 
-    protected function set_emulator_working_state($emulator, $state){
+    /**
+     * @brief The function ensures the setting emulator state to database
+     * @param Emulator $emulator Emulator data object
+     * @param bool $state New emulator state
+     * @return void
+     */
+    protected function set_emulator_working_state(Emulator $emulator, bool $state): void {
         Emulator::where("name",$emulator->name)->update(["is_working" => $state]);
     }
 }

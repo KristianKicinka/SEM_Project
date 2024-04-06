@@ -9,18 +9,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use Illuminate\Support\Facades\Log;
 
 class AuthAdmin {
     /**
-     * Handle an incoming request.
-     *
-     * @param Request $request
-     * @param Closure(Request): (Response|RedirectResponse) $next
-     * @return JsonResponse
+     * @brief The function ensures the admin user authentication
+     * @param Request $request HTTP request data
+     * @param Closure(Request): (Response|RedirectResponse) $next Next route to redirect
+     * @return JsonResponse Error response
      */
-    public function handle(Request $request, Closure $next): JsonResponse
-    {
+    public function handle(Request $request, Closure $next): JsonResponse {
         try {
             // Verify the JWT token
             $user = JWTAuth::parseToken()->authenticate();

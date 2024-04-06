@@ -23,5 +23,6 @@ class Hash extends Model {
         'sni',
         'ja4_hash',
         'ja4s_hash',
+        'ja4x_hash',
     ];
 }

@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Exceptions\HashGenerationProcessFailed;
+use App\Models\Emulator;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -21,11 +22,10 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private string $apk_file_name;
-    private $emulator;
+    private Emulator $emulator;
 
     /**
-     * Create a new job instance.
-     *
+     * @brief Create a new job instance.
      * @return void
      */
     public function __construct($apk_file_name, $hash_types, $ip_address, $channel_id, $process_id){
@@ -34,14 +34,13 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
     }
 
     /**
-     * Execute the job.
-     *
-     * @return void
+     * @brief Execute the job.
+     * @throws HashGenerationProcessFailed
      */
     public function handle(): void {
-        $hashes = [];
 
         try {
+            // Start processing job
             $this->hash_process_data->setProcessing();
 
             // Get and save APK file
@@ -49,9 +48,9 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
 
             $pcap_file_name = str_replace('.apk', '.pcap', $this->apk_file_name);
             $apk_path = APK_INSERTED_DIR.$this->apk_file_name;
-
             $this->addFileToFiles($this->apk_file_name, 'APK', $apk_path);
 
+            // Taking free emulator
             $emulator = $this->get_free_emulator();
             $this->emulator = $emulator;
             $this->set_emulator_working_state($emulator, true);
@@ -61,7 +60,7 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
             $version_name = trim($this->getAppVersionName($emulator, $apk_path));
             $application_name = trim($this->getAppName($emulator, $apk_path));
 
-            $pre_installed_apps = $this->getPreInstlledApps();
+            $pre_installed_apps = $this->getPreInstalledApps();
 
             // App installation
             $this->hash_process_data->nextProcessPart();
@@ -77,11 +76,12 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
             if (!in_array($package_name, $pre_installed_apps))
                 $this->uninstallAppOnEmulator($emulator, $package_name);
 
+            // Free emulator
             $this->set_emulator_working_state($emulator, false);
-            
+
             // Create hashes
             $this->hash_process_data->nextProcessPart();
-            $hashes = $this->createHashes($this->hash_types, $pcap_file_name, $pcap_file_path);
+            $hashes = $this->createHashes($pcap_file_name, $pcap_file_path);
 
             $db_data = [
                 'app_name' => $application_name,
@@ -95,10 +95,10 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
             // Save hashes to database
             $this->hash_process_data->nextProcessPart();
             $this->saveHashes($db_data);
-
             $this->hash_process_data->setFinished();
 
         } catch(Exception $e){
+            // Process job exception
             $this->hash_process_data->setFailed();
             $this->set_emulator_working_state($this->emulator, false);
             throw new HashGenerationProcessFailed($e);

@@ -11,8 +11,8 @@ import CreateHash from "./partials/hashes/CreateHash";
 import DeleteHash from "./partials/hashes/DeleteHash";
 import UpdateHash from "./partials/hashes/UpdateHash";
 
-const columnNames = ["ID", "SNI", "JA3 hash", "JA3S hash", "JA4 hash", "JA4S hash", "App Name", "Package name", "Version"];
-const dataIndexes = ["id", "sni", "ja3_hash", "ja3s_hash", "ja4_hash", "ja4s_hash", "app_name", "package_name", "version"];
+const columnNames = ["ID", "App Name", "Package name", "Version", "SNI", "JA3 hash", "JA3S hash", "JA4 hash", "JA4S hash", "JA4X hash"];
+const dataIndexes = ["id", "app_name", "package_name", "version", "sni", "ja3_hash", "ja3s_hash", "ja4_hash", "ja4s_hash", "ja4x_hash"];
 
 const Hashes = () => {
 

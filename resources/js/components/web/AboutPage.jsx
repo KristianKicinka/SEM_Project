@@ -16,40 +16,35 @@ const AboutPage = () => {
                             <div className="row">
                                 <div className="col">
                                     <p className="card-text">
-                                        The main idea of the project was to
-                                        create an application that would enable
-                                        the automated creation of TLS
-                                        fingerprints from mobile applications
-                                        created on the Android platform. The
-                                        platform being developed will contribute
-                                        to the improvement in the area of
-                                        network traffic analysis, as well as to
-                                        the increase in the efficiency of the
-                                        work of network administrators. The
-                                        above-mentioned platform is available in
-                                        the form of a web application that can
-                                        provide a native user interface to the
-                                        user. The interface provides the user
-                                        with several options for entering the
-                                        android application for which
-                                        fingerprints are to be generated. When
-                                        specifying the types of fingerprints to
-                                        be generated, the user has a choice of
-                                        several variants, including JA3, JA3S
-                                        and NetFlow. The platform also offers
-                                        the possibility of registering already
-                                        generated fingerprints of mobile
-                                        applications through a database system.
-                                        Last but not least, it is possible to
-                                        use the created API to interact with the
-                                        application.
+                                    Nowadays, mobile applications represent a key element for the daily fulfillment of users' needs. 
+                                    Applications represent an irreplaceable place in people's lives. The security aspects
+                                    of the communication of these applications are critical in some cases, especially when 
+                                    maintaining the confidentiality and integrity of information when performing banking transactions
+                                    or interacting on social networks.
+                                    <br/>
+                                    Securing these aspects is done through TLS encryption and integrity checks. This protocol poses
+                                    a challenge to network administrators of local and corporate networks in the current need to
+                                    guarantee private communications and network security, because it is not possible to easily
+                                    identify potentially dangerous as well as common applications on the network. 
+                                    By using TLS fingerprints of mobile applications, this problem can be solved to some extent.
+                                    <br/>
+                                    This work is focused on the description of the development of a new tool for the automated 
+                                    creation of TLS fingerprints of mobile applications. The tool represents an innovative approach
+                                    to support network administrators in analyzing and monitoring potentially dangerous 
+                                    mobile applications in their managed networks. Its goal is to provide an effective means of 
+                                    maintaining security while enabling a thorough analysis of network communications to reliably
+                                    respond to potential threats.
+                                    <br/>
+                                    The benefit of this platform should be the streamlining and automation of a certain part of
+                                    the work of network administrators. This should minimize the need to manually go through and 
+                                    evaluate large volumes of data containing the communication of mobile applications.
                                     </p>
                                 </div>
                                 <div className="col">
                                     <img src={MainPageImage} className="w-100 shadow" alt="" />
                                 </div>
                             </div>
-                            <a href="/" className="btn btn-search text-light">
+                            <a href="/" className="btn btn-search text-light mt-4">
                                 Get started
                             </a>
                         </div>

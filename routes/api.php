@@ -8,9 +8,7 @@ use App\Http\Controllers\FileController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ApiRequestController;
-use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\LikedAppController;
-use App\Http\Controllers\TestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +39,7 @@ Route::post('/register', [AuthController::class, 'register']);
 // Admin routes
 Route::group(['middleware' => ['auth:api', 'admin']], function () {
     Route::post('/admin/hashes', [HashController::class, 'getHashesForAdmin']);
-    Route::post('/admin/hash/create/text-input', [HashController::class, 'createHashAdmin']);
+    Route::post('/admin/hash/create/text-input', [HashController::class, 'createHashFromTextInput']);
     Route::post('/admin/hash/create/pcap-file', [HashController::class, 'createHashFromPcap']);
     Route::post('/admin/hash/delete', [HashController::class, 'deleteHashAdmin']);
     Route::post('/admin/hash/update', [HashController::class, 'updateHashAdmin']);
@@ -64,7 +62,6 @@ Route::group(['middleware' => ['auth:api', 'user']], function () {
     Route::post('/user/get-api-key', [ApiRequestController::class, 'getApiKey']);
     Route::post('/user/edit', [UserController::class, 'updateUserData']);
     Route::post('/user/change-password', [UserController::class, 'updateUserPassword']);
-
     Route::post('/user/get-liked-apps-hashes', [LikedAppController::class, 'getLikedAppsHashes']);
     Route::post('/user/get-liked-apps', [LikedAppController::class, 'index']);
     Route::post('/user/edit-liked-apps', [LikedAppController::class, 'editLikedApps']);
@@ -78,21 +75,4 @@ Route::group(['middleware' => ['external']], function () {
     Route::post('/create-hash-from-package-name', [ApiRequestController::class, 'createHashFromPackageName']);
     Route::post('/create-hash-from-pcap', [ApiRequestController::class, 'createHashFromPcap']);
     Route::post('/analyze-netflow-file', [ApiRequestController::class, 'analyzeNetFlowFile']);
-    //Route::post('/analyze-pcap-file', [ApiRequestController::class, 'analyzePcapFile']);
 });
-
-
-Route::get("/install", [TestController::class, 'install']);
-Route::get("/uninstall", [TestController::class, 'uninstall']);
-Route::get("/run", [TestController::class, 'run']);
-Route::get("/close", [TestController::class, 'close']);
-
-Route::get("/get_package_name", [TestController::class, 'getAppPackageName']);
-Route::get("/get_app_name", [TestController::class, 'getAppName']);
-Route::get("/get_app_version", [TestController::class, 'getAppVersionName']);
-Route::get("/python", [TestController::class, 'python']);
-Route::get("/download", [TestController::class, 'download']);
-Route::get("/get_installed_apps", [TestController::class, 'getInstlledApps']);
-Route::get("/create_hashes", [TestController::class, 'createHashes']);
-
-Route::get("/pusher", [TestController::class, 'pusher']);

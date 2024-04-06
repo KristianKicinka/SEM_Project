@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,25 +15,26 @@ use App\Models\User;
 class AuthController extends Controller {
 
     /**
-     * @param $user
-     * @param $token
-     * @param $token_type
-     * @return array
+     * @brief The function ensures the return
+     * @param Authenticatable $user Auth user data
+     * @param string $token Auth token string
+     * @return array Auth token data
      */
-    private function createResponse($user, $token, $token_type): array {
+    private function createResponse(Authenticatable $user, string $token): array {
         return [
             'status' => 'success',
             'user' => $user,
             'auth' => [
                 'token' => $token,
-                'type' => $token_type,
+                'type' => "bearer",
             ],
         ];
     }
 
     /**
-     * @param Request $request
-     * @return JsonResponse
+     * @brief The function ensures the user login
+     * @param Request $request HTTP request data
+     * @return JsonResponse Auth token data
      */
     public function login(Request $request): JsonResponse {
 
@@ -55,12 +57,13 @@ class AuthController extends Controller {
         }
 
         $user = Auth::user();
-        return response()->json($this->createResponse($user, $token, "bearer"));
+        return response()->json($this->createResponse($user, $token));
     }
 
     /**
-     * @param Request $request
-     * @return JsonResponse
+     * @brief The function ensures the user registration
+     * @param Request $request HTTP request data
+     * @return JsonResponse Auth token data
      */
     public function register(Request $request): JsonResponse {
 
@@ -88,12 +91,12 @@ class AuthController extends Controller {
 
         $token = JWTAuth::fromUser($user);
 
-        return response()->json($this->createResponse($user, $token, "bearer"), 200);
-
+        return response()->json($this->createResponse($user, $token), 200);
     }
 
     /**
-     * @return JsonResponse
+     * @brief The function ensures the user logout
+     * @return JsonResponse Operation status
      */
     public function logout(): JsonResponse {
         Auth::logout();
@@ -104,12 +107,13 @@ class AuthController extends Controller {
     }
 
     /**
-     * @return JsonResponse
+     * @brief The function ensures the refresh of auth token
+     * @return JsonResponse New auth token data
      */
     public function refresh(): JsonResponse {
         $user = Auth::user();
         $token = Auth::refresh();
 
-        return response()->json($this->createResponse($user, $token, "bearer"));
+        return response()->json($this->createResponse($user, $token));
     }
 }

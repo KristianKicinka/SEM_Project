@@ -4,15 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Models\LikedApp;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
-class LikedAppController extends Controller
-{
-    //
+class LikedAppController extends Controller {
 
-    public function index(Request $request){
+    /**
+     * @brief The function ensures the return of the specified user's favorite applications
+     * @param Request $request HTTP request data
+     * @return JsonResponse Favorite applications
+     */
+    public function index(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
             'user_id' => 'required',
@@ -37,7 +41,12 @@ class LikedAppController extends Controller
         return response()->json($results, 200);
     }
 
-    public function editLikedApps(Request $request){
+    /**
+     * @brief The function ensures the editing of the specified user's favorite applications
+     * @param Request $request HTTP request data
+     * @return JsonResponse Updated favorite applications
+     */
+    public function editLikedApps(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
             'user_id' => 'required',
@@ -52,20 +61,25 @@ class LikedAppController extends Controller
 
         foreach($request->data as $liked_app){
 
-            if($liked_app["liked"] == true){
+            if($liked_app["liked"]){
                 LikedApp::firstOrCreate(["user_id" => $request->user_id, "app_id" => $liked_app["id"]]);
             }else{
                 if(in_array($liked_app["id"], $liked_apps)){
-                    LikedApp::where("user_id", "=", $request->user_id)->where("app_id", "=", $liked_app["id"])->delete();
+                    LikedApp::where("user_id", "=", $request->user_id)
+                        ->where("app_id", "=", $liked_app["id"])->delete();
                 }
             }
-            
         }
 
         return response()->json([$request->data], 200);
     }
 
-    public function getLikedAppsHashes(Request $request){
+    /**
+     * @brief The function ensures the return of the specified user's favorite applications hashes
+     * @param Request $request HTTP request data
+     * @return JsonResponse Favorite apps hashes
+     */
+    public function getLikedAppsHashes(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
             'user_id' => 'required',
@@ -84,7 +98,7 @@ class LikedAppController extends Controller
         $query = DB::table('applications')->select(
             'applications.name as app_name','applications.package_name as package_name',
             'applications.version as app_version','hashes.ja3_hash as ja3_hash',
-            'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash', 
+            'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash',
             'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash'
         )->distinct()
         ->join('hashes', 'hashes.app_id', '=', 'applications.id');

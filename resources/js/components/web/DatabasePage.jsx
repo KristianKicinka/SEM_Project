@@ -7,9 +7,7 @@ import Table from "react-bootstrap/Table";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Button from "react-bootstrap/Button";
-import Pagination from "./partials/Pagination";
 
-import CopyClipboard from "./partials/CopyClipboard";
 import http from "../../http";
 
 import { PaginationControl } from 'react-bootstrap-pagination-control';
@@ -99,6 +97,7 @@ const DatabasePage = () => {
                                             <th>JA3S hash</th>
                                             <th>JA4 hash</th>
                                             <th>JA4S hash</th>
+                                            <th>JA4X hashes</th>
                                             <th>Created at</th>
                                         </tr>
                                     </thead>
@@ -115,6 +114,7 @@ const DatabasePage = () => {
                                                     <td><b>{item?.ja3s_hash}</b></td>
                                                     <td><b>{item?.ja4_hash}</b></td>
                                                     <td><b>{item?.ja4s_hash}</b></td>
+                                                    <td><b>{item?.ja4x_hash}</b></td>
                                                     <td>{item?.created_at}</td>
                                                 </tr>
                                             );

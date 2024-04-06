@@ -28,6 +28,7 @@ const HashTypePicker = ({hashTypes, setHashTypes}) => {
                     <Form.Check onChange={checkboxChange} inline label="JA3S" name="JA3S_checkbox" type='checkbox' id='JA3S' />
                     <Form.Check onChange={checkboxChange} inline label="JA4" name="JA4_checkbox" type='checkbox' id='JA4' />
                     <Form.Check onChange={checkboxChange} inline label="JA4S" name="JA4S_checkbox" type='checkbox' id='JA4S' />
+                    <Form.Check onChange={checkboxChange} inline label="JA4X" name="JA4X_checkbox" type='checkbox' id='JA4X' />
                 </div>
                 <div className="col"></div>
            </div>

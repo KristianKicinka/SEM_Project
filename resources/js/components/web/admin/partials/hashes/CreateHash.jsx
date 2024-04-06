@@ -14,6 +14,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const [ja3sHash, setJa3sHash] = useState("");
     const [ja4Hash, setJa4Hash] = useState("");
     const [ja4sHash, setJa4sHash] = useState("");
+    const [ja4xHash, setJa4xHash] = useState("");
     const [isMalwareText, setIsMalwareText] = useState(0);
     const [isDangerousText, setIsDangerousText] = useState(0);
 
@@ -32,12 +33,17 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         e.preventDefault();
 
         const data = {
-            app_name_text:appNameText, 
-            package_name_text:packageNameText, 
-            app_version_text:appVersionText,
-            hash_types_text:hashTypesText,
-            is_malware_text:isMalwareText,
-            hash:hash
+            app_name:appNameText, 
+            package_name:packageNameText, 
+            app_version:appVersionText,
+            ja3_hash:ja3Hash,
+            ja3s_hash:ja3sHash,
+            sni:sni,
+            ja4_hash:ja4Hash,
+            ja4s_hash:ja4sHash,
+            ja4x_hash:ja4xHash,
+            is_malware:isMalwareText,
+            is_dangerous:isDangerousText,
         };
 
         try {
@@ -82,7 +88,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     }
 
     return (
-        <Modal show={show} onHide={handleClose} size="lg" >
+        <Modal show={show} onHide={handleClose} dialogClassName="modal-80w" >
             <Modal.Header closeButton>
                 <Modal.Title>Create new hash</Modal.Title>
             </Modal.Header>
@@ -92,128 +98,145 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                         <div className="col border rounded p-3">
                             <span className="text text-bold">Create hash from text input:</span>
                             <form className="form" method="post" noValidate onSubmit={createHashFromTextInput} >
-                            <div className="form-group py-2">
-                                    <label htmlFor="app_name" className="text-dark">App name:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="app_name" 
-                                        id="app_name"
-                                        placeholder="app name"
-                                        value={appNameText}
-                                        onChange={(e) => setAppNameText(e.target.value)}
-                                        className="form-control"/>
-                                    {errors.app_name && <span className="error text-danger">{errors.app_name[0]}</span>}
+                                <div className="row">
+                                    <div className="col">
+                                        <div className="form-group py-2">
+                                            <label htmlFor="app_name" className="text-dark">App name:</label><br/>
+                                            <input 
+                                                type="text" 
+                                                name="app_name" 
+                                                id="app_name"
+                                                placeholder="app name"
+                                                value={appNameText}
+                                                onChange={(e) => setAppNameText(e.target.value)}
+                                                className="form-control"/>
+                                            {errors.app_name && <span className="error text-danger">{errors.app_name[0]}</span>}
+                                        </div>
+                                        <div className="form-group py-2">
+                                            <label htmlFor="package_name" className="text-dark">Package name:</label><br/>
+                                            <input 
+                                                type="text" 
+                                                name="package_name" 
+                                                id="package_name"
+                                                placeholder="package_name"
+                                                value={packageNameText}
+                                                onChange={(e) => setPackageNameText(e.target.value)} 
+                                                className="form-control"/>
+                                            {errors.package_name && <span className="error text-danger">{errors.package_name[0]}</span>}
+                                        </div>           
+                                        <div className="form-group py-2">
+                                            <label htmlFor="version" className="text-dark">Version:</label><br/>
+                                            <input 
+                                                type="text" 
+                                                name="version" 
+                                                id="version"
+                                                placeholder="version" 
+                                                value={appVersionText}
+                                                onChange={(e) => setAppVersionText(e.target.value)}
+                                                className="form-control"/>
+                                            {errors.version && <span className="error text-danger">{errors.version[0]}</span>}
+                                        </div>
+                                        <div className="form-group py-2">
+                                            <label htmlFor="sni" className="text-dark">SNI:</label><br/>
+                                            <input 
+                                                type="text" 
+                                                name="sni" 
+                                                id="sni"
+                                                placeholder="sni" 
+                                                value={sni}
+                                                onChange={(e) => setSni(e.target.value)}
+                                                className="form-control"/>
+                                            {errors.sni && <span className="error text-danger">{errors.sni[0]}</span>}
+                                        </div>
+                                        <div className="form-group py-2">
+                                            <label htmlFor="ja3_hash" className="text-dark">JA3 hash:</label><br/>
+                                            <input 
+                                                type="text" 
+                                                name="ja3_hash" 
+                                                id="ja3_hash"
+                                                placeholder="ja3_hash" 
+                                                value={ja3Hash}
+                                                onChange={(e) => setJa3Hash(e.target.value)}
+                                                className="form-control"/>
+                                            {errors.ja3_hash && <span className="error text-danger">{errors.ja3_hash[0]}</span>}
+                                        </div>
+                                        <div className="form-group py-2">
+                                            <label htmlFor="ja3s_hash" className="text-dark">JA3S hash:</label><br/>
+                                            <input 
+                                                type="text" 
+                                                name="ja3s_hash" 
+                                                id="ja3s_hash"
+                                                placeholder="ja3s_hash" 
+                                                value={ja3sHash}
+                                                onChange={(e) => setJa3sHash(e.target.value)}
+                                                className="form-control"/>
+                                            {errors.ja3s_hash && <span className="error text-danger">{errors.ja3s_hash[0]}</span>}
+                                        </div>
+                                    </div>
+                                    <div className="col">
+                                        <div className="form-group py-2">
+                                            <label htmlFor="ja4_hash" className="text-dark">JA4 hash:</label><br/>
+                                            <input 
+                                                type="text" 
+                                                name="ja4_hash" 
+                                                id="ja4_hash"
+                                                placeholder="ja4_hash" 
+                                                value={ja4Hash}
+                                                onChange={(e) => setJa4Hash(e.target.value)}
+                                                className="form-control"/>
+                                            {errors.ja4_hash && <span className="error text-danger">{errors.ja4_hash[0]}</span>}
+                                        </div>
+                                        <div className="form-group py-2">
+                                            <label htmlFor="ja4s_hash" className="text-dark">JA4S hash:</label><br/>
+                                            <input 
+                                                type="text" 
+                                                name="ja4s_hash" 
+                                                id="ja4s_hash"
+                                                placeholder="ja4s_hash" 
+                                                value={ja4sHash}
+                                                onChange={(e) => setJa4sHash(e.target.value)}
+                                                className="form-control"/>
+                                            {errors.ja4s_hash && <span className="error text-danger">{errors.ja4s_hash[0]}</span>}
+                                        </div>
+                                        <div className="form-group py-2">
+                                            <label htmlFor="ja4x_hash" className="text-dark">JA4X hash:</label><br/>
+                                            <input 
+                                                type="text" 
+                                                name="ja4x_hash" 
+                                                id="ja4x_hash"
+                                                placeholder="ja4x_hash" 
+                                                value={ja4xHash}
+                                                onChange={(e) => setJa4xHash(e.target.value)}
+                                                className="form-control"/>
+                                            {errors.ja4x_hash && <span className="error text-danger">{errors.ja4x_hash[0]}</span>}
+                                        </div>
+                                        <div className="form-group py-2">
+                                            <label htmlFor="is_malware" className="text-dark">Is malware:</label><br/>
+                                            <select 
+                                                className="form-select" 
+                                                aria-label="Select if is a malware"
+                                                value={isMalwareText}
+                                                onChange={(e) => setIsMalwareText(e.target.value)} >
+                                                <option value={0}>is not malware</option>
+                                                <option value={1}>malware</option>
+                                            </select>
+                                            {errors.is_malware && <span className="error text-danger">{errors.is_malware[0]}</span>}
+                                        </div>
+                                        <div className="form-group py-2">
+                                            <label htmlFor="is_dangerous" className="text-dark">Is dangerous:</label><br/>
+                                            <select 
+                                                className="form-select" 
+                                                aria-label="Select if is a malware"
+                                                value={isDangerousText}
+                                                onChange={(e) => setIsDangerousText(e.target.value)} >
+                                                <option value={0}>is not dangerous</option>
+                                                <option value={1}>dangerous</option>
+                                            </select>
+                                            {errors.is_dangerous && <span className="error text-danger">{errors.is_dangerous[0]}</span>}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="form-group py-2">
-                                    <label htmlFor="package_name" className="text-dark">Package name:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="package_name" 
-                                        id="package_name"
-                                        placeholder="package_name"
-                                        value={packageNameText}
-                                        onChange={(e) => setPackageNameText(e.target.value)} 
-                                        className="form-control"/>
-                                    {errors.package_name && <span className="error text-danger">{errors.package_name[0]}</span>}
-                                </div>           
-                                <div className="form-group py-2">
-                                    <label htmlFor="version" className="text-dark">Version:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="version" 
-                                        id="version"
-                                        placeholder="version" 
-                                        value={appVersionText}
-                                        onChange={(e) => setAppVersionText(e.target.value)}
-                                        className="form-control"/>
-                                    {errors.version && <span className="error text-danger">{errors.version[0]}</span>}
-                                </div>
-                                <div className="form-group py-2">
-                                    <label htmlFor="sni" className="text-dark">SNI:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="sni" 
-                                        id="sni"
-                                        placeholder="sni" 
-                                        value={sni}
-                                        onChange={(e) => setSni(e.target.value)}
-                                        className="form-control"/>
-                                    {errors.sni && <span className="error text-danger">{errors.sni[0]}</span>}
-                                </div>
-                                <div className="form-group py-2">
-                                    <label htmlFor="ja3_hash" className="text-dark">JA3 hash:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="ja3_hash" 
-                                        id="ja3_hash"
-                                        placeholder="ja3_hash" 
-                                        value={ja3Hash}
-                                        onChange={(e) => setJa3Hash(e.target.value)}
-                                        className="form-control"/>
-                                    {errors.ja3_hash && <span className="error text-danger">{errors.ja3_hash[0]}</span>}
-                                </div>
-                                <div className="form-group py-2">
-                                    <label htmlFor="ja3s_hash" className="text-dark">JA3S hash:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="ja3s_hash" 
-                                        id="ja3s_hash"
-                                        placeholder="ja3s_hash" 
-                                        value={ja3sHash}
-                                        onChange={(e) => setJa3sHash(e.target.value)}
-                                        className="form-control"/>
-                                    {errors.ja3s_hash && <span className="error text-danger">{errors.ja3s_hash[0]}</span>}
-                                </div>
-                                <div className="form-group py-2">
-                                    <label htmlFor="ja4_hash" className="text-dark">JA4 hash:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="ja4_hash" 
-                                        id="ja4_hash"
-                                        placeholder="ja4_hash" 
-                                        value={ja4Hash}
-                                        onChange={(e) => setJa4Hash(e.target.value)}
-                                        className="form-control"/>
-                                    {errors.ja4_hash && <span className="error text-danger">{errors.ja4_hash[0]}</span>}
-                                </div>
-                                <div className="form-group py-2">
-                                    <label htmlFor="ja4s_hash" className="text-dark">JA4S hash:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="ja4s_hash" 
-                                        id="ja4s_hash"
-                                        placeholder="ja4s_hash" 
-                                        value={ja4sHash}
-                                        onChange={(e) => setJa4sHash(e.target.value)}
-                                        className="form-control"/>
-                                    {errors.ja4s_hash && <span className="error text-danger">{errors.ja4s_hash[0]}</span>}
-                                </div>
-                                <div className="form-group py-2">
-                                    <label htmlFor="is_malware" className="text-dark">Is malware:</label><br/>
-                                    <select 
-                                        className="form-select" 
-                                        aria-label="Select if is a malware"
-                                        value={isMalwareText}
-                                        onChange={(e) => setIsMalwareText(e.target.value)}
-                                    >
-                                        <option value={0}>is not malware</option>
-                                        <option value={1}>malware</option>
-                                    </select>
-                                    {errors.is_malware && <span className="error text-danger">{errors.is_malware[0]}</span>}
-                                </div>
-                                <div className="form-group py-2">
-                                    <label htmlFor="is_dangerous" className="text-dark">Is dangerous:</label><br/>
-                                    <select 
-                                        className="form-select" 
-                                        aria-label="Select if is a malware"
-                                        value={isDangerousText}
-                                        onChange={(e) => setIsDangerousText(e.target.value)}
-                                    >
-                                        <option value={0}>is not dangerous</option>
-                                        <option value={1}>dangerous</option>
-                                    </select>
-                                    {errors.is_dangerous && <span className="error text-danger">{errors.is_dangerous[0]}</span>}
-                                </div>
+                            
                                 <div className="form-group pt-3 text-center">
                                     <input 
                                         type="submit" 

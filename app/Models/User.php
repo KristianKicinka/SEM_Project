@@ -11,12 +11,11 @@ use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject {
-    
+
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
-     *
+     * @brief The attributes that are mass assignable
      * @var array<int, string>
      */
     protected $fillable = [
@@ -30,8 +29,7 @@ class User extends Authenticatable implements JWTSubject {
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
+     * @brief The attributes that should be hidden for serialization
      * @var array<int, string>
      */
     protected $hidden = [
@@ -40,8 +38,7 @@ class User extends Authenticatable implements JWTSubject {
     ];
 
     /**
-     * The attributes that should be cast.
-     *
+     * @brief The attributes that should be cast
      * @var array<string, string>
      */
     protected $casts = [
@@ -49,20 +46,18 @@ class User extends Authenticatable implements JWTSubject {
     ];
 
     /**
-     * Get the identifier that will be stored in the subject claim of the JWT.
-     *
+     * @brief The function ensures getting the identifier that will be stored in the subject claim of the JWT
      * @return mixed
      */
-    public function getJWTIdentifier() {
+    public function getJWTIdentifier(): mixed {
         return $this->getKey();
     }
 
     /**
-     * Return a key value array, containing any custom claims to be added to the JWT.
-     *
+     * @brief The function ensures the returning a key value array, containing custom claims to be added to the JWT
      * @return array
      */
-    public function getJWTCustomClaims() {
+    public function getJWTCustomClaims(): array {
         return [];
     }
 }

@@ -6,7 +6,7 @@ import CopyClipboard from "./CopyClipboard";
 
 const Results = ({ results, onClose, hashTypes }) => {
 
-    console.log(hashTypes);
+    const hasResults = results && results.length > 0;
 
     const dataItem = (row, index) => {
         console.log(row.ja3_hash);
@@ -20,6 +20,7 @@ const Results = ({ results, onClose, hashTypes }) => {
                 {(hashTypes.includes("JA3S")) ? <td><CopyClipboard text={row.ja3s_hash}/></td> : null}
                 {(hashTypes.includes("JA4")) ? <td><CopyClipboard text={row.ja4_hash}/></td> : null}
                 {(hashTypes.includes("JA4S")) ? <td><CopyClipboard text={row.ja4s_hash}/></td> : null}
+                {(hashTypes.includes("JA4X")) ? <td><CopyClipboard text={row.ja4x_hash}/></td> : null}
             </tr>
         );
     }
@@ -42,10 +43,15 @@ const Results = ({ results, onClose, hashTypes }) => {
                                 {(hashTypes.includes("JA3S")) ? <th>JA3S hash</th> : null}
                                 {(hashTypes.includes("JA4")) ? <th>JA4 hash</th> : null}
                                 {(hashTypes.includes("JA4S")) ? <th>JA4S hash</th> : null}
+                                {(hashTypes.includes("JA4X")) ? <th>JA4X hash</th> : null}
                             </tr>
                         </thead>
                     <tbody>
-                        {results.map((row) => dataItem(row))}
+                        {hasResults ? results.map((row) => dataItem(row)):(
+                            <tr>
+                                <td>No results</td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
                 </Modal.Body>

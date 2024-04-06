@@ -13,7 +13,6 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
     const [recordsPerPage] = useState(8);
    
     let filteredData = data.filter(item => {
-        //console.log(item);
         let result = false;
         dataIndexes.map((col) => {
             if(item[col]?.toString().toLowerCase().includes(filter.toLowerCase())){
@@ -43,14 +42,14 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                             onClick={() => buttons.get('createButton').funct_call()} 
                         >{buttons.get('createButton').name}</button>): null}
 
-                        <div class="input-group flex-nowrap w-50 float-end">
+                        <div className="input-group flex-nowrap w-50 float-end">
                             <input 
                             type="text" 
                             className="form-control d-inline float-end" 
                             placeholder="search" 
                             onChange={e=>setFilter(e.target.value)}/>
-                            <span class="input-group-text bg-orange text-white">
-                                <i class="fa-solid fa-magnifying-glass"></i>
+                            <span className="input-group-text bg-orange text-white">
+                                <i className="fa-solid fa-magnifying-glass"></i>
                             </span>
                         </div>
                     </div>
@@ -72,27 +71,27 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                                                 return (<td key={key} >{item[name.toLowerCase()]}</td>)
                                             })}
                                             <td>
-                                                {buttons.has('infoButton') ? 
-                                                <small className="btn btn-link text-primary">
-                                                    <i className="fa-solid fa-circle-info"/>
-                                                </small>
-                                                :null}
-                                                {buttons.has('updateButton') ? 
-                                                <small 
-                                                    className="btn btn-link text-success"
-                                                    onClick={() => buttons.get('updateButton')(item)}
-                                                    >
-                                                    <i className="fa-solid fa-pen-to-square"/>
-                                                </small>
-                                                :null}
-                                                {buttons.has('deleteButton') ? 
-                                                <small 
-                                                    className="btn btn-link text-danger"
-                                                    onClick={() => buttons.get('deleteButton')(item)}
-                                                >
-                                                    <i className="fa-solid fa-trash"/>
-                                                </small>
-                                                :null}
+                                                <div className="btn-group">
+                                                    {buttons.has('infoButton') ? 
+                                                    <button className="btn btn-link text-primary">
+                                                        <i className="fa-solid fa-circle-info"/>
+                                                    </button>
+                                                    :null}
+                                                    {buttons.has('updateButton') ? 
+                                                    <button 
+                                                        className="btn btn-link text-success"
+                                                        onClick={() => buttons.get('updateButton')(item)}>
+                                                        <i className="fa-solid fa-pen-to-square"/>
+                                                    </button>
+                                                    :null}
+                                                    {buttons.has('deleteButton') ? 
+                                                    <button 
+                                                        className="btn btn-link text-danger"
+                                                        onClick={() => buttons.get('deleteButton')(item)}>
+                                                        <i className="fa-solid fa-trash"/>
+                                                    </button>
+                                                    :null}
+                                                </div>
                                             </td>
                                         </tr>
                                         );

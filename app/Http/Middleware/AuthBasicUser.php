@@ -12,14 +12,12 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthBasicUser {
     /**
-     * Handle an incoming request.
-     *
-     * @param Request $request
-     * @param Closure(Request): (Response|RedirectResponse) $next
-     * @return JsonResponse
+     * @brief The function ensures the basic user authentication
+     * @param Request $request HTTP request data
+     * @param Closure(Request): (Response|RedirectResponse) $next Next route to redirect
+     * @return JsonResponse Error response
      */
-    public function handle(Request $request, Closure $next): JsonResponse
-    {
+    public function handle(Request $request, Closure $next): JsonResponse {
 
         try {
             // Verify the JWT token

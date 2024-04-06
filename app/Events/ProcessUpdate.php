@@ -4,29 +4,25 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
-class ProcessUpdate implements ShouldBroadcast
-{
+class ProcessUpdate implements ShouldBroadcast {
+
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    private $channel_id;
-    public $process_id;
-    public $status;
-    public $progress;
-    public $message;
-    public $name;
+    private string $channel_id;
+    public string $process_id;
+    public string $status;
+    public int $progress;
+    public string $message;
+    public string $name;
 
     /**
      * Create a new event instance.
      */
-    public function __construct($channel_id, $process_id, $status, $progress, $message, $name)
-    {
+    public function __construct($channel_id, $process_id, $status, $progress, $message, $name) {
         $this->channel_id = $channel_id;
         $this->process_id = $process_id;
         $this->status = $status;
@@ -38,7 +34,7 @@ class ProcessUpdate implements ShouldBroadcast
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, Channel>
      */
     public function broadcastOn(): array
     {

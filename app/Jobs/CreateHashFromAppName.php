@@ -4,13 +4,12 @@ namespace App\Jobs;
 
 use App\Exceptions\ApkDownloadException;
 use App\Exceptions\HashGenerationProcessFailed;
+use App\Models\Emulator;
 use App\Objects\CreateHash;
 use Exception;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Symfony\Component\Process\Process;
@@ -21,16 +20,13 @@ use Illuminate\Support\Facades\Log;
 
 class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 
-    
-
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     private string $package_name;
-    private $emulator;
+    private ?Emulator $emulator = null;
 
     /**
-     * Create a new job instance.
-     *
+     * @brief Create a new job instance
      * @return void
      */
     public function __construct($package_name, $hash_types, $ip_address, $channel_id, $process_id){
@@ -39,17 +35,16 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
     }
 
     /**
-     * Execute the job.
-     *
-     * @return void
+     * @brief Execute the job
+     * @throws HashGenerationProcessFailed Hash process failed exception
      */
     public function handle(): void {
 
-        $hashes = [];
-
         try {
-            Log::channel('devlog')->info('Hash creation process for package_name: {name} started!', ['name' => $this->package_name]);
+            Log::channel('devlog')->info('Hash creation process for package_name: {name} started!',
+                ['name' => $this->package_name]);
 
+            // Start processing job
             $this->hash_process_data->setProcessing();
 
             Log::channel('devlog')->info('After processing');
@@ -79,7 +74,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
             $version_name = trim($this->getAppVersionName($emulator, $apk_path));
             $application_name = trim($this->getAppName($emulator, $apk_path));
 
-            $pre_installed_apps = $this->getPreInstlledApps();
+            $pre_installed_apps = $this->getPreInstalledApps();
 
             // App installation
             $this->hash_process_data->nextProcessPart();
@@ -99,7 +94,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 
             // Create hashes
             $this->hash_process_data->nextProcessPart();
-            $hashes = $this->createHashes($this->hash_types, $pcap_file_name, $pcap_file_path);
+            $hashes = $this->createHashes($pcap_file_name, $pcap_file_path);
 
             $results = [
                 'app_name' => $application_name,
@@ -112,8 +107,9 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
             $this->hash_process_data->nextProcessPart();
             $this->saveHashes($results);
 
+            // Finish processing job
             $this->hash_process_data->setFinished();
-    
+
         } catch(Exception $e){
             $this->hash_process_data->setFailed();
             if ($this->emulator)
@@ -123,8 +119,10 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
     }
 
     /**
-     * @param string $package_name
-     * @return string
+     * @brief The function ensures downloading file from Apkpure
+     * @param string $package_name Application package name
+     * @return string Downloaded file name
+     * @throws ApkDownloadException APK download exception
      */
     private function downloadApkFile(string $package_name): string {
 

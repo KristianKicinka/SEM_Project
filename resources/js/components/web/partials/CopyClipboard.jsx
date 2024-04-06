@@ -22,16 +22,11 @@ const CopyClipboard = ({ text }) => {
 
     return (
         <div className="CopyClipboard">
-            <div className="row gx-2">
-                <div className="col-10">
-                    <b className="text-nowrap fs-6">{text}</b>
-                </div>
-                <div className="col"></div>
-                <div className="col-1">
-                    <button className="btn btn-sm btn-search-outline float-end" onClick={handleClick}>
-                        <span>{isCopied ? <i className="fa-solid fa-check"></i> : <i className="fa-solid fa-copy"></i>}</span>
-                    </button>
-                </div>
+            <div className="d-flex">
+                <b className="text-nowrap fs-6 flex-fill px-2">{text}</b>
+                <button className="btn btn-sm btn-search-outline" onClick={handleClick}>
+                    <span>{isCopied ? <i className="fa-solid fa-check"></i> : <i className="fa-solid fa-copy"></i>}</span>
+                </button>
             </div>
         </div>
     );
