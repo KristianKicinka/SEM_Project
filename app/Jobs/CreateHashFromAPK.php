@@ -95,6 +95,11 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
             // Save hashes to database
             $this->hash_process_data->nextProcessPart();
             $this->saveHashes($db_data);
+
+            // Clear APK files for save storage space
+            $this->delete_apk_file($apk_path);
+
+            // Set finished state
             $this->hash_process_data->setFinished();
 
         } catch(Exception $e){

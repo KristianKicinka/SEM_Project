@@ -19,7 +19,9 @@ use App\Models\File;
 use App\Models\Hash;
 use App\Models\Process as ProcessModel;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
 
 // Hash generator python script path
@@ -421,6 +423,21 @@ class CreateHash {
         }
     }
 
+    /**
+     * @brief The function ensures deleting APK file after hash creation
+     * @param string $file_path APK file path
+     * @return void
+     */
+    protected function delete_apk_file(string $file_path): void {
+
+        $relative_path = substr($file_path,
+            strpos($file_path, '/storage/app') + strlen('/storage/app'));
+
+        if (Storage::exists($relative_path)) {
+            Storage::delete($relative_path);
+            DB::table('files')->where('files.path', '=', $file_path)->delete();
+        }
+    }
 
     /**
      * @brief The function ensures the getting free emulator from database

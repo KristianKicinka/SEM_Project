@@ -4,7 +4,6 @@ import ReactDOM from 'react-dom';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import axios from 'axios';
-import pusher from "../../../pusher"; 
 
 import { setNewActiveChannel, setNewActiveProcess } from '../../../processManagement';
 import { toast } from 'react-toastify';
@@ -32,7 +31,7 @@ const ApkInput = ({ hashTypes }) => {
         setChannelID(channel_id);
 
         const data = new FormData();
-        
+
         apkFiles.map((apkFile) => {
             processes[apkFile.name] = setNewActiveProcess();
             data.append("files[]", apkFile);

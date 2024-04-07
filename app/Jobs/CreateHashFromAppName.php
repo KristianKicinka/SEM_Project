@@ -107,6 +107,9 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
             $this->hash_process_data->nextProcessPart();
             $this->saveHashes($results);
 
+            // Clear APK files for save storage space
+            $this->delete_apk_file($apk_path);
+
             // Finish processing job
             $this->hash_process_data->setFinished();
 
