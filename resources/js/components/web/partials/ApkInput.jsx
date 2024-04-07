@@ -1,3 +1,10 @@
+/**
+ * @file ApkInput.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -17,6 +24,10 @@ const ApkInput = ({ hashTypes }) => {
     const [channelID, setChannelID] = useState(false);
     const [processes, setProcesses] = useState([]);
 
+    /**
+     * @brief The function ensures calling API request for hash generation from APK file
+     * @param {*} event OnClick event
+     */
     const createHash = async (event) => {
         event.preventDefault();
 
@@ -29,18 +40,26 @@ const ApkInput = ({ hashTypes }) => {
         let processes = [];
 
         setChannelID(channel_id);
-
         const data = new FormData();
 
         apkFiles.map((apkFile) => {
-            processes[apkFile.name] = setNewActiveProcess();
+            processes.push({
+                process_id: setNewActiveProcess(),
+                channel_id: channel_id,
+                name: apkFile.name,
+                message: "Waiting in queue",
+                progress: 0,
+                status: "processing"
+            });
             data.append("files[]", apkFile);
         });
         
+        data.append("processes", JSON.stringify(processes));
         data.append("hash_types", JSON.stringify(hashTypes));
         data.append("channel_id", channel_id);
 
-        console.log(data);
+        setProcesses(processes);
+        setShowLoading(true);
 
         try {
             let results = await axios.post('/api/create-hash-apk', data, { 
@@ -48,10 +67,6 @@ const ApkInput = ({ hashTypes }) => {
                     'Content-Type': 'multipart/form-data',
                 }
             });
-            console.log(results.data);
-
-            setProcesses(results.data.processes);
-            setShowLoading(true);
 
         } catch (error) {
             setShowLoading(false);
@@ -60,6 +75,9 @@ const ApkInput = ({ hashTypes }) => {
         }
     }
 
+    /**
+     * @brief The function ensures close loading modal box
+     */
     const closeLoading = () => {
         setShowLoading(false);
     }
@@ -68,6 +86,7 @@ const ApkInput = ({ hashTypes }) => {
 
     }, []);
 
+    // Component body
     return (
         <div className='bg-light text-dark p-3 rounded-3'>
             <Form onSubmit={createHash} className='container' encType="multipart/form-data">
@@ -75,7 +94,9 @@ const ApkInput = ({ hashTypes }) => {
                 <Form.Group controlId="formFileAPK" className="row">
                     <Form.Control type="file" className='col'
                         onChange={e=>{setApkFiles(Array.from(e.target.files))}} accept='.apk' required multiple/>
-                    <Button id="submit_apk_files" type='submit' className='btn-search text-light col-2 mx-2'><i className='fa-solid fa-file-import'></i></Button>
+                    <Button id="submit_apk_files" type='submit' className='btn-search text-light col-2 mx-2'>
+                        <i className='fa-solid fa-file-import'></i>
+                    </Button>
                 </Form.Group>
             </Form>
             {showLoading && (

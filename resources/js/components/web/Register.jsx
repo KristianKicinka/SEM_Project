@@ -1,8 +1,14 @@
+/**
+ * @file Register.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import { Link } from "react-router-dom";
-
 import AuthUser from "../../AuthUser";
 
 const Register = () => {
@@ -17,6 +23,10 @@ const Register = () => {
     const [errors, setErrors] = useState({});
     const {http, setToken} = AuthUser();
 
+    /**
+     * @brief The function ensures user registration
+     * @param {*} event OnClick event
+     */
     const registerUser = async (event) => {
         event.preventDefault();
 
@@ -26,17 +36,15 @@ const Register = () => {
 
         try {
             let resp = await http.post('/register', userData);
-            console.log(resp);
             setToken(resp.data.auth.token, resp.data.user);
         } catch (error) {
             if (error.response.status === 400) {
                 setErrors(error.response.data.errors);
             }
-            console.log(error);
         }
-
     }
 
+    // Component body
     return (
         <div className="Register">
             <div className="navbar navbar-expand-lg navbar-dark bg-dark">

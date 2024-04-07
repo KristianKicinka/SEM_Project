@@ -1,3 +1,10 @@
+/**
+ * @file Hashes.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
@@ -11,14 +18,15 @@ import CreateHash from "./partials/hashes/CreateHash";
 import DeleteHash from "./partials/hashes/DeleteHash";
 import UpdateHash from "./partials/hashes/UpdateHash";
 
+// Table headers
 const columnNames = ["ID", "App Name", "Package name", "Version", "SNI", "JA3 hash", "JA3S hash", "JA4 hash", "JA4S hash", "JA4X hash"];
 const dataIndexes = ["id", "app_name", "package_name", "version", "sni", "ja3_hash", "ja3s_hash", "ja4_hash", "ja4s_hash", "ja4x_hash"];
+
 
 const Hashes = () => {
 
     const [hashes, setHashes] = useState([]);
     const {http, token} = AuthUser();
-
     const [fetchDataState, setFetchDataState] = useState(false);
 
     const [hashOnDelete, setHashOnDelete] = useState(null);
@@ -28,19 +36,29 @@ const Hashes = () => {
     const [updateModalShow, setUpdateModalShow] = useState(false);
     const [deleteModalShow, setDeleteModalShow] = useState(false);
 
+    /**
+     * @brief The function ensures handling create button on click event
+     */
     const handleCreateClick = () => {
         setCreateModalShow(true);
     }
 
+    /**
+     * @brief The function ensures handling delete button on click event
+     * @param {*} hash Hash object to delete
+     */
     const handleDeleteClick = (hash) => {
         setHashOnDelete(hash);
         setDeleteModalShow(true);
     }
 
+    /**
+     * @brief The function ensures handling update button on click event
+     * @param {*} hash Hash object to update
+     */
     const handleUpdateClick = (hash) => {
         setHashOnUpdate(hash);
         setUpdateModalShow(true);
-        //console.log(hash);
     }
 
     const buttons = new Map([
@@ -49,10 +67,12 @@ const Hashes = () => {
         ["updateButton", handleUpdateClick]
       ]);
 
+    /**
+     * @brief The function ensures fetching data from database
+     */
     const fetchData = async () => {
         try {
             let resp = await http.post('/admin/hashes');
-            //console.log(resp.data)
             setHashes(resp.data);
         } catch (error) {
             console.log(error);
@@ -65,6 +85,7 @@ const Hashes = () => {
         return () => clearInterval(interval);
     }, [fetchDataState]);
 
+    // Component body
     return (
         <div className="Hashes container-fluid">
             <div className="row">

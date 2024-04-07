@@ -1,3 +1,10 @@
+/**
+ * @file Files.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
@@ -8,8 +15,10 @@ import TableComponent from "../partials/TableComponent";
 import AuthUser from "../../../AuthUser";
 import DeleteFile from "./partials/files/DeleteFile";
 
+// Table headers
 const columnNames = ["ID", "File name", "File type", "File path" ,"App Name"];
 const dataIndexes = ["file_id", "file_name", "file_type", "file_path", "app_name"];
+
 
 const Files = () => {
 
@@ -17,12 +26,13 @@ const Files = () => {
     const {http, token} = AuthUser();
 
     const [fetchDataState, setFetchDataState] = useState(false);
-
     const [fileOnDelete, setFileOnDelete] = useState(null);
-
     const [deleteModalShow, setDeleteModalShow] = useState(false);
 
-
+    /**
+     * @brief The function ensures handling delete button on click events
+     * @param {*} hash Hash to delete
+     */
     const handleDeleteClick = (hash) => {
         setFileOnDelete(hash);
         setDeleteModalShow(true);
@@ -32,10 +42,12 @@ const Files = () => {
         ["deleteButton", handleDeleteClick],
       ]);
 
+    /**
+     * @brief The function ensures fetching data from database system
+     */
     const fetchData = async () => {
         try {
             let resp = await http.post('/admin/files');
-            console.log(resp.data)
             setFiles(resp.data);
         } catch (error) {
             console.log(error);
@@ -48,6 +60,7 @@ const Files = () => {
         return () => clearInterval(interval);
     }, [fetchDataState]);
 
+    // Component body 
     return (
         <div className="Hashes container-fluid">
             <div className="row">

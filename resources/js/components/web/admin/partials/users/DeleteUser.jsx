@@ -1,15 +1,25 @@
+/**
+ * @file DeleteUser.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import AuthUser from "../../../../../AuthUser";
 import { Modal, Button } from 'react-bootstrap';
 
+
 const DeleteUser = ({ show, user, handleClose, setFetchDataState }) => {
 
     const {http} = AuthUser();
 
+    /**
+     * @brief The function ensures handling delete button on click event
+     */
     const handleDeleteUser = async () => {
-        console.log(user);
 
         try {
             let resp = await http.post('/admin/user/delete', {user_id:user.id});
@@ -21,6 +31,7 @@ const DeleteUser = ({ show, user, handleClose, setFetchDataState }) => {
         }
     }
 
+    // Component body
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>

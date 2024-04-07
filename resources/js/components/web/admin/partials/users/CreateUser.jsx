@@ -1,8 +1,16 @@
+/**
+ * @file CreateUser.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import AuthUser from "../../../../../AuthUser";
 import { Modal, Button } from 'react-bootstrap';
+
 
 const CreateUser = ({show, handleClose, setFetchDataState}) => {
 
@@ -16,6 +24,10 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const [errors, setErrors] = useState({});
     const {http} = AuthUser();
 
+    /**
+     * @brief The function ensures creating new users
+     * @param {*} e OnClick event
+     */
     const createNewUser = async (e) => {
         e.preventDefault();
 
@@ -23,16 +35,13 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
             name:name, surname:surname, email:email, phone:phone, password:password, role:role
         };
 
-        console.log(userData);
-
         try {
             let resp = await http.post('/admin/user/create', userData);
-            console.log(resp);
+
             setFetchDataState(prevState => !prevState);
             clearInputs();
             handleClose();
         } catch (error) {
-            console.log(error);
             if (error.response.status === 400) {
                 setErrors(error.response.data.errors);
             }
@@ -40,6 +49,9 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         }
     }
 
+    /**
+     * @brief The function ensures clear inputs
+     */
     const clearInputs = () => {
         setName('');
         setSurname('');
@@ -49,6 +61,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         setPhone('');
     }
 
+    // Component body
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>

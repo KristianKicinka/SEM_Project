@@ -1,9 +1,18 @@
+/**
+ * @file Navbar.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React from "react";
 import ReactDOM from "react-dom";
-
 import { Link } from "react-router-dom";
 
+
 const Navbar = () => {
+
+    // Component body
     return (
         <div className="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
             <div className="container px-4">

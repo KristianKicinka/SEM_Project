@@ -1,29 +1,40 @@
+/**
+ * @file DatabasePage.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import Navbar from "./partials/Navbar";
-
 import Table from "react-bootstrap/Table";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Button from "react-bootstrap/Button";
 
 import http from "../../http";
-
 import { PaginationControl } from 'react-bootstrap-pagination-control';
+
 
 const DatabasePage = () => {
 
     const [data, setData] = useState([]);
     const [filter, setFilter] = useState('');
-    const columns = ['id','name','package_name','version','ja3_hash', 'sni', 'ja3s_hash','created_at'];
+
+    // Table columns
+    const columns = [
+        'id','name','package_name','version','ja3_hash', 'sni', 'ja3s_hash',
+        'ja4_hash', 'ja4s_hash', 'ja4x_hash', 'created_at'
+    ];
 
     const [currentPage, setCurrentPage] = useState(1);
     const [recordsPerPage] = useState(8);
    
     let filteredData = data.filter(item => {
-        console.log(item);
         let result = false;
+
         columns.map((col) => {
             if(item[col]?.toString().toLowerCase().includes(filter.toLowerCase())){
                 result = true;
@@ -38,6 +49,9 @@ const DatabasePage = () => {
 
     filteredData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
 
+    /**
+     * @brief The function ensures getting data from database
+     */
     const getData = async () => {
         try {
             let response = await http.post('/get-app-data');

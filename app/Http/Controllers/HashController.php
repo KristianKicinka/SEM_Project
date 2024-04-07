@@ -33,6 +33,7 @@ class HashController extends Controller {
             'hash_types' => 'required',
             'channel_id' => 'required|string',
             'files.*' => 'required',
+            'processes' => 'required',
         ]);
 
         if ($validator->fails()) {
@@ -42,14 +43,14 @@ class HashController extends Controller {
         $ip_address = $request->ip();
         $channel_id = $request->input('channel_id');
         $hash_types = json_decode($request->input('hash_types'));
-
+        $processes = json_decode($request->input('processes'), true);
 
         $apk_files = $request->file("files");
-        $processes = [];
 
         foreach ($apk_files as $apk_file){
+            $process_name = $apk_file->getClientOriginalName();
             $apk_file_name = $this->saveApkFile($apk_file);
-            $process_id = uniqid('int_api_', true);
+            $process_id = collect($processes)->where('name', $process_name)->pluck('process_id')->first();
 
             CreateHashFromAPK::dispatch(
                 $apk_file_name,
@@ -57,13 +58,8 @@ class HashController extends Controller {
                 $ip_address,
                 $channel_id,
                 $process_id,
+                $process_name,
             )->onQueue('process_queue');
-
-            $process = [
-                "process_id" => $process_id, "name" => $apk_file_name,
-                "message" => "Waiting in queue", "progress" => 0, "status" => "processing"
-            ];
-            $processes[] = $process;
         }
 
         return response()->json([

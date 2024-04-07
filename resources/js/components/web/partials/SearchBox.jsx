@@ -1,3 +1,10 @@
+/**
+ * @file SearchBox.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -20,6 +27,10 @@ const SearchBox = ({ hashTypes, setHashTypes }) => {
     const [appItems, setAppItems] = useState();
     const [appItemsLoaded, setAppItemsLoaded] = useState(false);
 
+    /**
+     * @brief The function ensures searching applications
+     * @param {*} event Form submit event
+     */
     const get_app_items = async (event) => {
         event.preventDefault();
         appName.toLowerCase();
@@ -34,6 +45,9 @@ const SearchBox = ({ hashTypes, setHashTypes }) => {
         }
     }
 
+    /**
+     * @brief The function ensures loading apps from static source
+     */
     const first_load_apps = async () => {
        setAppItems(StaticData.MainPageAppsData);
        setAppItemsLoaded(true);
@@ -43,6 +57,7 @@ const SearchBox = ({ hashTypes, setHashTypes }) => {
         first_load_apps();
     }, []);
 
+    // Component body
     return (
         <div>
             <header className='bg-primary bg-gradient text-white pb-0'>

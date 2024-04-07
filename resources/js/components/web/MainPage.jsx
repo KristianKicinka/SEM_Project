@@ -1,15 +1,20 @@
+/**
+ * @file MainPage.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 
 import Navbar from './partials/Navbar';
 import SearchBox from './partials/SearchBox';
 
-import Results from './partials/Results';
-import LoadingModal from './partials/LoadingModal';
-
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// Main page component
 const MainPage = () => {
 
     const [hashTypes, setHashTypes] = useState([]);

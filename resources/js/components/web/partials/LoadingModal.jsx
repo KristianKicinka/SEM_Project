@@ -1,3 +1,10 @@
+/**
+ * @file LoadingModal.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { Modal, Badge } from "react-bootstrap";
@@ -17,9 +24,9 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
     useEffect(() => {
 
         const channel = pusher.subscribe(`process-channel-${channel_id}`);
-        console.log(channel);
         channel.bind('process-update', data => {
 
+            // Setting new updated data to processes
             setUpdatedProcesses(prevProcesses => {
                 const index = prevProcesses.findIndex(process => process.process_id === data.process_id);
                 
@@ -39,15 +46,15 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
     }, [channel_id]);
 
     /**
-     * @brief The function
+     * @brief The function ensures colse results modal box
      */
     const closeResults = () => {
         setShowResults(false);
     }
 
     /**
-     * @brief 
-     * @param {*} process_id 
+     * @brief The function ensures getting process generation results
+     * @param {*} process_id Process ID
      */
     const getResults = async (process_id) => {
         try {
@@ -66,9 +73,9 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
     }
     
     /**
-     * @brief The function ensures 
-     * @param {*} process 
-     * @returns 
+     * @brief The function ensures loading items creation
+     * @param {*} process Process data object
+     * @returns Loading item component
      */
     const loadingItem = (process) => {
         return (
@@ -85,6 +92,7 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
         );
     }
 
+    // Component body
     return (
         <div className="LoadingModal">
             <Modal show={true} onHide={onClose} size="xl" dialogClassName="modal-85w">

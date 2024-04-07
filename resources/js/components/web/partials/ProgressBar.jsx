@@ -1,8 +1,19 @@
+/**
+ * @file ProgressBar.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { Modal, Button, Spinner } from 'react-bootstrap';
 
+
+// Progress bar component body
 const ProgressBar = ({ description, completed }) => {
+
+    // Component body
     return (
         <div className='ProgressBar'>
             <div className='container'>

@@ -1,3 +1,10 @@
+/**
+ * @file Application.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -25,7 +32,7 @@ import BasicUserProfile from './web/user/Profile';
 
 import ProtectedRoute from '../ProtectedRoute';
 
-
+// Application routes component
 const Application = () => {
     return (
         <div className="Application">

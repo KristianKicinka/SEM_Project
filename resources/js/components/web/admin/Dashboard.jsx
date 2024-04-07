@@ -1,12 +1,20 @@
+/**
+ * @file Dashboard.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import Navbar from "../partials/auth/Navbar";
 import Sidebar from "../partials/auth/Sidebar";
-import TableComponent from "../partials/TableComponent";
 
 
 const Dashboard = () => {
+
+    // Component body
     return (
         <div className="Dashboard container-fluid">
             <div className="row">

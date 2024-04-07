@@ -1,3 +1,10 @@
+/**
+ * @file Login.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
@@ -13,6 +20,10 @@ const Login = () => {
     const {http, setToken} = AuthUser();
     const [errors, setErrors] = useState({});
 
+    /**
+     * @brief The function ensures users logging in
+     * @param {*} event OnClick event 
+     */
     const loginUser = async (event) => {
         event.preventDefault();
 
@@ -27,6 +38,7 @@ const Login = () => {
         }
     }
 
+    // Component body
     return (
         <div className="Login">
             <div className="navbar navbar-expand-lg navbar-dark bg-dark">

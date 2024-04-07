@@ -1,12 +1,18 @@
+/**
+ * @file UpdateUser.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 
 import AuthUser from "../../../../../AuthUser";
 import { Modal, Button } from 'react-bootstrap';
 
-const UpdateUser = ({show, user, handleClose, setFetchDataState}) => {
 
-    console.log(user);
+const UpdateUser = ({show, user, handleClose, setFetchDataState}) => {
 
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');
@@ -18,6 +24,10 @@ const UpdateUser = ({show, user, handleClose, setFetchDataState}) => {
     const [errors, setErrors] = useState({});
     const {http} = AuthUser();
 
+    /**
+     * @brief The function ensures updating user data
+     * @param {*} e OnClick event
+     */
     const updateUserData = async (e) => {
         e.preventDefault();
 
@@ -37,6 +47,10 @@ const UpdateUser = ({show, user, handleClose, setFetchDataState}) => {
         }
     }
 
+    /**
+     * @brief The function ensures changing user password
+     * @param {*} e OnClick event
+     */
     const changeUserPassword = async (e) => {
         e.preventDefault();
 
@@ -52,6 +66,9 @@ const UpdateUser = ({show, user, handleClose, setFetchDataState}) => {
         }
     }
 
+    /**
+     * @brief The function ensures user data init 
+     */
     const initData = () => {
         setName(user?.name);
         setSurname(user?.surname);
@@ -64,6 +81,7 @@ const UpdateUser = ({show, user, handleClose, setFetchDataState}) => {
         initData();
     },[user]);
 
+    // Component body
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>

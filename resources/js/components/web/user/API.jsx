@@ -1,3 +1,10 @@
+/**
+ * @file API.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
@@ -9,6 +16,7 @@ import AuthUser from "../../../AuthUser";
 
 const API = () => {
 
+    // Table headers
     const columnNames = ["ID","User", "IP address", "Request type", "Status"];
     const dataIndexes = ["id", "email", "ip_address", "type", "status"];
 
@@ -16,16 +24,14 @@ const API = () => {
     const { http, token, user } = AuthUser();
 
     const [fetchDataState, setFetchDataState] = useState(false);
+    const buttons = new Map([]);
 
-    const buttons = new Map([
-        //["createButton", handleCreateClick],
-        //["deleteButton", handleDeleteClick],
-    ]);
-
+    /**
+     * @brief The function ensures fetching data from database
+     */
     const fetchData = async () => {
         try {
             let resp = await http.post('/user/api-requests', {user_id: user.id});
-            console.log(resp.data)
             setApiRequests(resp.data);
         } catch (error) {
             console.log(error);
@@ -38,6 +44,7 @@ const API = () => {
         return () => clearInterval(interval);
     }, [fetchDataState]);
 
+    // Component body
     return (
         <div className="Dashboard container-fluid">
             <div className="row">

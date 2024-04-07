@@ -1,8 +1,16 @@
+/**
+ * @file CreateHash.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import AuthUser from "../../../../../AuthUser";
 import { Modal, Button, Form } from 'react-bootstrap';
+
 
 const CreateUser = ({show, handleClose, setFetchDataState}) => {
 
@@ -18,7 +26,6 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const [isMalwareText, setIsMalwareText] = useState(0);
     const [isDangerousText, setIsDangerousText] = useState(0);
 
-
     const [appNamePcap, setAppNamePcap] = useState("");
     const [packageNamePcap, setPackageNamePcap] = useState("");
     const [appVersionPcap, setAppVersionPcap] = useState("");
@@ -29,6 +36,10 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const [errors, setErrors] = useState({});
     const {http, http_file} = AuthUser();
 
+    /**
+     * @brief The function ensures creating hash from text input
+     * @param {*} e Text input event 
+     */
     const createHashFromTextInput = async (e) => {
         e.preventDefault();
 
@@ -48,12 +59,10 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
 
         try {
             let resp = await http.post('/admin/hash/create/text-input', data);
-            console.log(resp);
             setFetchDataState(prevState => !prevState);
             //clearInputs();
             handleClose();
         } catch (error) {
-            console.log(error);
             if (error.response.status === 400) {
                 setErrors(error.response.data.errors);
             }
@@ -61,6 +70,10 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         }
     }
 
+    /**
+     * @brief The function ensures creating hashes from pcap file
+     * @param {*} e Input file event
+     */
     const createHashFromPcapFile = async (e) => {
         e.preventDefault();
 
@@ -74,12 +87,10 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
 
         try {
             let resp = await http_file.post('/admin/hash/create/pcap-file', data);
-            console.log(resp);
             setFetchDataState(prevState => !prevState);
             //clearInputs();
             handleClose();
         } catch (error) {
-            console.log(error);
             if (error.response.status === 400) {
                 setErrors(error.response.data.errors);
             }
@@ -87,6 +98,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         }
     }
 
+    // Component body
     return (
         <Modal show={show} onHide={handleClose} dialogClassName="modal-80w" >
             <Modal.Header closeButton>

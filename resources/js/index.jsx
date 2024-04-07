@@ -1,3 +1,10 @@
+/**
+ * @file index.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 

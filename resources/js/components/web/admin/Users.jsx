@@ -1,3 +1,10 @@
+/**
+ * @file Users.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
@@ -10,6 +17,7 @@ import CreateUser from "./partials/users/CreateUser";
 import UpdateUser from "./partials/users/UpdateUser";
 import DeleteUser from "./partials/users/DeleteUser";
 
+// Table headers
 const columnNames = ["ID","Name", "Surname", "Email", "Phone", "Role"];
 const dataIndexes = ["id","name", "surname", "email", "phone", "role"];
 
@@ -20,7 +28,6 @@ const Users = () => {
     const {http, token} = AuthUser();
 
     const [fetchDataState, setFetchDataState] = useState(false);
-
     const [userOnDelete, setUserOnDelete] = useState(null);
     const [userOnUpdate, setUserOnUpdate] = useState(null);
 
@@ -28,16 +35,26 @@ const Users = () => {
     const [updateModalShow, setUpdateModalShow] = useState(false);
     const [deleteModalShow, setDeleteModalShow] = useState(false);
 
+    /**
+     * @brief The function ensures handling create button onclick event
+     */
     const handleCreateClick = () => {
         setCreateModalShow(true);
     }
 
+    /**
+     * @brief The function ensures handling update button onclick event
+     * @param {*} user User object to update
+     */
     const handleUpdateClick = (user) => {
         setUserOnUpdate(user);
         setUpdateModalShow(true);
-        console.log(user);
     }
 
+    /**
+     * @brief The function ensures handling delete button onclick event
+     * @param {*} user User object to delete
+     */
     const handleDeleteClick = (user) => {
         setUserOnDelete(user);
         setDeleteModalShow(true);  
@@ -49,6 +66,9 @@ const Users = () => {
         ["updateButton", handleUpdateClick]
       ]);
 
+    /**
+     * @brief The function ensures fetching data from database
+     */
     const fetchData = async () => {
         try {
             let resp = await http.post('/admin/users');
@@ -65,6 +85,7 @@ const Users = () => {
         return () => clearInterval(interval);
     }, [fetchDataState]);
 
+    // Component body
     return (
         <div className="Users container-fluid">
             <div className="row">

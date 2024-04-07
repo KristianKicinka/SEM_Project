@@ -1,19 +1,27 @@
+/**
+ * @file DeleteFile.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import AuthUser from "../../../../../AuthUser";
 import { Modal, Button } from 'react-bootstrap';
 
+
 const DeleteFile = ({ show, file, handleClose, setFetchDataState }) => {
 
     const {http} = AuthUser();
 
+    /**
+     *  @brief The function ensures calling delete function from backend API
+     */
     const handleDeleteFile = async () => {
-        console.log(file);
-
         try {
             let resp = await http.post('/admin/file/delete', {file_id:file.file_id});
-            console.log(resp);
             setFetchDataState(prevState => !prevState);
             handleClose();
         } catch (error) {
@@ -21,6 +29,7 @@ const DeleteFile = ({ show, file, handleClose, setFetchDataState }) => {
         }
     }
 
+    // Component body
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>

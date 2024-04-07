@@ -1,9 +1,18 @@
+/**
+ * @file ContentBox.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import AppItem from './AppItem';
 
 
 const ContentBox = ({ items, hashTypes }) => {
+
+    // Component body
     return (
         <div className='ContentBox pt-4'>
             <div className="container pb-4">

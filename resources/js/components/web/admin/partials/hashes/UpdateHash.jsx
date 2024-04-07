@@ -1,12 +1,18 @@
+/**
+ * @file UpdateHash.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 
 import AuthUser from "../../../../../AuthUser";
 import { Modal, Button } from 'react-bootstrap';
 
-const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
 
-    console.log(hash);
+const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
 
     const [appName, setAppName] = useState('');
     const [packageName, setPackageName] = useState('');
@@ -23,6 +29,10 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
     const [errors, setErrors] = useState({});
     const {http} = AuthUser();
 
+    /**
+     * @brief The function ensures updating hash data
+     * @param {*} e OnClick event
+     */
     const updateHashData = async (e) => {
         e.preventDefault();
 
@@ -59,6 +69,7 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
         setIsMalware(hash?.is_malware);
     },[hash]);
 
+    // Component body
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>

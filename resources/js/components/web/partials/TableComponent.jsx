@@ -1,8 +1,14 @@
+/**
+ * @file TableComponent.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import Table from "react-bootstrap/Table";
-import Pagination from "./Pagination";
 import { PaginationControl } from 'react-bootstrap-pagination-control';
 
 
@@ -12,6 +18,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
     const [currentPage, setCurrentPage] = useState(1);
     const [recordsPerPage] = useState(8);
    
+    // Search box data filtration
     let filteredData = data.filter(item => {
         let result = false;
         dataIndexes.map((col) => {
@@ -28,6 +35,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
 
     filteredData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
 
+    // Component body
     return (
         <div className="TableComponent pt-md-3">
             <div className="container-fluid px-2 shadow bg-white text-dark">

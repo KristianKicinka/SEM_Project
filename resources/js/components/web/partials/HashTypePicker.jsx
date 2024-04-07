@@ -1,3 +1,10 @@
+/**
+ * @file HashTypePicker.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 
@@ -6,6 +13,10 @@ import Form from 'react-bootstrap/Form';
 
 const HashTypePicker = ({hashTypes, setHashTypes}) => {
 
+    /**
+     * @brief The function ensures handle checkbox changes
+     * @param {*} e OnChange event
+     */
     const checkboxChange = (e) =>{
 
         let newHashesTypes = [...hashTypes, e.target.id];
@@ -16,8 +27,7 @@ const HashTypePicker = ({hashTypes, setHashTypes}) => {
         setHashTypes(newHashesTypes);
     }
 
-    console.log(hashTypes);
-
+    // Component body
     return (
         <div className='HashTypePicker container py-4'>
            <div className="row">

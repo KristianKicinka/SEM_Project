@@ -1,3 +1,10 @@
+/**
+ * @file AppItem.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from 'react';
 import ReactDOM from "react-dom";
 import axios from "axios";
@@ -6,12 +13,17 @@ import { setNewActiveChannel, setNewActiveProcess } from '../../../processManage
 import { toast } from 'react-toastify';
 import LoadingModal from './LoadingModal';
 
+
 const AppItem = ({ item, hashTypes }) => {
 
     const [showLoading, setShowLoading] = useState(false);
     const [channelID, setChannelID] = useState(false);
     const [processes, setProcesses] = useState([]);
 
+    /**
+     * @brief The function ensures calling API request for creation hashes from application name
+     * @param {*} event OnClick event
+     */
     const createHash = async (event) => {
         event.preventDefault();
 
@@ -21,7 +33,6 @@ const AppItem = ({ item, hashTypes }) => {
         }
 
         let channel_id = setNewActiveChannel();
-        console.log(channel_id);
         setChannelID(channel_id);
 
         let data = {
@@ -30,11 +41,8 @@ const AppItem = ({ item, hashTypes }) => {
             'channel_id': channel_id,
         }
 
-        console.log(`Data object: ${data.package_name}`);
-
         try {
             let results = await axios.post('/api/create-hash-appname', data);
-            console.log(results.data);
 
             setProcesses(results.data.processes);
             setShowLoading(true);
@@ -45,6 +53,9 @@ const AppItem = ({ item, hashTypes }) => {
         }
     }
 
+    /**
+     * @brief The function ensures close loading modal box
+     */
     const closeLoading = () => {
         setShowLoading(false);
     }
@@ -53,6 +64,7 @@ const AppItem = ({ item, hashTypes }) => {
        
     }, []);
 
+    // Component body
     return (
         <div>
             <a href={item.package_name} onClick={createHash} className="text-decoration-none" >

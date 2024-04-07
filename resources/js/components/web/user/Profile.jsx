@@ -1,18 +1,22 @@
+/**
+ * @file Profile.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { Link } from "react-router-dom";
 
 import AuthUser from "../../../AuthUser";
-
 import Navbar from "../partials/auth/Navbar";
 import Sidebar from "../partials/auth/Sidebar";
-import TableComponent from "../partials/TableComponent";
 
 
 const Profile = () => {
 
     const { http, setToken, user } = AuthUser();
-
     const [apiKey, setApiKey] = useState("");
 
     const [name, setName] = useState(user.name);
@@ -24,9 +28,11 @@ const Profile = () => {
 
     const [errors, setErrors] = useState({});
     const [fetchDataState, setFetchDataState] = useState(false);
-
-    console.log(user);
     
+    /**
+     * @brief The function ensures user profile editing
+     * @param {*} e OnClick event
+     */
     const editProfile = async (e) => {
         e.preventDefault();
 
@@ -36,20 +42,27 @@ const Profile = () => {
 
         try {
             let resp = await http.post('/edit', userData);
-            console.log(resp);
             setToken(resp.data.auth.token, resp.data.user);
         } catch (error) {
             if (error.response.status === 400) {
                 setErrors(error.response.data.errors);
             }
-            console.log(error);
         }
     }
 
+    /**
+     * @breif The function ensures changing password
+     * @param {*} e OnClick event
+     */
     const changePassword = (e) => {
         e.preventDefault();
+        //TODO: implement function
     }
 
+    /**
+     * @brief The function ensures API key generation
+     * @param {*} e OnClick event
+     */
     const generateApiKey = async (e) => {
         e.preventDefault();
         try {
@@ -61,6 +74,9 @@ const Profile = () => {
         }
     }
 
+    /**
+     * @brief The function ensures fetching data from database
+     */
     const fetchData = async () => {
         try {
             let resp = await http.post('/user/get-api-key', {user_id:user.id});
@@ -72,10 +88,9 @@ const Profile = () => {
 
     useEffect(() => {
         fetchData();
-        /*const interval = setInterval(() => {fetchData()}, 3000);
-        return () => clearInterval(interval);*/
     }, [fetchDataState]);
 
+    // Component body
     return (
         <div className="Dashboard container-fluid">
             <div className="row">

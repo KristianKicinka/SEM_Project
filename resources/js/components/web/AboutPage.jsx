@@ -1,3 +1,10 @@
+/**
+ * @file AboutPage.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
@@ -5,6 +12,8 @@ import Navbar from "./partials/Navbar";
 import MainPageImage from "../../../../public/img/main_page.png";
 
 const AboutPage = () => {
+
+    // Component body
     return (
         <div className="AboutPage bg-primary bg-gradient pt-5 vh-100">
             <Navbar />

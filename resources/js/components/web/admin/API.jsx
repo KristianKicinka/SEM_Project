@@ -1,17 +1,23 @@
+/**
+ * @file API.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import Navbar from "../partials/auth/Navbar";
 import Sidebar from "../partials/auth/Sidebar";
 import TableComponent from "../partials/TableComponent";
-
 import AuthUser from "../../../AuthUser";
 
-//import CreateHash from "./partials/hashes/CreateHash";
-//import DeleteHash from "./partials/hashes/DeleteHash";
 
+// Table headers
 const columnNames = ["ID","User", "IP address", "Request type", "Status"];
 const dataIndexes = ["id", "email", "ip_address", "type", "status"];
+
 
 const API = () => {
 
@@ -19,24 +25,24 @@ const API = () => {
     const {http, token} = AuthUser();
 
     const [fetchDataState, setFetchDataState] = useState(false);
-
-    const [createModalShow, setCreateModalShow] = useState(false);
     const [deleteModalShow, setDeleteModalShow] = useState(false);
 
-    const handleCreateClick = () => {
-        setCreateModalShow(true);
-    }
-
+    /**
+     * @brief The function ensures handling delete button on click events
+     * @param {*} request API request to delete
+     */
     const handleDeleteClick = (request) => {
         setRequestOnDelete(request);
         setDeleteModalShow(true);  
     }
 
     const buttons = new Map([
-        //["createButton", handleCreateClick],
         ["deleteButton", handleDeleteClick],
     ]);
 
+    /**
+     * @brief The function ensures fetching data from database
+     */
     const fetchData = async () => {
         try {
             let resp = await http.post('/admin/requests');
@@ -53,6 +59,7 @@ const API = () => {
         return () => clearInterval(interval);
     }, [fetchDataState]);
 
+    // Component body
     return (
         <div className="API container-fluid">
             <div className="row">

@@ -1,18 +1,30 @@
+/**
+ * @file Navbar.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React from "react";
 import ReactDOM from "react-dom";
 
 import { Link } from "react-router-dom";
 import AuthUser from "../../../../AuthUser";
 
+
 const Navbar = () => {
 
     const {token, logout} = AuthUser();
 
+    /**
+     * @brief The function ensures logouting users
+     */
     const logoutUser = () => {
         if (token != undefined)
             logout();
     }
 
+    // Component body
     return (
         <nav className="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow py-3">
             <div className="container">

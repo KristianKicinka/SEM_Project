@@ -1,15 +1,25 @@
+/**
+ * @file APIPage.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-
 import { Accordion, Card, Button } from "react-bootstrap";
 
 import Navbar from "./partials/Navbar";
-
 import ApiRequestsData from "../../../../scripts/ApiRequests.json";
 
+/**
+ * @brief The function ensures creating api request component
+ * @param {*} param0 Data object with id, title, code, output and description
+ * @returns React component body
+ */
 const ApiRequest = ({ id, title, pythonCode, expectedOutput, description }) => {
     return (
         <Accordion.Item eventKey={id}>
@@ -50,6 +60,7 @@ const APIPage = () => {
         setApiRequests(ApiRequestsData);
     }, []);
 
+    // Component body
     return (
         <div className="APIPage bg-primary bg-gradient pt-5 min-vh-100">
             <Navbar />

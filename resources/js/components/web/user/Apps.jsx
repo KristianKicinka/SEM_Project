@@ -1,3 +1,10 @@
+/**
+ * @file Apps.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
@@ -8,6 +15,7 @@ import LikedApps from "./partials/apps/LikedApps";
 
 import AuthUser from "../../../AuthUser";
 
+// Table headers
 const columnNames = ["ID", "App Name", "Package name", "Version", "SNI", "JA3 hash", "JA3S hash", "JA4 hash", "JA4S hash", "JA4X hash"];
 const dataIndexes = ["id", "app_name", "package_name", "app_version", "sni", "ja3_hash", "ja3s_hash", "ja4_hash", "ja4s_hash", "ja4x_hash"];
 
@@ -20,12 +28,13 @@ const Apps = () => {
     const [createModalShow, setCreateModalShow] = useState(false);
     const [likedApps, setLikedApps] = useState([]);
 
-
+    /**
+     * @brief The function ensures app creation handling
+     */
     const handleCreateClick = async () => {
 
         try {
             let resp = await http.post('/user/get-liked-apps', {user_id:user.id});
-            console.log(resp.data);
             setLikedApps(resp.data);
             setCreateModalShow(true);
         } catch (error) {
@@ -37,10 +46,12 @@ const Apps = () => {
         ["createButton", {name:"Liked apps", funct_call:handleCreateClick}],
     ]);
 
+    /**
+     * @brief The function ensures fetching data from database
+     */
     const fetchData = async () => {
         try {
             let resp = await http.post('/user/get-liked-apps-hashes', {user_id:user.id});
-            console.log(resp.data)
             setHashes(resp.data);
         } catch (error) {
             console.log(error);
@@ -53,6 +64,7 @@ const Apps = () => {
         return () => clearInterval(interval);
     }, [fetchDataState]);
 
+    // Component body
     return (
         <div className="Dashboard container-fluid">
             <div className="row">

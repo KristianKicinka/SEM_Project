@@ -1,3 +1,10 @@
+/**
+ * @file LikedApps.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
@@ -9,6 +16,11 @@ const LikedApps = ({show, likedApps, handleClose, setFetchDataState}) => {
     const {http, token, user } = AuthUser();
     const [apps, setApps] = useState([]);
 
+    /**
+     * @brief The function ensures handling like apps
+     * @param {*} appId Application ID
+     * @param {*} liked Is liked value
+     */
     const handleLikeToggle = async (appId, liked) => {
 
         const updatedApps = apps.map((app) => {
@@ -23,7 +35,6 @@ const LikedApps = ({show, likedApps, handleClose, setFetchDataState}) => {
 
         try {
             let resp = await http.post('user/edit-liked-apps', {user_id:user.id, data:updatedApps});
-            console.log(resp);
             setFetchDataState(prevState => !prevState);
         } catch (error) {
             console.log(error);
@@ -35,6 +46,7 @@ const LikedApps = ({show, likedApps, handleClose, setFetchDataState}) => {
         setApps(likedApps)
     }, [likedApps]);
 
+    // Component body 
     return (
         <Modal show={show} onHide={handleClose} size="md" scrollable={true} >
             <Modal.Header closeButton>

@@ -1,10 +1,19 @@
+/**
+ * @file Sidebar.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React from "react";
 import ReactDOM from "react-dom";
 
 import { Link } from "react-router-dom";
 
+
 const Sidebar = ({sidebarType}) => {
 
+    // Sidebar items for admin users
     const sidebar_items_admin = [
         {id:1, text: "Dashboard" , url: "/admin/dashboard", icon_class: "fa-solid fa-house pe-2"},
         {id:2, text: "API requests" , url: "/admin/api", icon_class: "fa-solid fa-code pe-2"},
@@ -14,6 +23,7 @@ const Sidebar = ({sidebarType}) => {
         {id:6, text: "Files" , url: "/admin/files", icon_class: "fa-solid fa-file pe-2"},
     ];
 
+    // Sidebar items for basic users
     const sidebar_items_user = [
         {id:1, text: "Dashboard" , url: "/user/dashboard", icon_class: "fa-solid fa-house pe-2"},
         {id:2, text: "API requests" , url: "/user/api", icon_class: "fa-solid fa-code pe-2"},
@@ -23,6 +33,7 @@ const Sidebar = ({sidebarType}) => {
 
     let sidebar_items = (sidebarType == "admin") ? sidebar_items_admin : sidebar_items_user;
 
+    // Component body
     return (
         <div className="p-3 text-white bg-dark col vh-100">
             <Link className="d-flex align-items-center px-3 mb-3 mb-md-0 me-md-auto text-white text-decoration-none">

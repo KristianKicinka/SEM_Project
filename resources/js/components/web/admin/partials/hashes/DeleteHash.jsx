@@ -1,19 +1,28 @@
+/**
+ * @file DeleteHash.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 
 import AuthUser from "../../../../../AuthUser";
 import { Modal, Button } from 'react-bootstrap';
 
+
 const DeleteHash = ({ show, hash, handleClose, setFetchDataState }) => {
 
     const {http} = AuthUser();
 
+    /**
+     * @brief The function ensures handling delete button on click event
+     */
     const handleDeleteHash = async () => {
-        console.log(hash);
 
         try {
             let resp = await http.post('/admin/hash/delete', {hash_id:hash.id});
-            console.log(resp);
             setFetchDataState(prevState => !prevState);
             handleClose();
         } catch (error) {
@@ -21,6 +30,7 @@ const DeleteHash = ({ show, hash, handleClose, setFetchDataState }) => {
         }
     }
 
+    // Component body
     return (
         <Modal show={show} onHide={handleClose}>
             <Modal.Header closeButton>

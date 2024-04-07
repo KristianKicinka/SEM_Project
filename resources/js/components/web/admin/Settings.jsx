@@ -1,10 +1,15 @@
+/**
+ * @file Settings.jsx
+ * @author Kristián Kičinka (xkicin02)
+ * 
+ * @copyright Copyright (c) 2024
+ */
+
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 
 import Navbar from "../partials/auth/Navbar";
 import Sidebar from "../partials/auth/Sidebar";
-import TableComponent from "../partials/TableComponent";
-
 import AuthUser from "../../../AuthUser";
 
 
@@ -15,8 +20,13 @@ const Settings = () => {
 
     const [fetchDataState, setFetchDataState] = useState(false);
 
+    /**
+     * @brief The function ensures api key generation
+     * @param {*} e OnClick event
+     */
     const generateApiKey = async (e) => {
         e.preventDefault();
+
         try {
             let resp = await http.post('/admin/api-key-generate', {user_id:user.id});
             setFetchDataState(prevState => !prevState);
@@ -26,6 +36,9 @@ const Settings = () => {
         }
     }
 
+    /**
+     * @brief The function ensures fetching data from database
+     */
     const fetchData = async () => {
         try {
             let resp = await http.post('/admin/get-api-key', {user_id:user.id});
@@ -37,10 +50,9 @@ const Settings = () => {
     
     useEffect(() => {
         fetchData();
-        /*const interval = setInterval(() => {fetchData()}, 3000);
-        return () => clearInterval(interval);*/
     }, [fetchDataState]);
 
+    // Component body
     return (
         <div className="Settings container-fluid">
             <div className="row">

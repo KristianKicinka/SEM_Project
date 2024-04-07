@@ -2,17 +2,18 @@
  * @file Pagination.jsx
  * @author Kristián Kičinka (xkicin02)
  * 
- * @copyright Copyright (c) 2022
+ * @copyright Copyright (c) 2024
  */
 
 import React, { Component } from 'react'
+
 
 const Pagination = ({nPages, currentPage, setCurrentPage}) => {
 
     const pageNumbers = [...Array(nPages + 1).keys()].slice(1);
 
     /**
-     * Function serves to redirecting to next page 
+     * @brief The function ensures redirecting to next page 
      */
     const nextPage = () => {
         if(currentPage !== nPages) 
@@ -20,13 +21,14 @@ const Pagination = ({nPages, currentPage, setCurrentPage}) => {
     }
 
     /**
-     * Function serves to redirecting to prev page 
+     * @brief The function ensures redirecting to previous page 
      */
     const prevPage = () => {
         if(currentPage !== 1) 
             setCurrentPage(currentPage - 1)
     }
 
+    // Component body
     return (
         <div className='Pagination'>
             <nav className='float-end me-4'>
