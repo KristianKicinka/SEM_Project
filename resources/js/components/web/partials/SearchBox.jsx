@@ -14,10 +14,7 @@ import HashTypePicker from './HashTypePicker';
 import StaticData from '../../../../../scripts/StaticData.json';
 
 
-const SearchBox = ({
-    handleShowLoading, handleCloseLoading, handleShowResults, 
-    setResults, hashTypes, setHashTypes, setLoadingData
-}) => {
+const SearchBox = ({ hashTypes, setHashTypes }) => {
 
     const [appName, setAppName] = useState();
     const [appItems, setAppItems] = useState();
@@ -51,14 +48,7 @@ const SearchBox = ({
             <header className='bg-primary bg-gradient text-white pb-0'>
                 <div className='container text-center py-2 pb-4'>
                     <HashTypePicker hashTypes={hashTypes} setHashTypes={setHashTypes} />
-                    <ImportSection  
-                        handleShowLoading={handleShowLoading} 
-                        handleCloseLoading={handleCloseLoading}
-                        handleShowResults={handleShowResults}
-                        setResults={setResults}
-                        hashTypes={hashTypes}
-                        setLoadingData={setLoadingData}
-                    />
+                    <ImportSection  hashTypes={hashTypes} />
                 </div>
                 <div className='container px-4 text-center pt-5'>
                     <h1 className='fw-bolder'>Enter name of the application</h1>
@@ -87,15 +77,7 @@ const SearchBox = ({
                     </div>
                 </div>
             </header>
-            {appItemsLoaded ? <ContentBox 
-                                items={appItems} 
-                                handleCloseLoading={handleCloseLoading}
-                                handleShowLoading={handleShowLoading}
-                                handleShowResults={handleShowResults}
-                                setResults={setResults}
-                                hashTypes={hashTypes}
-                                setLoadingData={setLoadingData}
-                                /> : null}
+            {appItemsLoaded ? <ContentBox items={appItems} hashTypes={hashTypes} /> : null}
         </div>
     );
 }

@@ -1,11 +1,16 @@
 import { v4 as uuidv4 } from 'uuid';
 
-const createNewID = () => {
+const createNewProcessID = () => {
+    const uniqueId = uuidv4().substring(0,23);
+    return `int_api_${uniqueId}`;
+}
+
+const createNewChannelID = () => {
     return uuidv4().substring(0,8);
 }
 
 export const setNewActiveProcess = () => {
-    const processID = createNewID();
+    const processID = createNewProcessID();
     let activeProcesses = getActvieProcesses();
     
     activeProcesses.push(processID);
@@ -19,7 +24,7 @@ export const getActvieProcesses = () => {
 }
 
 export const setNewActiveChannel = () => {
-    const channelID = createNewID();
+    const channelID = createNewChannelID();
     let activeChannels = getActvieProcesses();
     
     activeChannels.push(channelID);

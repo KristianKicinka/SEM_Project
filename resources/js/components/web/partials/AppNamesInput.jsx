@@ -8,10 +8,7 @@ import { setNewActiveChannel, setNewActiveProcess } from '../../../processManage
 import { toast } from 'react-toastify';
 import LoadingModal from './LoadingModal';
 
-const AppNamesInput = ({
-    handleShowLoading, handleCloseLoading, handleShowResults,
-    setResults, hashTypes, setLoadingData
-}) => {
+const AppNamesInput = ({ hashTypes }) => {
 
     const [file, setFile] = useState(null);
     const [showLoading, setShowLoading] = useState(false);

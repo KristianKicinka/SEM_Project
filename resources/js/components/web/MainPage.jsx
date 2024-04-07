@@ -12,34 +12,13 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const MainPage = () => {
 
-    const [results, setResults] = useState([]);
     const [hashTypes, setHashTypes] = useState([]);
-
-    const [showResults, setShowResults] = useState(false);
-    const [showLoading, setShowLoading] = useState(false);
-    const [loadingData, setLoadingData] = useState(
-        {progress:0, message:'Hash process was created'}
-    );
-
-    const handleCloseResults = () => setShowResults(false);
-    const handleShowResults = () => setShowResults(true);
-
-    const handleCloseLoading = () => setShowLoading(false);
-    const handleShowLoading = () => setShowLoading(true);
 
     return (
         <div className='MainPage'>
             <Navbar />
 
-            <SearchBox
-                handleShowLoading={handleShowLoading} 
-                handleCloseLoading={handleCloseLoading}
-                handleShowResults={handleShowResults}
-                setResults={setResults}
-                hashTypes={hashTypes}
-                setHashTypes={setHashTypes}
-                setLoadingData={setLoadingData}
-            />
+            <SearchBox hashTypes={hashTypes} setHashTypes={setHashTypes} />
 
             <ToastContainer
                 position="bottom-right"

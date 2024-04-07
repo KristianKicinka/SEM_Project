@@ -11,10 +11,7 @@ import { toast } from 'react-toastify';
 import LoadingModal from './LoadingModal';
 
 
-const ApkInput = ({
-    handleShowLoading, handleCloseLoading, handleShowResults,
-    setResults, hashTypes, setLoadingData
-}) => {
+const ApkInput = ({ hashTypes }) => {
 
     const [apkFiles, setApkFiles] = useState([]);
     const [showLoading, setShowLoading] = useState(false);
@@ -30,12 +27,14 @@ const ApkInput = ({
         }
 
         let channel_id = setNewActiveChannel();
-        console.log(channel_id);
+        let processes = [];
+
         setChannelID(channel_id);
 
         const data = new FormData();
-        console.log(apkFiles);
+        
         apkFiles.map((apkFile) => {
+            processes[apkFile.name] = setNewActiveProcess();
             data.append("files[]", apkFile);
         });
         

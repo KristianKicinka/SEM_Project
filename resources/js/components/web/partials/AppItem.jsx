@@ -6,9 +6,7 @@ import { setNewActiveChannel, setNewActiveProcess } from '../../../processManage
 import { toast } from 'react-toastify';
 import LoadingModal from './LoadingModal';
 
-const AppItem = (
-    { item, handleShowLoading, handleCloseLoading, handleShowResults, 
-        setResults, hashTypes, setLoadingData}) => {
+const AppItem = ({ item, hashTypes }) => {
 
     const [showLoading, setShowLoading] = useState(false);
     const [channelID, setChannelID] = useState(false);
