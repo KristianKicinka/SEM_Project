@@ -63,7 +63,7 @@ const Results = ({ results, onClose, hashTypes }) => {
                     <tbody>
                         {hasResults ? results.map((row) => dataItem(row)):(
                             <tr>
-                                <td>No results</td>
+                                <td colSpan={4+hashTypes.length}>No hashes found, repeat the process</td>
                             </tr>
                         )}
                     </tbody>

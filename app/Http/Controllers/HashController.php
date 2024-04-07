@@ -337,10 +337,6 @@ class HashController extends Controller {
             ->where('processes.job_id','=',$request->input("process_id"))
             ->get();
 
-        if(count($results) == 0){
-            return response()->json(['errors' => 'No hashes!'], 400);
-        }
-
         return response()->json($results, 200);
     }
 
