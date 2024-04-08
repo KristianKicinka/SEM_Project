@@ -27,11 +27,21 @@ const AuthUser = () => {
      * @brief The function ensures getting user data
      * @returns User data
      */
-    const getUser = () =>{
+    const getUser = () => {
         const userString = sessionStorage.getItem('auth_user');
         const userDetail = JSON.parse(userString);
 
         return userDetail;
+    };
+
+    /**
+     * @brief The function ensures editting user data
+     * @param {*} user New user data
+     * @returns User data
+     */
+    const editUser = (user) => {
+        sessionStorage.setItem('auth_user',JSON.stringify(user));
+        setUser(user);
     };
 
     const navigate = useNavigate();
@@ -111,7 +121,7 @@ const AuthUser = () => {
         }
     });
 
-    return { setToken:saveToken, token, user, getToken, http, http_file, logout }
+    return { setToken:saveToken, token, user, getToken, http, http_file, logout, editUser }
 }
 
 export default AuthUser;

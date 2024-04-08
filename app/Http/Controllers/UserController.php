@@ -73,9 +73,9 @@ class UserController extends Controller {
     public function updateUserData(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required',
-            'name' => 'required',
-            'surname' => 'required',
+            'user_id' => 'required|numeric',
+            'name' => 'required|string',
+            'surname' => 'required|string',
             'email' => ['required', 'email', Rule::unique('users')->ignore($request->user_id)],
             'phone' => ['required', Rule::unique('users')->ignore($request->user_id)],
             'role' => 'required',
@@ -115,6 +115,64 @@ class UserController extends Controller {
         User::where('id','=',$request->user_id)->update([
             'password' => Hash::make($request->password),
         ]);
+
+        return response()->json(['status' => 'success'], 200);
+    }
+
+    /**
+     * @brief The function ensures editing user profile in basic user interface
+     * @param Request $request HTTP request data
+     * @return JsonResponse Operation status message
+     */
+    public function editBasicUser(Request $request): JsonResponse {
+
+        // Request data validator
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|numeric',
+            'name' => 'required|string',
+            'surname' => 'required|string',
+            'email' => ['required', 'email', Rule::unique('users')->ignore($request->user_id)],
+            'phone' => ['required', Rule::unique('users')->ignore($request->user_id)],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        User::where('id', '=', $request->user_id)->update([
+            'name' => $request->name,
+            'surname'=> $request->surname,
+            'email' => $request->email,
+            'phone' => $request->phone,
+        ]);
+
+        // Updated user
+        $user = User::find($request->user_id);
+
+        return response()->json($user, 200);
+    }
+
+    /**
+     * @brief The function ensures changing password in user GUI
+     * @param Request $request HTTP request data
+     * @return JsonResponse Operation status message
+     */
+    public function changePasswordBasicUser(Request $request): JsonResponse {
+
+        // Request data validator
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required',
+            'password' => 'required|min:8',
+            'password_re' => 'required|same:password',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        // Update password
+        $password = bcrypt($request->password);
+        User::where('id', '=', $request->user_id)->update([ 'password' => $password,]);
 
         return response()->json(['status' => 'success'], 200);
     }

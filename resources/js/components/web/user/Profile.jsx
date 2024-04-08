@@ -16,7 +16,7 @@ import Sidebar from "../partials/auth/Sidebar";
 
 const Profile = () => {
 
-    const { http, setToken, user } = AuthUser();
+    const { http, setToken, user, editUser } = AuthUser();
     const [apiKey, setApiKey] = useState("");
 
     const [name, setName] = useState(user.name);
@@ -37,16 +37,19 @@ const Profile = () => {
         e.preventDefault();
 
         const userData = {
-            name:name, surname:surname, email:email, phone:phone
+            user_id:user.id, name:name, surname:surname, email:email, phone:phone
         };
 
         try {
-            let resp = await http.post('/edit', userData);
-            setToken(resp.data.auth.token, resp.data.user);
+            let resp = await http.post('/user/edit', userData);
+            console.log(resp.data);
+            editUser(resp.data);
+            setFetchDataState(prevState => !prevState);
         } catch (error) {
             if (error.response.status === 400) {
                 setErrors(error.response.data.errors);
             }
+            console.log(error);
         }
     }
 
@@ -54,9 +57,26 @@ const Profile = () => {
      * @breif The function ensures changing password
      * @param {*} e OnClick event
      */
-    const changePassword = (e) => {
+    const changePassword = async (e) => {
         e.preventDefault();
-        //TODO: implement function
+
+        const userData = {
+            user_id:user.id, password:password, password_re:passwordRe
+        };
+
+        try {
+            let resp = await http.post('/user/change-password', userData);
+            setFetchDataState(prevState => !prevState);
+
+            // Clear inputs 
+            setPassword("");
+            setPasswordRe("");
+        } catch (error) {
+            if (error.response.status === 400) {
+                setErrors(error.response.data.errors);
+            }
+            console.log(error);
+        }
     }
 
     /**
@@ -229,7 +249,7 @@ const Profile = () => {
                                 </div>
                                 <div className="col"></div>
                                 <div className="col-md-5">
-                                    <form className="form" method="post" noValidate onSubmit={editProfile} >
+                                    <form className="form" method="post" noValidate onSubmit={changePassword} >
                                         <h5 className="text-dark py-2">
                                             Change password
                                         </h5>
@@ -241,7 +261,7 @@ const Profile = () => {
                                                         <label htmlFor="password" className="text-dark">Password:</label><br/>
                                                         <input 
                                                             type="password"
-                                                            name="password" 
+                                                            name="password"
                                                             id="password"
                                                             placeholder="password"
                                                             value={password}

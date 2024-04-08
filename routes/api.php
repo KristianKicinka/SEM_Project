@@ -60,8 +60,8 @@ Route::group(['middleware' => ['auth:api', 'user']], function () {
     Route::post('/user/api-requests', [ApiRequestController::class, 'getRequestsUser']);
     Route::post('/user/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
     Route::post('/user/get-api-key', [ApiRequestController::class, 'getApiKey']);
-    Route::post('/user/edit', [UserController::class, 'updateUserData']);
-    Route::post('/user/change-password', [UserController::class, 'updateUserPassword']);
+    Route::post('/user/edit', [UserController::class, 'editBasicUser']);
+    Route::post('/user/change-password', [UserController::class, 'changePasswordBasicUser']);
     Route::post('/user/get-liked-apps-hashes', [LikedAppController::class, 'getLikedAppsHashes']);
     Route::post('/user/get-liked-apps', [LikedAppController::class, 'index']);
     Route::post('/user/edit-liked-apps', [LikedAppController::class, 'editLikedApps']);
