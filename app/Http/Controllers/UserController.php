@@ -32,8 +32,8 @@ class UserController extends Controller {
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'surname' => 'required',
-            'email' => 'required|email|unique:users',
-            'phone' => 'required|unique:users',
+            'email' => 'required|email:strict|unique:users',
+            'phone' => 'required|regex:/^((\+)?[0-9]{3} ?)?[0-9]{3} ?[0-9]{3} ?[0-9]{3} ?$/m|unique:users',
             'password' => 'required|min:8',
             'role' => 'required',
         ]);
@@ -76,8 +76,8 @@ class UserController extends Controller {
             'user_id' => 'required|numeric',
             'name' => 'required|string',
             'surname' => 'required|string',
-            'email' => ['required', 'email', Rule::unique('users')->ignore($request->user_id)],
-            'phone' => ['required', Rule::unique('users')->ignore($request->user_id)],
+            'email' => 'required|email:strict|unique:users',
+            'phone' => 'required|regex:/^((\+)?[0-9]{3} ?)?[0-9]{3} ?[0-9]{3} ?[0-9]{3} ?$/m|unique:users',
             'role' => 'required',
         ]);
 
@@ -131,8 +131,8 @@ class UserController extends Controller {
             'user_id' => 'required|numeric',
             'name' => 'required|string',
             'surname' => 'required|string',
-            'email' => ['required', 'email', Rule::unique('users')->ignore($request->user_id)],
-            'phone' => ['required', Rule::unique('users')->ignore($request->user_id)],
+            'email' => 'required|email:strict|unique:users',
+            'phone' => 'required|regex:/^((\+)?[0-9]{3} ?)?[0-9]{3} ?[0-9]{3} ?[0-9]{3} ?$/m|unique:users',
         ]);
 
         if ($validator->fails()) {

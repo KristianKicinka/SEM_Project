@@ -39,7 +39,7 @@ class AuthController extends Controller {
     public function login(Request $request): JsonResponse {
 
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'email' => 'required|email:strict',
             'password' => 'required',
         ]);
 
@@ -70,8 +70,8 @@ class AuthController extends Controller {
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'surname' => 'required',
-            'email' => 'required|email|unique:users',
-            'phone' => 'required|unique:users',
+            'email' => 'required|email:strict|unique:users',
+            'phone' => 'required|regex:/^((\+)?[0-9]{3} ?)?[0-9]{3} ?[0-9]{3} ?[0-9]{3} ?$/m|unique:users',
             'password' => 'required|min:8',
             're_password' => 'required|same:password',
         ]);

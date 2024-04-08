@@ -39,7 +39,7 @@ class HashProcessData {
     private int $process_part;
     private string $process_id;
     private string $process_name;
-    private string $channel_id;
+    private ?string $channel_id;
     private string $ip_address;
     private string $status;
     private int $progress;
@@ -50,11 +50,11 @@ class HashProcessData {
      * @param string $process_id Hash process ID
      * @param string $type Hash process type
      * @param string $ip_address Client IP address
-     * @param string $channel_id Pusher channel ID
+     * @param string|null $channel_id Pusher channel ID
      * @param string $process_name Name of currently processing hash process
      */
     public function __construct(
-        string $process_id, string $type, string $ip_address, string $channel_id, string $process_name){
+        string $process_id, string $type, string $ip_address, ?string $channel_id, string $process_name){
 
         $this->process_id = $process_id;
         $this->process_name = $process_name;

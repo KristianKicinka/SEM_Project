@@ -416,7 +416,7 @@ class ApiRequestController extends Controller {
 
         // Dispatching queue job
         CreateHashFromAPK::dispatch(
-            $apk_file_name, $hash_types, $request->ip(), $channel_id, $process_id,
+            $apk_file_name, $hash_types, $request->ip(), $channel_id, $process_id, $apk_file_name
         )->onQueue('process_queue');
 
         return response()
