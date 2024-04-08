@@ -135,7 +135,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
         $file_name = date('his')."_".$package_name.".apk";
         $download_dir = storage_path("app/public/uploads/apk_downloaded");
 
-        $command = "aria2c -d ".$download_dir." -o ".$file_name." ".$url;
+        $command = "aria2c -x 2 -s 2 -d ".$download_dir." -o ".$file_name." ".$url;
 
         $process = Process::fromShellCommandline($command);
         $process->run();
