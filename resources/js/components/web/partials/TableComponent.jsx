@@ -35,6 +35,8 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
 
     filteredData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
 
+    const hasFilteredData = filteredData && filteredData.length > 0;
+
     // Component body
     return (
         <div className="TableComponent pt-md-3">
@@ -72,7 +74,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                                 </tr>
                             </thead>
                             <tbody className="align-baseline">
-                                {filteredData?.map((item, key) => {
+                                {hasFilteredData ? filteredData?.map((item, key) => {
                                     return (
                                         <tr key={key}>
                                             {dataIndexes?.map((name, key) =>{
@@ -102,9 +104,11 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                                                 </div>
                                             </td>
                                         </tr>
-                                        );
-                                    })
-                                }
+                                        )}):(
+                                            <tr>
+                                                <td colSpan={columnNames.length+1}>No data found.</td>
+                                            </tr>
+                                        )}
                             </tbody>
                         </Table>
                     </div>

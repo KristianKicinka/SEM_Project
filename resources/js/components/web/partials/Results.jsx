@@ -22,7 +22,7 @@ const Results = ({ results, onClose, hashTypes }) => {
      * @returns Table row component
      */
     const dataItem = (row, index) => {
-        console.log(row.ja3_hash);
+
         return (
             <tr key={index}>
                 <td>{row.app_name}</td>

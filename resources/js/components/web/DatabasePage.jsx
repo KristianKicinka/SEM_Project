@@ -49,6 +49,8 @@ const DatabasePage = () => {
 
     filteredData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
 
+    const hasFilteredData = filteredData && filteredData.length > 0;
+
     /**
      * @brief The function ensures getting data from database
      */
@@ -116,7 +118,7 @@ const DatabasePage = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredData.map((item, key) => {
+                                        {hasFilteredData ? filteredData.map((item, key) => {
                                             return (
                                                 <tr key={key}>
                                                     <td>{item?.id}</td>
@@ -132,7 +134,11 @@ const DatabasePage = () => {
                                                     <td>{item?.created_at}</td>
                                                 </tr>
                                             );
-                                        })}
+                                        }):(
+                                            <tr>
+                                                <td colSpan={11}>No data loaded, try to refresh page.</td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </Table>
                             </div>
