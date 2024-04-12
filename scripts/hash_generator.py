@@ -776,6 +776,10 @@ if __name__ == '__main__':
         obj = {
             "ja3_hash": results[key]["ja3_hash"],
             "sni": results[key]["sni"],
+            "ip_src": results[key]["ip_src"],
+            "port_src": results[key]["port_src"],
+            "ip_dest": results[key]["ip_dest"],
+            "port_dest": results[key]["port_dest"],
             "ja3s_hash": results[key]["ja3s_hash"],
             "ja4_hash": results[key]["ja4_hash"],
             "ja4s_hash": results[key]["ja4s_hash"],

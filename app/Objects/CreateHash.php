@@ -411,11 +411,14 @@ class CreateHash {
                 'process_id' => $process_id,
                 'ja3_hash' => $hash->ja3_hash,
                 'ja3s_hash' => $hash->ja3s_hash,
-                'hash_type' => null,
                 'sni' => $hash->sni,
                 'ja4_hash' => $hash->ja4_hash,
                 'ja4s_hash' => $hash->ja4s_hash,
                 'ja4x_hash' => json_encode($hash->ja4x_hash),
+                'ip_src' => $hash->ip_src,
+                'port_src' => $hash->port_src,
+                'ip_dest' => $hash->ip_dest,
+                'port_dest' => $hash->port_dest,
             ];
 
             $db_hash = Hash::create($new_record);

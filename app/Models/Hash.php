@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Hash extends Model {
-    
+
     use HasFactory;
 
      /**
@@ -24,5 +24,9 @@ class Hash extends Model {
         'ja4_hash',
         'ja4s_hash',
         'ja4x_hash',
+        'ip_src',
+        'port_src',
+        'ip_dest',
+        'port_dest',
     ];
 }

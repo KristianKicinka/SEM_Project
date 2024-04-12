@@ -100,10 +100,13 @@ class CreateHashFromPcap extends CreateHash {
                 'ja4_hash' => $hash->ja4_hash,
                 'ja4s_hash' => $hash->ja4s_hash,
                 'ja4x_hash' => json_encode($hash->ja4x_hash),
-                'hash_type' => null,
                 'sni' => $hash->sni,
                 'is_malware' => $data['is_malware'],
                 'is_dangerous' => $data['is_dangerous'],
+                'ip_src' => $hash->ip_src,
+                'port_src' => $hash->port_src,
+                'ip_dest' => $hash->ip_dest,
+                'port_dest' => $hash->port_dest,
             ];
 
             $db_hash = Hash::create($new_record);
