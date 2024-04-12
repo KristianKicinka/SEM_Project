@@ -1,7 +1,7 @@
 /**
  * @file DatabasePage.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -26,12 +26,12 @@ const DatabasePage = () => {
     // Table columns
     const columns = [
         'id','name','package_name','version','ja3_hash', 'sni', 'ja3s_hash',
-        'ja4_hash', 'ja4s_hash', 'ja4x_hash', 'created_at'
+        'ja4_hash', 'ja4s_hash', 'ja4x_hash', 'is_dangerous', 'is_malware', 'created_at'
     ];
 
     const [currentPage, setCurrentPage] = useState(1);
     const [recordsPerPage] = useState(8);
-   
+
     let filteredData = data.filter(item => {
         let result = false;
 
@@ -103,19 +103,21 @@ const DatabasePage = () => {
                             <div className="row px-1 py-2 table-responsive">
                                 <Table className="table table-sm">
                                     <thead>
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>App name</th>
-                                            <th>Package name</th>
-                                            <th>Version</th>
-                                            <th>SNI</th>
-                                            <th>JA3 hash</th>
-                                            <th>JA3S hash</th>
-                                            <th>JA4 hash</th>
-                                            <th>JA4S hash</th>
-                                            <th>JA4X hashes</th>
-                                            <th>Created at</th>
-                                        </tr>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>App name</th>
+                                        <th>Package name</th>
+                                        <th>Version</th>
+                                        <th>SNI</th>
+                                        <th>JA3 hash</th>
+                                        <th>JA3S hash</th>
+                                        <th>JA4 hash</th>
+                                        <th>JA4S hash</th>
+                                        <th>JA4X hashes</th>
+                                        <th>Is dangerous</th>
+                                        <th>Is malware</th>
+                                        <th>Created at</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
                                         {hasFilteredData ? filteredData.map((item, key) => {
@@ -131,12 +133,14 @@ const DatabasePage = () => {
                                                     <td><b>{item?.ja4_hash}</b></td>
                                                     <td><b>{item?.ja4s_hash}</b></td>
                                                     <td><b>{item?.ja4x_hash}</b></td>
+                                                    <td><b>{item?.is_dangerous}</b></td>
+                                                    <td><b>{item?.is_malware}</b></td>
                                                     <td>{item?.created_at}</td>
                                                 </tr>
                                             );
-                                        }):(
+                                        }) : (
                                             <tr>
-                                                <td colSpan={11}>No data loaded, try to refresh page.</td>
+                                                <td colSpan={13}>No data loaded, try to refresh page.</td>
                                             </tr>
                                         )}
                                     </tbody>

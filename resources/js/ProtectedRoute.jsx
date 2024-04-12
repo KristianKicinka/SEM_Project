@@ -1,7 +1,7 @@
 /**
  * @file ProtectedRoute.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -15,7 +15,7 @@ const ProtectedRoute = ({children, userType}) =>{
     if(!user)
         return <Navigate to="/login" state={{error: 'user_not_found'}} />;
 
-    if(user.role != userType)
+    if(user.role !== userType)
         return <Navigate to="/login" state={{error: 'access_denied'}} />;
 
     return children;

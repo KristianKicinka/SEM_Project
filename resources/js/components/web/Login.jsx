@@ -1,7 +1,7 @@
 /**
  * @file Login.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -22,7 +22,7 @@ const Login = () => {
 
     /**
      * @brief The function ensures users logging in
-     * @param {*} event OnClick event 
+     * @param {*} event OnClick event
      */
     const loginUser = async (event) => {
         event.preventDefault();
@@ -33,7 +33,7 @@ const Login = () => {
         } catch (error) {
             if (error.response.status === 400)
                 setErrors(error.response.data.errors);
-            
+
             console.log(`ERROR: ${error}`);
         }
     }
@@ -57,9 +57,9 @@ const Login = () => {
                                     <h3 className="text-center text-dark py-2">Sign in</h3>
                                     <div className="form-group py-2">
                                         <label htmlFor="email" className="text-dark">E-mail:</label><br/>
-                                        <input 
-                                            type="email" 
-                                            name="email" 
+                                        <input
+                                            type="email"
+                                            name="email"
                                             id="email"
                                             placeholder="email"
                                             value={email}
@@ -69,9 +69,9 @@ const Login = () => {
                                     </div>
                                     <div className="form-group py-2">
                                         <label htmlFor="password" className="text-dark">Password:</label><br/>
-                                        <input 
+                                        <input
                                             type="password"
-                                            name="password" 
+                                            name="password"
                                             id="password"
                                             placeholder="password"
                                             value={password}
@@ -80,15 +80,15 @@ const Login = () => {
                                         {errors.password && <span className="error text-danger">{errors.password[0]}</span>}
                                     </div>
                                     <div className="form-group pt-3">
-                                        <input 
-                                            type="submit" 
-                                            name="submit" 
-                                            className="btn btn-search text-light btn-md col-md-3" 
+                                        <input
+                                            type="submit"
+                                            name="submit"
+                                            className="btn btn-search text-light btn-md col-md-3"
                                             value="Login"/>
                                     </div>
                                     <div className="form-group pt-4">
                                         <small>
-                                            Don't have an acoount? Register <Link to="/register" className="btn-link" >here</Link>. 
+                                            Don't have an account? Register <Link to="/register" className="btn-link" >here</Link>.
                                         </small>
                                     </div>
                                 </form>

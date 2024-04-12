@@ -1,7 +1,7 @@
 /**
  * @file Register.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -63,11 +63,11 @@ const Register = () => {
                                     <h3 className="text-center text-dark py-2">Sign up</h3>
                                     <div className="form-group py-2">
                                         <label htmlFor="name" className="text-dark">Name:</label><br/>
-                                        <input 
-                                            type="text" 
-                                            name="name" 
+                                        <input
+                                            type="text"
+                                            name="name"
                                             id="name"
-                                            placeholder="name" 
+                                            placeholder="name"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
                                             className="form-control"/>
@@ -75,23 +75,23 @@ const Register = () => {
                                     </div>
                                     <div className="form-group py-2">
                                         <label htmlFor="surname" className="text-dark">Surname:</label><br/>
-                                        <input 
-                                            type="text" 
-                                            name="surname" 
+                                        <input
+                                            type="text"
+                                            name="surname"
                                             id="surname"
                                             placeholder="surname"
                                             value={surname}
-                                            onChange={(e) => setSurname(e.target.value)} 
+                                            onChange={(e) => setSurname(e.target.value)}
                                             className="form-control"/>
                                         {errors.surname && <span className="error text-danger">{errors.surname[0]}</span>}
                                     </div>
                                     <div className="form-group py-2">
                                         <label htmlFor="email" className="text-dark">E-mail:</label><br/>
-                                        <input 
-                                            type="email" 
-                                            name="email" 
+                                        <input
+                                            type="email"
+                                            name="email"
                                             id="email"
-                                            placeholder="email" 
+                                            placeholder="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             className="form-control"/>
@@ -99,11 +99,11 @@ const Register = () => {
                                     </div>
                                     <div className="form-group py-2">
                                         <label htmlFor="phone" className="text-dark">Phone number:</label><br/>
-                                        <input 
-                                            type="text" 
-                                            name="phone" 
+                                        <input
+                                            type="text"
+                                            name="phone"
                                             id="phone"
-                                            placeholder="phone number" 
+                                            placeholder="phone number"
                                             value={phone}
                                             onChange={(e) => setPhone(e.target.value)}
                                             className="form-control"/>
@@ -111,38 +111,38 @@ const Register = () => {
                                     </div>
                                     <div className="form-group py-2">
                                         <label htmlFor="password" className="text-dark">Password:</label><br/>
-                                        <input 
+                                        <input
                                             type="password"
-                                            name="password" 
+                                            name="password"
                                             id="password"
                                             placeholder="password"
                                             value={password}
-                                            onChange={(e) => setPassword(e.target.value)} 
+                                            onChange={(e) => setPassword(e.target.value)}
                                             className="form-control" />
                                         {errors.password && <span className="error text-danger">{errors.password[0]}</span>}
                                     </div>
                                     <div className="form-group py-2">
                                         <label htmlFor="re-password" className="text-dark">Re-password:</label><br/>
-                                        <input 
+                                        <input
                                             type="password"
-                                            name="re-password" 
+                                            name="re-password"
                                             id="re-password"
                                             placeholder="re-password"
                                             value={passwordRe}
-                                            onChange={(e) => setPasswordRe(e.target.value)} 
+                                            onChange={(e) => setPasswordRe(e.target.value)}
                                             className="form-control" />
                                         {errors.re_password && <span className="error text-danger">{errors.re_password[0]}</span>}
                                     </div>
                                     <div className="form-group pt-3">
-                                        <input 
-                                            type="submit" 
-                                            name="submit" 
-                                            className="btn btn-search text-light btn-md col-md-3" 
+                                        <input
+                                            type="submit"
+                                            name="submit"
+                                            className="btn btn-search text-light btn-md col-md-3"
                                             value="Register"/>
                                     </div>
                                     <div className="form-group pt-4">
                                         <small>
-                                            Dou you have an acoount? Sign in <Link to="/login" className="btn-link" >here</Link>. 
+                                            Dou you have an account? Sign in <Link to="/login" className="btn-link" >here</Link>.
                                         </small>
                                     </div>
                                 </form>

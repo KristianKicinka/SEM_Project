@@ -1,7 +1,7 @@
 /**
  * @file processManagement.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -30,8 +30,8 @@ const createNewChannelID = () => {
  */
 export const setNewActiveProcess = () => {
     const processID = createNewProcessID();
-    let activeProcesses = getActvieProcesses();
-    
+    let activeProcesses = getActiveProcesses();
+
     activeProcesses.push(processID);
     localStorage.setItem('ActiveProcesses', JSON.stringify(activeProcesses));
 
@@ -42,7 +42,7 @@ export const setNewActiveProcess = () => {
  * @brief The function ensures getting active processes
  * @returns Active processes
  */
-export const getActvieProcesses = () => {
+export const getActiveProcesses = () => {
     return JSON.parse(localStorage.getItem('ActiveProcesses'));
 }
 
@@ -52,8 +52,8 @@ export const getActvieProcesses = () => {
  */
 export const setNewActiveChannel = () => {
     const channelID = createNewChannelID();
-    let activeChannels = getActvieProcesses();
-    
+    let activeChannels = getActiveProcesses();
+
     activeChannels.push(channelID);
     localStorage.setItem('ActiveChannels', JSON.stringify(activeChannels));
 
@@ -64,7 +64,7 @@ export const setNewActiveChannel = () => {
  * @brief The function ensures getting active channels
  * @returns Active channels
  */
-export const getActvieChannels = () => {
+export const getActiveChannels = () => {
     return JSON.parse(localStorage.getItem('ActiveChannels'));
 }
 

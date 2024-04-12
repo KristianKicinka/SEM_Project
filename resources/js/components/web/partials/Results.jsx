@@ -1,7 +1,7 @@
 /**
  * @file Results.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -50,7 +50,7 @@ const Results = ({ results, onClose, hashTypes }) => {
                         <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Pcakage name</th>
+                                <th>Package name</th>
                                 <th>Version</th>
                                 <th>SNI</th>
                                 {(hashTypes.includes("JA3")) ? <th>JA3 hash</th> : null}

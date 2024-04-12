@@ -1,12 +1,12 @@
 /**
  * @file AuthUser.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
-import React, { Component, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
 import axios from 'axios';
 
 
@@ -18,9 +18,7 @@ const AuthUser = () => {
      */
     const getToken = () =>{
         const tokenString = sessionStorage.getItem('auth_token');
-        const userToken = JSON.parse(tokenString);
-
-        return userToken;
+        return JSON.parse(tokenString);
     };
 
     /**
@@ -29,9 +27,7 @@ const AuthUser = () => {
      */
     const getUser = () => {
         const userString = sessionStorage.getItem('auth_user');
-        const userDetail = JSON.parse(userString);
-
-        return userDetail;
+        return JSON.parse(userString);
     };
 
     /**
@@ -62,9 +58,9 @@ const AuthUser = () => {
 
         handleTokenExpiry();
 
-        if(user.role == 'admin')
+        if(user.role === 'admin')
             navigate('/admin/dashboard');
-        if(user.role == 'basic_user')
+        if(user.role === 'basic_user')
             navigate('/user/dashboard');
     };
 
@@ -104,7 +100,7 @@ const AuthUser = () => {
         }
     };
 
-    // HTTP asxios object for JSON requests
+    // HTTP axios object for JSON requests
     const http = axios.create({
         baseURL: `/api`,
         headers: {
@@ -113,7 +109,7 @@ const AuthUser = () => {
         }
     });
 
-    // HTTP asxios object for files requests
+    // HTTP axios object for files requests
     const http_file = axios.create({
         baseURL: `/api`,
         headers: {

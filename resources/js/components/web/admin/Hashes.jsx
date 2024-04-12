@@ -1,7 +1,7 @@
 /**
  * @file Hashes.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -19,8 +19,14 @@ import DeleteHash from "./partials/hashes/DeleteHash";
 import UpdateHash from "./partials/hashes/UpdateHash";
 
 // Table headers
-const columnNames = ["ID", "App Name", "Package name", "Version", "SNI", "JA3 hash", "JA3S hash", "JA4 hash", "JA4S hash", "JA4X hash"];
-const dataIndexes = ["id", "app_name", "package_name", "version", "sni", "ja3_hash", "ja3s_hash", "ja4_hash", "ja4s_hash", "ja4x_hash"];
+const columnNames = [
+    "ID", "App Name", "Package name", "Version", "SNI", "JA3 hash", "JA3S hash", "JA4 hash", "JA4S hash", "JA4X hash",
+    "Is dangerous", "Is malware"
+];
+const dataIndexes = [
+    "id", "app_name", "package_name", "version", "sni", "ja3_hash", "ja3s_hash", "ja4_hash", "ja4s_hash", "ja4x_hash",
+    "is_dangerous", "is_malware"
+];
 
 
 const Hashes = () => {
@@ -78,7 +84,7 @@ const Hashes = () => {
             console.log(error);
         }
     }
-    
+
     useEffect(() => {
         fetchData();
         const interval = setInterval(() => {fetchData()}, 3000);
@@ -93,27 +99,27 @@ const Hashes = () => {
                 <div className="col-md-10 px-0">
                     <Navbar />
                     <div className="container-fluid">
-                        <CreateHash  
+                        <CreateHash
                             show={createModalShow}
                             setFetchDataState={setFetchDataState}
                             handleClose={() => setCreateModalShow(false)}
                         />
-                        <DeleteHash 
-                            show={deleteModalShow} 
+                        <DeleteHash
+                            show={deleteModalShow}
                             hash={hashOnDelete}
                             setFetchDataState={setFetchDataState}
                             handleClose={() => setDeleteModalShow(false)}
                         />
-                        <UpdateHash 
-                            show={updateModalShow} 
+                        <UpdateHash
+                            show={updateModalShow}
                             hash={hashOnUpdate}
                             setFetchDataState={setFetchDataState}
                             handleClose={() => setUpdateModalShow(false)}
                         />
-                        <TableComponent 
-                            data={hashes} 
-                            dataIndexes={dataIndexes} 
-                            columnNames={columnNames} 
+                        <TableComponent
+                            data={hashes}
+                            dataIndexes={dataIndexes}
+                            columnNames={columnNames}
                             buttons={buttons}
                             tableName={"Hashes"}
                         />
