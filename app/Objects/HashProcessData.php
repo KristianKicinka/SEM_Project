@@ -132,6 +132,14 @@ class HashProcessData {
     }
 
     /**
+     * @brief The function serves to get current process part
+     * @return int Process part ID
+     */
+    public function getProcessPart(): int {
+        return $this->process_part;
+    }
+
+    /**
      * @brief The function ensures saving data to database and send process notification to pusher channel
      * @return void
      */
