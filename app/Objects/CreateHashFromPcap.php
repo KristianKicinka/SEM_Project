@@ -72,12 +72,16 @@ class CreateHashFromPcap extends CreateHash {
             'name' => $data['app_name'],
             'package_name' => $data['package_name'],
             'version' => $data['version'],
+            'is_malware' => $data['is_malware'],
+            'is_dangerous' => $data['is_dangerous'],
         ];
 
         $new_application = [
             'name' => $data['app_name'],
             'package_name' => $data['package_name'],
             'version' => $data['version'],
+            'is_malware' => $data['is_malware'],
+            'is_dangerous' => $data['is_dangerous'],
         ];
 
         $application = Application::firstOrCreate($identifier, $new_application);
@@ -101,8 +105,6 @@ class CreateHashFromPcap extends CreateHash {
                 'ja4s_hash' => $hash->ja4s_hash,
                 'ja4x_hash' => json_encode($hash->ja4x_hash),
                 'sni' => $hash->sni,
-                'is_malware' => $data['is_malware'],
-                'is_dangerous' => $data['is_dangerous'],
                 'ip_src' => $hash->ip_src,
                 'port_src' => $hash->port_src,
                 'ip_dest' => $hash->ip_dest,

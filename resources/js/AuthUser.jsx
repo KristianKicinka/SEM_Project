@@ -12,6 +12,9 @@ import axios from 'axios';
 
 const AuthUser = () => {
 
+    let manualLogout = false;
+    let timeoutID;
+
     /**
      * @brief The function ensures getting auth token
      * @returns User auth token
@@ -68,7 +71,11 @@ const AuthUser = () => {
      * @brief The function ensures logging out users
      */
     const logout = () => {
+        manualLogout = true;
+
+        let timeout = Number(sessionStorage.getItem('expiry_timeout'));
         sessionStorage.clear();
+        clearTimeout(timeout);
         navigate('/login');
     }
 
@@ -78,7 +85,8 @@ const AuthUser = () => {
      * @returns isExpired bool value
      */
     const isTokenExpired = (token) => {
-        if (!token) return true;
+        if (!token)
+            return true;
 
         const decodedToken = JSON.parse(atob(token.split('.')[1]));
         const expiryTime = decodedToken.exp * 1000;
@@ -94,8 +102,9 @@ const AuthUser = () => {
         const token = sessionStorage.getItem('auth_token');
 
         if (token && !isTokenExpired(token)) {
-          setTimeout(handleTokenExpiry, 60000);
-        } else {
+          let timeout= setTimeout(handleTokenExpiry, 60000);
+          sessionStorage.setItem('expiry_timeout', timeout.toString());
+        } else if (!manualLogout) {
           logout();
         }
     };

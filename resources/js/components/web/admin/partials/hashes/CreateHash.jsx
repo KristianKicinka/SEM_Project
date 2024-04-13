@@ -157,8 +157,8 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                                 value={appVersionText}
                                                 onChange={(e) => setAppVersionText(e.target.value)}
                                                 className="form-control"/>
-                                            {errors.version &&
-                                                <span className="error text-danger">{errors.version[0]}</span>}
+                                            {errors.app_version &&
+                                                <span className="error text-danger">{errors.app_version[0]}</span>}
                                         </div>
                                         <div className="form-group py-2">
                                             <label htmlFor="sni" className="text-dark">SNI:</label><br/>

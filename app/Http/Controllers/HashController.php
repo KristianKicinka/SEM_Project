@@ -178,12 +178,12 @@ class HashController extends Controller {
             'app_name' => 'required|string',
             'package_name' => 'required|string',
             'app_version' => 'required|string',
-            'ja3_hash' => 'required|string',
-            'ja3s_hash' => 'required|string',
-            'sni' => 'required|string',
-            'ja4_hash' => 'required|string',
-            'ja4s_hash' => 'required|string',
-            'ja4x_hash' => 'required|json',
+            'ja3_hash' => 'nullable|string',
+            'ja3s_hash' => 'nullable|string',
+            'sni' => 'nullable|string',
+            'ja4_hash' => 'nullable|string',
+            'ja4s_hash' => 'nullable|string',
+            'ja4x_hash' => 'nullable|json',
             'is_malware' => 'required|bool',
             'is_dangerous' => 'required|bool',
             'ip_src' => 'required|ip',
@@ -196,15 +196,25 @@ class HashController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
-        $application = Application::create([
+        $app_identifier = [
             'name' => $request->app_name,
             'package_name' => $request->package_name,
             'version' => $request->app_version,
-        ]);
+            'is_malware' => $request->is_malware,
+            'is_dangerous' => $request->is_dangerous,
+        ];
 
-        $application->save();
+        $new_application = [
+            'name' => $request->app_name,
+            'package_name' => $request->package_name,
+            'version' => $request->app_version,
+            'is_malware' => $request->is_malware,
+            'is_dangerous' => $request->is_dangerous,
+        ];
 
-        $identifier = [
+        $application = Application::firstOrCreate($app_identifier, $new_application);
+
+        $hash_identifier = [
             'app_id' => $application->id,
             'ja3_hash' => $request->ja3_hash,
             'ja3s_hash' => $request->ja3_hash,
@@ -226,15 +236,13 @@ class HashController extends Controller {
             'ja4_hash' => $request->ja4_hash,
             'ja4s_hash' => $request->ja4s_hash,
             'ja4x_hash' => $request->ja4x_hash,
-            'is_malware' => $request->is_malware,
-            'is_dangerous' => $request->is_dangerous,
             'ip_src' => $request->ip_src,
             'port_src' => $request->port_src,
             'ip_dest' => $request->ip_dest,
             'port_dest' => $request->port_dest,
         ];
 
-        Hash::firstOrCreate($identifier, $new_record);
+        Hash::firstOrCreate($hash_identifier, $new_record);
 
         return response()->json('process success!', 200);
     }
@@ -392,12 +400,12 @@ class HashController extends Controller {
             'app_name' => 'required|string',
             'package_name' => 'required|string',
             'version' => 'required|string',
-            'sni' => 'required|string',
-            'ja3_hash' => 'required|string',
-            'ja3s_hash' => 'required|string',
-            'ja4_hash' => 'required|string',
-            'ja4s_hash' => 'required|string',
-            'ja4x_hash' => 'required|string',
+            'sni' => 'nullable|string',
+            'ja3_hash' => 'nullable|string',
+            'ja3s_hash' => 'nullable|string',
+            'ja4_hash' => 'nullable|string',
+            'ja4s_hash' => 'nullable|string',
+            'ja4x_hash' => 'nullable|json',
             'is_malware' => 'required|bool',
             'is_dangerous' => 'required|bool',
             'ip_src' => 'required|ip',
