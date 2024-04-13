@@ -40,6 +40,10 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const [errors, setErrors] = useState({});
     const {http, http_file} = AuthUser();
 
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    console.log(isProcessing);
+
     /**
      * @brief The function ensures creating hash from text input
      * @param {*} e Text input event
@@ -84,6 +88,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
      */
     const createHashFromPcapFile = async (e) => {
         e.preventDefault();
+        setIsProcessing(true);
 
         const data = new FormData();
         data.append("app_name_pcap", appNamePcap);
@@ -96,6 +101,7 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         try {
             let resp = await http_file.post('/admin/hash/create/pcap-file', data);
             setFetchDataState(prevState => !prevState);
+            setIsProcessing(false);
             //clearInputs();
             handleClose();
         } catch (error) {
@@ -402,7 +408,10 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                         type="submit"
                                         name="submit"
                                         className="btn btn-search text-light btn-md col-md-10"
-                                        value="Create new hash"/>
+                                        value={isProcessing ? "Processing..." : "Create new hash"}
+                                        disabled={isProcessing}
+                                    />
+                                    {isProcessing && <span className="spinner-border spinner-border-sm mx-3" role="status" aria-hidden="true"></span>}
                                 </div>
                             </form>
                         </div>

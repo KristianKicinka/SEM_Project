@@ -1,7 +1,7 @@
 /**
  * @file ApkInput.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -53,7 +53,7 @@ const ApkInput = ({ hashTypes }) => {
             });
             data.append("files[]", apkFile);
         });
-        
+
         data.append("processes", JSON.stringify(processes));
         data.append("hash_types", JSON.stringify(hashTypes));
         data.append("channel_id", channel_id);
@@ -62,7 +62,7 @@ const ApkInput = ({ hashTypes }) => {
         setShowLoading(true);
 
         try {
-            let results = await axios.post('/api/create-hash-apk', data, { 
+            let results = await axios.post('/api/create-hash-apk', data, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 }

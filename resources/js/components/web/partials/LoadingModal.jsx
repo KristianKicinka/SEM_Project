@@ -1,7 +1,7 @@
 /**
  * @file LoadingModal.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -29,7 +29,7 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
             // Setting new updated data to processes
             setUpdatedProcesses(prevProcesses => {
                 const index = prevProcesses.findIndex(process => process.process_id === data.process_id);
-                
+
                 if (index !== -1){
                     const updatedProcesses = [...prevProcesses];
                     updatedProcesses[index] = { ...updatedProcesses[index], ...data };
@@ -71,13 +71,16 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
             console.log(`ERROR: ${error}`);
         }
     }
-    
+
     /**
      * @brief The function ensures loading items creation
      * @param {*} process Process data object
      * @returns Loading item component
      */
     const loadingItem = (process) => {
+
+        let is_processing = (process.status !== 'failed' && process.status !== 'finished');
+
         return (
             <tr key={process.process_id} className="align-middle gx-5">
                 <td className="col">{process.name}</td>
@@ -85,6 +88,7 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
                 <td className="col text-center">{process.message}</td>
                 <td className="col">{process.status}</td>
                 <td className="col text-center">
+                    {is_processing && <span className="spinner-border spinner-border-sm text-orange" role="status" aria-hidden="true"></span>}
                     {process.status === 'failed' && <Badge bg="danger">Process failed!</Badge>}
                     {process.status === 'finished' && ( <button className="btn btn-sm btn-search text-light" onClick={() => getResults(process.process_id)}>Show Results</button>)}
                 </td>
