@@ -20,12 +20,12 @@ import UpdateHash from "./partials/hashes/UpdateHash";
 
 // Table headers
 const columnNames = [
-    "ID", "App Name", "Package name", "Version", "SNI", "JA3 hash", "JA3S hash", "JA4 hash", "JA4S hash", "JA4X hash",
-    "Is dangerous", "Is malware"
+    "ID", "App Name", "Package name", "Version", "Src IP", "Src port", "Dest IP", "Dest port", "SNI", "JA3 hash",
+    "JA3S hash", "JA4 hash", "JA4S hash", "JA4X hash", "Is dangerous", "Is malware"
 ];
 const dataIndexes = [
-    "id", "app_name", "package_name", "version", "sni", "ja3_hash", "ja3s_hash", "ja4_hash", "ja4s_hash", "ja4x_hash",
-    "is_dangerous", "is_malware"
+    "id", "app_name", "package_name", "version", "ip_src", "port_src", "ip_dest", "port_dest", "sni", "ja3_hash",
+    "ja3s_hash", "ja4_hash", "ja4s_hash", "ja4x_hash", "is_dangerous", "is_malware"
 ];
 
 

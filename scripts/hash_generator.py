@@ -704,6 +704,32 @@ def get_results_with_ja4x(pcap_file, results):
 
     return results
 
+
+def remove_duplicities(data):
+    """
+    The function ensures removing duplicities from results
+
+    Parameters:
+    data (lit): list with results.
+
+    Returns:
+    list: updated results list.
+    """
+    unique_keys = set()
+    results = []
+
+    for item in data:
+        key = (
+            item["ja3_hash"], item["ja3s_hash"], item["ja4_hash"], item["ja4s_hash"],
+            item["sni"], tuple(item["ja4x_hash"])
+        )
+
+        if key not in unique_keys:
+            unique_keys.add(key)
+            results.append(item)
+
+    return results
+
 if __name__ == '__main__':
     load_layer('tls')
 
@@ -790,9 +816,8 @@ if __name__ == '__main__':
     # Remove advertisements servers
     array_results = remove_adds(array_results)
 
-    # Remove duplicities
-    tuple_of_results = [tuple(sorted((k, tuple(v) if isinstance(v, list) else v) for k, v in res.items())) for res in array_results]
-    unique_tuples = set(tuple_of_results)
-    array_results = [dict(tp) for tp in unique_tuples]
+    # Filter out duplicate dictionaries
+    filtered_results = remove_duplicities(array_results)
 
-    print(json.dumps(array_results))
+    # Send output
+    print(json.dumps(filtered_results))

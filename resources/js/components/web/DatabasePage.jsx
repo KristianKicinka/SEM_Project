@@ -26,7 +26,8 @@ const DatabasePage = () => {
     // Table columns
     const columns = [
         'id','name','package_name','version','ja3_hash', 'sni', 'ja3s_hash',
-        'ja4_hash', 'ja4s_hash', 'ja4x_hash', 'is_dangerous', 'is_malware', 'created_at'
+        'ja4_hash', 'ja4s_hash', 'ja4x_hash', 'is_dangerous', 'is_malware',
+        'ip_src', 'port_src', 'ip_dest', 'port_dest', 'created_at'
     ];
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -116,6 +117,10 @@ const DatabasePage = () => {
                                         <th>JA4X hashes</th>
                                         <th>Is dangerous</th>
                                         <th>Is malware</th>
+                                        <th>IP src</th>
+                                        <th>Port src</th>
+                                        <th>IP dest</th>
+                                        <th>Port dest</th>
                                         <th>Created at</th>
                                     </tr>
                                     </thead>
@@ -135,6 +140,10 @@ const DatabasePage = () => {
                                                     <td><b>{item?.ja4x_hash}</b></td>
                                                     <td><b>{item?.is_dangerous}</b></td>
                                                     <td><b>{item?.is_malware}</b></td>
+                                                    <td><b>{item?.ip_src}</b></td>
+                                                    <td><b>{item?.port_src}</b></td>
+                                                    <td><b>{item?.ip_dest}</b></td>
+                                                    <td><b>{item?.port_dest}</b></td>
                                                     <td>{item?.created_at}</td>
                                                 </tr>
                                             );

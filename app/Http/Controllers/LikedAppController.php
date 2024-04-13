@@ -99,7 +99,9 @@ class LikedAppController extends Controller {
             'applications.name as app_name','applications.package_name as package_name',
             'applications.version as app_version','hashes.ja3_hash as ja3_hash',
             'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash',
-            'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash'
+            'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash', 'hashes.ja4x_hash',
+            'hashes.ip_src', 'hashes.port_src', 'hashes.ip_dest', 'hashes.port_dest',
+            'applications.is_malware', 'applications.is_dangerous'
         )->distinct()
         ->join('hashes', 'hashes.app_id', '=', 'applications.id');
 

@@ -19,9 +19,9 @@ return new class extends Migration
             $table->bigInteger('process_id')->unsigned()->nullable();
 
             $table->string('ip_src')->nullable();
-            $table->string('port_src')->nullable();
+            $table->integer('port_src')->nullable();
             $table->string('ip_dest')->nullable();
-            $table->string('port_dest')->nullable();
+            $table->integer('port_dest')->nullable();
 
             $table->string('sni')->nullable();
             $table->string('ja3_hash')->nullable();
@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('ja4_hash')->nullable();
             $table->string('ja4s_hash')->nullable();
             $table->json('ja4x_hash')->nullable();
+
             $table->timestamps();
             $table->foreign('app_id')->references('id')->on('applications');
             $table->foreign('process_id')->references('id')->on('processes');

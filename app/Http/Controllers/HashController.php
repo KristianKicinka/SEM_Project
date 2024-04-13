@@ -186,6 +186,10 @@ class HashController extends Controller {
             'ja4x_hash' => 'required|json',
             'is_malware' => 'required|bool',
             'is_dangerous' => 'required|bool',
+            'ip_src' => 'required|ip',
+            'port_src' => 'required|numeric',
+            'ip_dest'=> 'required|ip',
+            'port_dest' => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -208,6 +212,10 @@ class HashController extends Controller {
             'ja4_hash' => $request->ja4_hash,
             'ja4s_hash' => $request->ja4s_hash,
             'ja4x_hash' => $request->ja4x_hash,
+            'ip_src' => $request->ip_src,
+            'port_src' => $request->port_src,
+            'ip_dest' => $request->ip_dest,
+            'port_dest' => $request->port_dest,
         ];
 
         $new_record = [
@@ -220,6 +228,10 @@ class HashController extends Controller {
             'ja4x_hash' => $request->ja4x_hash,
             'is_malware' => $request->is_malware,
             'is_dangerous' => $request->is_dangerous,
+            'ip_src' => $request->ip_src,
+            'port_src' => $request->port_src,
+            'ip_dest' => $request->ip_dest,
+            'port_dest' => $request->port_dest,
         ];
 
         Hash::firstOrCreate($identifier, $new_record);
@@ -349,7 +361,9 @@ class HashController extends Controller {
         $data = DB::table('applications')
             ->join('hashes','applications.id','=','hashes.app_id')
             ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash','ja4_hash','ja4s_hash', 'ja4x_hash',
-                'name AS app_name', 'package_name', 'version', 'is_dangerous', 'is_malware')
+                'name AS app_name', 'package_name', 'version', 'is_dangerous', 'is_malware', 'ip_src',
+                'port_src', 'ip_dest', 'port_dest'
+            )
             ->distinct()
             ->get();
 
@@ -386,6 +400,10 @@ class HashController extends Controller {
             'ja4x_hash' => 'required|string',
             'is_malware' => 'required|bool',
             'is_dangerous' => 'required|bool',
+            'ip_src' => 'required|ip',
+            'port_src' => 'required|numeric',
+            'ip_dest'=> 'required|ip',
+            'port_dest' => 'required|numeric',
         ]);
 
         if ($validator->fails()) {
@@ -407,6 +425,10 @@ class HashController extends Controller {
             'hashes.ja4x_hash' => $request->ja4x_hash,
             'applications.is_malware' => $request->is_malware,
             'applications.is_dangerous' => $request->is_dangerous,
+            'ip_src' => $request->ip_src,
+            'port_src' => $request->port_src,
+            'ip_dest' => $request->ip_dest,
+            'port_dest' => $request->port_dest,
         ]);
 
         return response()->json(['status' => 'success'], 200);

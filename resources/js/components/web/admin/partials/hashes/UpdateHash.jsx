@@ -1,7 +1,7 @@
 /**
  * @file UpdateHash.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -18,6 +18,10 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
     const [packageName, setPackageName] = useState('');
     const [version, setVersion] = useState('');
     const [sni, setSni] = useState('');
+    const [ipSrc, setIpSrc] = useState('');
+    const [portSrc, setPortSrc] = useState('');
+    const [ipDest, setIpDest] = useState('');
+    const [portDest, setPortDest] = useState('');
     const [ja3Hash, setJa3Hash] = useState('');
     const [ja3sHash, setJa3sHash] = useState('');
     const [ja4Hash, setJa4Hash] = useState('');
@@ -39,8 +43,9 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
         const hashData = {
             hash_id:hash.id, app_name:appName, package_name:packageName,
             version:version, sni:sni, ja3_hash:ja3Hash, ja3s_hash:ja3sHash,
-            ja4_hash:ja4Hash, ja4s_hash:ja4sHash, ja4x_hash:ja4xHash, 
-            is_dangerous:isDangerous, is_malware:isMalware,
+            ja4_hash:ja4Hash, ja4s_hash:ja4sHash, ja4x_hash:ja4xHash,
+            is_dangerous:isDangerous, is_malware:isMalware,ip_src:ipSrc,
+            port_src:Number(portSrc), ip_dest:ipDest, port_dest:Number(portDest),
         };
 
         try {
@@ -67,24 +72,28 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
         setJa4xHash(hash?.ja4x_hash);
         setIsDangerous(hash?.is_dangerous);
         setIsMalware(hash?.is_malware);
+        setIpSrc(hash?.ip_src);
+        setPortSrc(hash?.port_src);
+        setIpDest(hash?.ip_dest);
+        setPortDest(hash?.port_dest);
     },[hash]);
 
     // Component body
     return (
-        <Modal show={show} onHide={handleClose}>
+        <Modal show={show} onHide={handleClose} size={"lg"}>
             <Modal.Header closeButton>
                 <Modal.Title>Update hash data</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <div className="container-fluid">
-                    <div className="row">
-                        <div className="col">
-                            <form className="form" method="post" noValidate onSubmit={updateHashData} >
+                    <form className="form" method="post" noValidate onSubmit={updateHashData}>
+                        <div className="row">
+                            <div className="col">
                                 <div className="form-group py-2">
                                     <label htmlFor="app_name" className="text-dark">App name:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="app_name" 
+                                    <input
+                                        type="text"
+                                        name="app_name"
                                         id="app_name"
                                         placeholder="app name"
                                         value={appName}
@@ -94,23 +103,24 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
                                 </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="package_name" className="text-dark">Package name:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="package_name" 
+                                    <input
+                                        type="text"
+                                        name="package_name"
                                         id="package_name"
                                         placeholder="package_name"
                                         value={packageName}
-                                        onChange={(e) => setPackageName(e.target.value)} 
+                                        onChange={(e) => setPackageName(e.target.value)}
                                         className="form-control"/>
-                                    {errors.package_name && <span className="error text-danger">{errors.package_name[0]}</span>}
-                                </div>           
+                                    {errors.package_name &&
+                                        <span className="error text-danger">{errors.package_name[0]}</span>}
+                                </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="version" className="text-dark">Version:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="version" 
+                                    <input
+                                        type="text"
+                                        name="version"
                                         id="version"
-                                        placeholder="version" 
+                                        placeholder="version"
                                         value={version}
                                         onChange={(e) => setVersion(e.target.value)}
                                         className="form-control"/>
@@ -118,23 +128,73 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
                                 </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="sni" className="text-dark">SNI:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="sni" 
+                                    <input
+                                        type="text"
+                                        name="sni"
                                         id="sni"
-                                        placeholder="sni" 
+                                        placeholder="sni"
                                         value={sni}
                                         onChange={(e) => setSni(e.target.value)}
                                         className="form-control"/>
                                     {errors.sni && <span className="error text-danger">{errors.sni[0]}</span>}
                                 </div>
                                 <div className="form-group py-2">
+                                    <label htmlFor="sni" className="text-dark">IP src:</label><br/>
+                                    <input
+                                        type="text"
+                                        name="ip_src"
+                                        id="ip_src"
+                                        placeholder="ip src"
+                                        value={ipSrc}
+                                        onChange={(e) => setIpSrc(e.target.value)}
+                                        className="form-control"/>
+                                    {errors.ip_src && <span className="error text-danger">{errors.ip_src[0]}</span>}
+                                </div>
+                                <div className="form-group py-2">
+                                    <label htmlFor="port_src" className="text-dark">Port src:</label><br/>
+                                    <input
+                                        type="text"
+                                        name="port_src"
+                                        id="port_src"
+                                        placeholder="port src"
+                                        value={portSrc}
+                                        onChange={(e) => setPortSrc(e.target.value)}
+                                        className="form-control"/>
+                                    {errors.port_src && <span className="error text-danger">{errors.port_src[0]}</span>}
+                                </div>
+                                <div className="form-group py-2">
+                                    <label htmlFor="ip_dest" className="text-dark">IP dest:</label><br/>
+                                    <input
+                                        type="text"
+                                        name="ip_dest"
+                                        id="ip_dest"
+                                        placeholder="ip dest"
+                                        value={ipDest}
+                                        onChange={(e) => setIpDest(e.target.value)}
+                                        className="form-control"/>
+                                    {errors.ip_dest && <span className="error text-danger">{errors.ip_dest[0]}</span>}
+                                </div>
+                                <div className="form-group py-2">
+                                    <label htmlFor="port_dest" className="text-dark">Port dest:</label><br/>
+                                    <input
+                                        type="text"
+                                        name="port_dest"
+                                        id="port_dest"
+                                        placeholder="port dest"
+                                        value={portDest}
+                                        onChange={(e) => setPortDest(e.target.value)}
+                                        className="form-control"/>
+                                    {errors.port_dest && <span className="error text-danger">{errors.port_dest[0]}</span>}
+                                </div>
+                            </div>
+                            <div className="col">
+                                <div className="form-group py-2">
                                     <label htmlFor="ja3_hash" className="text-dark">JA3 hash:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="ja3_hash" 
+                                    <input
+                                        type="text"
+                                        name="ja3_hash"
                                         id="ja3_hash"
-                                        placeholder="ja3_hash" 
+                                        placeholder="ja3_hash"
                                         value={ja3Hash}
                                         onChange={(e) => setJa3Hash(e.target.value)}
                                         className="form-control"/>
@@ -142,23 +202,24 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
                                 </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="ja3s_hash" className="text-dark">JA3S hash:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="ja3s_hash" 
+                                    <input
+                                        type="text"
+                                        name="ja3s_hash"
                                         id="ja3s_hash"
-                                        placeholder="ja3s_hash" 
+                                        placeholder="ja3s_hash"
                                         value={ja3sHash}
                                         onChange={(e) => setJa3sHash(e.target.value)}
                                         className="form-control"/>
-                                    {errors.ja3s_hash && <span className="error text-danger">{errors.ja3s_hash[0]}</span>}
+                                    {errors.ja3s_hash &&
+                                        <span className="error text-danger">{errors.ja3s_hash[0]}</span>}
                                 </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="ja4_hash" className="text-dark">JA4 hash:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="ja4_hash" 
+                                    <input
+                                        type="text"
+                                        name="ja4_hash"
                                         id="ja4_hash"
-                                        placeholder="ja4_hash" 
+                                        placeholder="ja4_hash"
                                         value={ja4Hash}
                                         onChange={(e) => setJa4Hash(e.target.value)}
                                         className="form-control"/>
@@ -166,32 +227,34 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
                                 </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="ja4s_hash" className="text-dark">JA4S hash:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="ja4s_hash" 
+                                    <input
+                                        type="text"
+                                        name="ja4s_hash"
                                         id="ja4s_hash"
-                                        placeholder="ja4s_hash" 
+                                        placeholder="ja4s_hash"
                                         value={ja4sHash}
                                         onChange={(e) => setJa4sHash(e.target.value)}
                                         className="form-control"/>
-                                    {errors.ja4s_hash && <span className="error text-danger">{errors.ja4s_hash[0]}</span>}
+                                    {errors.ja4s_hash &&
+                                        <span className="error text-danger">{errors.ja4s_hash[0]}</span>}
                                 </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="ja4x_hash" className="text-dark">JA4X hash:</label><br/>
-                                    <input 
-                                        type="text" 
-                                        name="ja4x_hash" 
+                                    <input
+                                        type="text"
+                                        name="ja4x_hash"
                                         id="ja4x_hash"
-                                        placeholder="ja4x_hash" 
+                                        placeholder="ja4x_hash"
                                         value={ja4xHash}
                                         onChange={(e) => setJa4xHash(e.target.value)}
                                         className="form-control"/>
-                                    {errors.ja4x_hash && <span className="error text-danger">{errors.ja4x_hash[0]}</span>}
+                                    {errors.ja4x_hash &&
+                                        <span className="error text-danger">{errors.ja4x_hash[0]}</span>}
                                 </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="is_malware" className="text-dark">Is malware:</label><br/>
-                                    <select 
-                                        className="form-select" 
+                                    <select
+                                        className="form-select"
                                         aria-label="Select if is a malware"
                                         value={isMalware}
                                         onChange={(e) => setIsMalware(e.target.value)}
@@ -199,12 +262,13 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
                                         <option value={0}>is not malware</option>
                                         <option value={1}>malware</option>
                                     </select>
-                                    {errors.is_malware && <span className="error text-danger">{errors.is_malware[0]}</span>}
+                                    {errors.is_malware &&
+                                        <span className="error text-danger">{errors.is_malware[0]}</span>}
                                 </div>
                                 <div className="form-group py-2">
                                     <label htmlFor="is_dangerous" className="text-dark">Is dangerous:</label><br/>
-                                    <select 
-                                        className="form-select" 
+                                    <select
+                                        className="form-select"
                                         aria-label="Select if is a malware"
                                         value={isDangerous}
                                         onChange={(e) => setIsDangerous(e.target.value)}
@@ -212,18 +276,25 @@ const UpdateHash = ({show, hash, handleClose, setFetchDataState}) => {
                                         <option value={0}>is not dangerous</option>
                                         <option value={1}>dangerous</option>
                                     </select>
-                                    {errors.is_dangerous && <span className="error text-danger">{errors.is_dangerous[0]}</span>}
+                                    {errors.is_dangerous &&
+                                        <span className="error text-danger">{errors.is_dangerous[0]}</span>}
                                 </div>
+                            </div>
+                        </div>
+                        <div className="row">
+                            <div className="col"></div>
+                            <div className="col">
                                 <div className="form-group pt-3 text-center">
-                                    <input 
-                                        type="submit" 
-                                        name="submit" 
-                                        className="btn btn-search text-light btn-md col-md-10" 
+                                    <input
+                                        type="submit"
+                                        name="submit"
+                                        className="btn btn-search text-light btn-md col-md-10"
                                         value="Save data"/>
                                 </div>
-                            </form>
+                            </div>
+                            <div className="col"></div>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </Modal.Body>
         </Modal>
