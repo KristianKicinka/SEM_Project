@@ -149,7 +149,7 @@ const DatabasePage = () => {
                                             );
                                         }) : (
                                             <tr>
-                                                <td colSpan={13}>No data loaded, try to refresh page.</td>
+                                                <td colSpan={17}>No data loaded, try to refresh page.</td>
                                             </tr>
                                         )}
                                     </tbody>
