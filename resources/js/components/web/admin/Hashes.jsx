@@ -17,6 +17,7 @@ import AuthUser from "../../../AuthUser";
 import CreateHash from "./partials/hashes/CreateHash";
 import DeleteHash from "./partials/hashes/DeleteHash";
 import UpdateHash from "./partials/hashes/UpdateHash";
+import Ja4xInfo from "../partials/Ja4xInfo";
 
 // Table headers
 const columnNames = [

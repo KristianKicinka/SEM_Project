@@ -5,15 +5,19 @@
  * @copyright Copyright (c) 2024
  */
 
-import React from "react";
+import React, {useState} from "react";
 import ReactDOM from "react-dom";
 import { Modal, Button } from "react-bootstrap";
 import CopyClipboard from "./CopyClipboard";
+import Ja4xInfo from "./Ja4xInfo";
 
 
 const Results = ({ results, onClose, hashTypes }) => {
 
     const hasResults = results && results.length > 0;
+
+    const [ja4xToShow, setJa4xToShow] = useState(null);
+    const [showJa4xModal, setShowJa4xModal] = useState(false);
 
     /**
      * @brief The function ensures data item creation
@@ -33,9 +37,29 @@ const Results = ({ results, onClose, hashTypes }) => {
                 {(hashTypes.includes("JA3S")) ? <td><CopyClipboard text={row.ja3s_hash}/></td> : null}
                 {(hashTypes.includes("JA4")) ? <td><CopyClipboard text={row.ja4_hash}/></td> : null}
                 {(hashTypes.includes("JA4S")) ? <td><CopyClipboard text={row.ja4s_hash}/></td> : null}
-                {(hashTypes.includes("JA4X")) ? <td><CopyClipboard text={row.ja4x_hash}/></td> : null}
+                {(hashTypes.includes("JA4X")) ? <td>
+                    <button className="btn btn-sm btn-search text-light"
+                            onClick={() => handleJA4XClick(row.ja4x_hash)}>show
+                    </button>
+                </td> : null}
             </tr>
         );
+    }
+
+    /**
+     * @brief The function ensures handling JA4X show button on click event
+     * @param {*} ja4x_hash_data Hash object to update
+     */
+    const handleJA4XClick = (ja4x_hash_data) => {
+        setJa4xToShow(JSON.parse(ja4x_hash_data));
+        setShowJa4xModal(true);
+    }
+
+    /**
+     * @brief The function ensures colse JA4X modal box
+     */
+    const closeJa4xModal = () => {
+        setShowJa4xModal(false);
     }
 
     // Results component body
@@ -60,8 +84,8 @@ const Results = ({ results, onClose, hashTypes }) => {
                                 {(hashTypes.includes("JA4X")) ? <th>JA4X hash</th> : null}
                             </tr>
                         </thead>
-                    <tbody>
-                        {hasResults ? results.map((row) => dataItem(row)):(
+                    <tbody className="text-nowrap">
+                        {hasResults ? results.map((row, key) => dataItem(row, key)):(
                             <tr>
                                 <td colSpan={4+hashTypes.length}>No hashes found, repeat the process</td>
                             </tr>
@@ -70,6 +94,7 @@ const Results = ({ results, onClose, hashTypes }) => {
                 </table>
                 </Modal.Body>
             </Modal>
+            {showJa4xModal && (<Ja4xInfo data={ja4xToShow} onClose={closeJa4xModal} />)}
         </div>
     );
 };

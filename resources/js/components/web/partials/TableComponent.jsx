@@ -1,7 +1,7 @@
 /**
  * @file TableComponent.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -17,7 +17,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
     const [filter, setFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [recordsPerPage] = useState(8);
-   
+
     // Search box data filtration
     let filteredData = data.filter(item => {
         let result = false;
@@ -47,16 +47,16 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                     </div>
                     <div className="col"/>
                     <div className="col-md-5">
-                        {buttons.has("createButton") ? (<button 
+                        {buttons.has("createButton") ? (<button
                             className="btn btn-search text-white float-end d-inline mx-3"
-                            onClick={() => buttons.get('createButton').funct_call()} 
+                            onClick={() => buttons.get('createButton').funct_call()}
                         >{buttons.get('createButton').name}</button>): null}
 
                         <div className="input-group flex-nowrap w-50 float-end">
-                            <input 
-                            type="text" 
-                            className="form-control d-inline float-end" 
-                            placeholder="search" 
+                            <input
+                            type="text"
+                            className="form-control d-inline float-end"
+                            placeholder="search"
                             onChange={e=>setFilter(e.target.value)}/>
                             <span className="input-group-text bg-orange text-white">
                                 <i className="fa-solid fa-magnifying-glass"></i>
@@ -78,24 +78,24 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                                     return (
                                         <tr key={key}>
                                             {dataIndexes?.map((name, key) =>{
-                                                return (<td key={key} >{item[name.toLowerCase()]}</td>)
+                                                return (<td key={key} className="text-nowrap" >{item[name.toLowerCase()]}</td>)
                                             })}
                                             <td>
                                                 <div className="btn-group">
-                                                    {buttons.has('infoButton') ? 
+                                                    {buttons.has('infoButton') ?
                                                     <button className="btn btn-link text-primary">
                                                         <i className="fa-solid fa-circle-info"/>
                                                     </button>
                                                     :null}
-                                                    {buttons.has('updateButton') ? 
-                                                    <button 
+                                                    {buttons.has('updateButton') ?
+                                                    <button
                                                         className="btn btn-link text-success"
                                                         onClick={() => buttons.get('updateButton')(item)}>
                                                         <i className="fa-solid fa-pen-to-square"/>
                                                     </button>
                                                     :null}
-                                                    {buttons.has('deleteButton') ? 
-                                                    <button 
+                                                    {buttons.has('deleteButton') ?
+                                                    <button
                                                         className="btn btn-link text-danger"
                                                         onClick={() => buttons.get('deleteButton')(item)}>
                                                         <i className="fa-solid fa-trash"/>

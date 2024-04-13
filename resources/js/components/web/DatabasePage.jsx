@@ -16,12 +16,17 @@ import Button from "react-bootstrap/Button";
 
 import http from "../../http";
 import { PaginationControl } from 'react-bootstrap-pagination-control';
+import Results from "./partials/Results";
+import Ja4xInfo from "./partials/Ja4xInfo";
 
 
 const DatabasePage = () => {
 
     const [data, setData] = useState([]);
     const [filter, setFilter] = useState('');
+
+    const [ja4xToShow, setJa4xToShow] = useState(null);
+    const [showJa4xModal, setShowJa4xModal] = useState(false);
 
     // Table columns
     const columns = [
@@ -51,6 +56,22 @@ const DatabasePage = () => {
     filteredData = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
 
     const hasFilteredData = filteredData && filteredData.length > 0;
+
+    /**
+     * @brief The function ensures handling JA4X show button on click event
+     * @param {*} ja4x_hash_data Hash object to update
+     */
+    const handleJA4XClick = (ja4x_hash_data) => {
+        setJa4xToShow(JSON.parse(ja4x_hash_data));
+        setShowJa4xModal(true);
+    }
+
+    /**
+     * @brief The function ensures colse JA4X modal box
+     */
+    const closeJa4xModal = () => {
+        setShowJa4xModal(false);
+    }
 
     /**
      * @brief The function ensures getting data from database
@@ -124,7 +145,7 @@ const DatabasePage = () => {
                                         <th>Created at</th>
                                     </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="text-nowrap">
                                         {hasFilteredData ? filteredData.map((item, key) => {
                                             return (
                                                 <tr key={key}>
@@ -137,7 +158,11 @@ const DatabasePage = () => {
                                                     <td><b>{item?.ja3s_hash}</b></td>
                                                     <td><b>{item?.ja4_hash}</b></td>
                                                     <td><b>{item?.ja4s_hash}</b></td>
-                                                    <td><b>{item?.ja4x_hash}</b></td>
+                                                    <td>
+                                                        <button className="btn btn-sm btn-search-outline"
+                                                                onClick={() => handleJA4XClick(item?.ja4x_hash)}>show
+                                                        </button>
+                                                    </td>
                                                     <td><b>{item?.is_dangerous}</b></td>
                                                     <td><b>{item?.is_malware}</b></td>
                                                     <td><b>{item?.ip_src}</b></td>
@@ -166,6 +191,7 @@ const DatabasePage = () => {
                     </div>
                 </div>
             </div>
+            {showJa4xModal && (<Ja4xInfo data={ja4xToShow} onClose={closeJa4xModal} />)}
         </div>
     );
 };

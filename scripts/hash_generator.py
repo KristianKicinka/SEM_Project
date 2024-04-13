@@ -655,6 +655,31 @@ def create_ja4X_hash(cert):
     ja4x = f"{ja4x_a_hash}_{ja4x_b_hash}_{ja4x_c_hash}"
     return ja4x
 
+def get_CN_ON_values(attribute):
+    """
+    The function ensures getting additional data from x509 certificates
+
+    Parameters:
+    cert (Certificate): X509 certificate object.
+
+    Returns:
+    string: JA4X hash.
+    """
+    cn = None
+    on = None
+    c = None
+
+    if len(attribute.get_attributes_for_oid(NameOID.COMMON_NAME)) != 0:
+        cn = attribute.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+
+    if len(attribute.get_attributes_for_oid(NameOID.ORGANIZATION_NAME)) != 0:
+        on = attribute.get_attributes_for_oid(NameOID.ORGANIZATION_NAME)[0].value
+
+    if len(attribute.get_attributes_for_oid(NameOID.COUNTRY_NAME)) != 0:
+        c = attribute.get_attributes_for_oid(NameOID.COUNTRY_NAME)[0].value
+
+    return cn, on, c
+
 def get_results_with_ja4x(pcap_file, results):
     """
     The function ensures tls certificate processing
@@ -687,6 +712,10 @@ def get_results_with_ja4x(pcap_file, results):
                 certificate_bytes = bytes.fromhex(cert_str.replace(":", "").replace(" ", ""))
                 cert = x509.load_der_x509_certificate(certificate_bytes)
 
+                # Get certificate issuer and subject data
+                issuer_cn, issuer_on, issuer_c = get_CN_ON_values(cert.issuer)
+                subject_cn, subject_on, subject_c = get_CN_ON_values(cert.subject)
+
                 ja4x = create_ja4X_hash(cert)
 
                 ip_src = layers["ip.src"][0]
@@ -697,7 +726,11 @@ def get_results_with_ja4x(pcap_file, results):
                 key = (ip_dest, port_dest, ip_src, port_src)
 
                 if key in results:
-                    results[key]["ja4x_hash"].append(ja4x)
+                    results[key]["ja4x_hash"].append({
+                        "issuer": f"CN={issuer_cn}, ON={issuer_on}, C={issuer_c}",
+                        "subject":  f"CN={subject_cn}, ON={subject_on}, C={subject_c}",
+                        "ja4x": ja4x
+                    })
 
         except Exception as e:
             print(f"Error extracting certificate: {e}")
@@ -719,10 +752,7 @@ def remove_duplicities(data):
     results = []
 
     for item in data:
-        key = (
-            item["ja3_hash"], item["ja3s_hash"], item["ja4_hash"], item["ja4s_hash"],
-            item["sni"], tuple(item["ja4x_hash"])
-        )
+        key = (item["ja3_hash"], item["ja3s_hash"], item["ja4_hash"], item["ja4s_hash"], item["sni"])
 
         if key not in unique_keys:
             unique_keys.add(key)
