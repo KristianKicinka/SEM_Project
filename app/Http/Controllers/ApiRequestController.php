@@ -317,7 +317,7 @@ class ApiRequestController extends Controller {
                 $query->orWhere(function ($query) use ($item) {
                     $query->whereRaw("JSON_CONTAINS(hashes.ja4x_hash, ?)", ['{"ja4x":"' . $item["ja4x_hash"] . '"}']);
                 });
-                $results[] = ["ja4x_hash" => $item["ja4x_hash"]];
+                $results[] = ["ja4x_hash" => $item["ja4x_hash"], "apps" => []];
             }else if($request->input("input_type") == "JA4X_SNI"){
                 $query->orWhere(function ($query) use ($item) {
                     $query->where('hashes.sni', $item["sni"]);
@@ -416,6 +416,8 @@ class ApiRequestController extends Controller {
                 }
             }
         }
+
+        return response()->json($results, 200);
 
         // Remove duplicities
         foreach($results as &$result){
