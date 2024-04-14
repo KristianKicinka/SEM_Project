@@ -122,6 +122,10 @@ class ApiRequestController extends Controller {
             ];
         }else if ($request->input("input_type") == "JA4"){
             $rules = ['hashes.*.ja4_hash' => 'required|string'];
+        }else if ($request->input("input_type") == "JA4X"){
+            $rules = ['hashes.*.ja4x_hash' => 'required|string'];
+        }else if ($request->input("input_type") == "JA4X_SNI"){
+            $rules = ['hashes.*.ja4x_hash' => 'required|string', 'hashes.*.sni' => 'required|string'];
         }else if ($request->input("input_type") == "JA4_JA4S"){
             $rules = ['hashes.*.ja4_hash' => 'required|string', 'hashes.*.ja4s_hash' => 'required|string'];
         }else if ($request->input("input_type") == "JA4_JA4S_SNI"){
@@ -236,7 +240,7 @@ class ApiRequestController extends Controller {
         $query = DB::table('applications')->select(
             'applications.name', 'applications.package_name', 'applications.version',
             'applications.is_malware', 'applications.is_dangerous', 'hashes.ja3_hash',
-            'hashes.ja3s_hash', 'hashes.ja4_hash', 'hashes.ja4s_hash', 'hashes.sni',
+            'hashes.ja3s_hash', 'hashes.ja4_hash', 'hashes.ja4s_hash', 'hashes.sni', 'hashes.ja4x_hash'
             )
             ->distinct()
             ->join('hashes', 'hashes.app_id', '=', 'applications.id');
@@ -309,8 +313,20 @@ class ApiRequestController extends Controller {
                     "ja3_hash" => $item["ja3_hash"], "ja3s_hash" => $item["ja3s_hash"], "sni" => $item["sni"],
                     "ja4_hash" => $item["ja4_hash"], "ja4s_hash" => $item["ja4s_hash"], "apps" => [],
                 ];
+            }else if($request->input("input_type") == "JA4X"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->whereRaw("JSON_CONTAINS(hashes.ja4x_hash, ?)", ['{"ja4x":"' . $item["ja4x_hash"] . '"}']);
+                });
+                $results[] = ["ja4x_hash" => $item["ja4x_hash"]];
+            }else if($request->input("input_type") == "JA4X_SNI"){
+                $query->orWhere(function ($query) use ($item) {
+                    $query->where('hashes.sni', $item["sni"]);
+                    $query->whereRaw("JSON_CONTAINS(hashes.ja4x_hash, ?)", ['{"ja4x":"' . $item["ja4x_hash"] . '"}']);
+                });
+                $results[] = [
+                    "ja4x_hash" => $item["ja4x_hash"], "sni" => $item["sni"], "apps" => [],
+                ];
             }
-
         }
 
         // Database select
@@ -363,6 +379,38 @@ class ApiRequestController extends Controller {
                     if($item->ja3_hash == $result["ja3_hash"] && $item->ja3s_hash == $result["ja3s_hash"] &&
                     $item->sni == $result["sni"] && $item->ja4_hash == $result["ja4_hash"]
                         && $item->ja4s_hash == $result["ja4s_hash"]){
+                        $result["apps"][] = $app_data;
+                    }
+                }else if ($request->input("input_type") == "JA4X"){
+                    // Decode value from database column
+                    $ja4x_json = json_decode($item->ja4x_hash);
+                    $ja4x_is_obj = false;
+
+                    // Check all JA4X hashes in database column
+                    foreach ($ja4x_json as $json_item) {
+                        if (isset($json_item->ja4x) && $json_item->ja4x === $result["ja4x_hash"]) {
+                            $ja4x_is_obj = true;
+                            break;
+                        }
+                    }
+                    // Add apps data mapped to JA4X hashes
+                    if($ja4x_is_obj){
+                        $result["apps"][] = $app_data;
+                    }
+                }else if ($request->input("input_type") == "JA4X_SNI"){
+                    // Decode value from database column
+                    $ja4x_json = json_decode($item->ja4x_hash);
+                    $ja4x_is_obj = false;
+
+                    // Check all JA4X hashes in database column
+                    foreach ($ja4x_json as $json_item) {
+                        if (isset($json_item->ja4x) && $json_item->ja4x === $result["ja4x_hash"]) {
+                            $ja4x_is_obj = true;
+                            break;
+                        }
+                    }
+                    // Add apps data mapped to JA4X hashes
+                    if($ja4x_is_obj && $item->sni == $result["sni"]){
                         $result["apps"][] = $app_data;
                     }
                 }
