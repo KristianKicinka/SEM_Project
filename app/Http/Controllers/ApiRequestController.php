@@ -417,8 +417,6 @@ class ApiRequestController extends Controller {
             }
         }
 
-        return response()->json($results, 200);
-
         // Remove duplicities
         foreach($results as &$result){
             $apps = collect($result["apps"])->unique();
