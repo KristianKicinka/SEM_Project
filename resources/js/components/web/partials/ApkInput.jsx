@@ -24,15 +24,37 @@ const ApkInput = ({ hashTypes }) => {
     const [channelID, setChannelID] = useState(false);
     const [processes, setProcesses] = useState([]);
 
+    // Max file size supported
+    const maxFileSize = 950 * 1024 * 1024;
+
     /**
      * @brief The function ensures calling API request for hash generation from APK file
      * @param {*} event OnClick event
      */
     const createHash = async (event) => {
         event.preventDefault();
+        let curr_files_size = 0;
 
+        // Validate hash types selection
         if(hashTypes.length === 0){
             toast.error('Hash type must be selected!');
+            return;
+        }
+
+        // Check max apk files count
+        if(apkFiles.length > 5){
+            toast.error('Too many APK files inserted. Max files allowed : 5');
+            return;
+        }
+
+        // Get selected apk's full size
+        for (let i = 0; i < apkFiles.length; i++) {
+            curr_files_size += apkFiles[i].size;
+        }
+
+        // Check max apk files size
+        if(curr_files_size > maxFileSize){
+            toast.error('List of APK files is too large. Max list size : 950 M');
             return;
         }
 
