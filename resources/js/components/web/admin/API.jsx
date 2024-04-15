@@ -1,7 +1,7 @@
 /**
  * @file API.jsx
  * @author Kristián Kičinka (xkicin02)
- * 
+ *
  * @copyright Copyright (c) 2024
  */
 
@@ -12,11 +12,13 @@ import Navbar from "../partials/auth/Navbar";
 import Sidebar from "../partials/auth/Sidebar";
 import TableComponent from "../partials/TableComponent";
 import AuthUser from "../../../AuthUser";
+import DeleteFile from "./partials/files/DeleteFile";
+import DeleteApiRequest from "./partials/api/DeleteApiRequest";
 
 
 // Table headers
-const columnNames = ["ID","User", "IP address", "Request type", "Status"];
-const dataIndexes = ["id", "email", "ip_address", "type", "status"];
+const columnNames = ["ID","User", "IP address", "Request type", "Task info", "Status"];
+const dataIndexes = ["id", "email", "ip_address", "type", "description", "status"];
 
 
 const API = () => {
@@ -26,6 +28,7 @@ const API = () => {
 
     const [fetchDataState, setFetchDataState] = useState(false);
     const [deleteModalShow, setDeleteModalShow] = useState(false);
+    const [requestOnDelete, setRequestOnDelete] = useState(null);
 
     /**
      * @brief The function ensures handling delete button on click events
@@ -33,7 +36,7 @@ const API = () => {
      */
     const handleDeleteClick = (request) => {
         setRequestOnDelete(request);
-        setDeleteModalShow(true);  
+        setDeleteModalShow(true);
     }
 
     const buttons = new Map([
@@ -52,7 +55,7 @@ const API = () => {
             console.log(error);
         }
     }
-    
+
     useEffect(() => {
         fetchData();
         const interval = setInterval(() => {fetchData()}, 3000);
@@ -67,11 +70,16 @@ const API = () => {
                 <div className="col-md-10 px-0">
                     <Navbar />
                     <div className="container-fluid">
-    
-                        <TableComponent 
-                            data={apiRequests} 
-                            dataIndexes={dataIndexes} 
-                            columnNames={columnNames} 
+                        <DeleteApiRequest
+                            show={deleteModalShow}
+                            api_request={requestOnDelete}
+                            setFetchDataState={setFetchDataState}
+                            handleClose={() => setDeleteModalShow(false)}
+                        />
+                        <TableComponent
+                            data={apiRequests}
+                            dataIndexes={dataIndexes}
+                            columnNames={columnNames}
                             buttons={buttons}
                             tableName={"API Requests"}
                         />

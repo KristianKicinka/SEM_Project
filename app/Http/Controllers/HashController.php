@@ -59,6 +59,7 @@ class HashController extends Controller {
                 $channel_id,
                 $process_id,
                 $process_name,
+                null
             )->onQueue('process_queue');
         }
 
@@ -156,6 +157,7 @@ class HashController extends Controller {
             $ip_address,
             $channel_id,
             $process_id,
+            null
             )->onQueue('process_queue');
 
         $process = [
@@ -280,6 +282,7 @@ class HashController extends Controller {
                 $ip_address,
                 $channel_id,
                 $process_id,
+                null
                 )->onQueue('process_queue');
 
             $process = [

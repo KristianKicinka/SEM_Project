@@ -50,6 +50,7 @@ Route::group(['middleware' => ['auth:api', 'admin']], function () {
     Route::post('/admin/user/delete', [UserController::class, 'deleteUser']);
     Route::post('/admin/files', [FileController::class, 'getFilesForAdmin']);
     Route::post('/admin/file/delete', [FileController::class, 'deleteFile']);
+    Route::post('/admin/api/delete-request', [ApiRequestController::class, 'deleteApiRequest']);
     Route::post('/admin/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
     Route::post('/admin/get-api-key', [ApiRequestController::class, 'getApiKey']);
     Route::post('/admin/requests', [ApiRequestController::class, 'getRequests']);

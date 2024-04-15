@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\HashGeneratorFailException;
+use App\Models\Process as ProcessModel;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ use App\Jobs\CreateHashFromAppName;
 use App\Models\ApiRequest;
 
 use App\Objects\CreateHashFromPcap;
+use phpseclib3\Math\BigInteger;
 
 // API request types
 const REQUEST_TYPES = [
@@ -64,6 +66,7 @@ class ApiRequestController extends Controller {
                 'users.email AS email',
                 'api_requests.type AS type',
                 'api_requests.status AS status',
+                'api_requests.description AS description',
                 'api_requests.ip_address AS ip_address',
             )
             ->join('api_requests', 'users.id', '=', 'api_requests.user_id')
@@ -94,6 +97,7 @@ class ApiRequestController extends Controller {
                 'users.email AS email',
                 'api_requests.type AS type',
                 'api_requests.status AS status',
+                'api_requests.description AS description',
                 'api_requests.ip_address AS ip_address',
             )
             ->join('api_requests', 'users.id', '=', 'api_requests.user_id')
@@ -178,7 +182,9 @@ class ApiRequestController extends Controller {
         }
 
         // API request registration
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[0]);
+        $api_id = $this->registerApiRequest(
+            $request->input('auth_key'), $request->ip(), REQUEST_TYPES[0], "Get apps hashes");
+
         $results = [];
 
         foreach ($request->input('apps') as $app){
@@ -194,6 +200,8 @@ class ApiRequestController extends Controller {
 
             $results[$app["package_name"]] = $hashes->get();
         }
+
+        $this->updateApiStatus($api_id, "finished");
 
         return response()->json($results, 200);
     }
@@ -233,7 +241,8 @@ class ApiRequestController extends Controller {
         }
 
         // API request registration
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[1]);
+        $api_id = $this->registerApiRequest(
+            $request->input('auth_key'), $request->ip(), REQUEST_TYPES[1], "Get apps from hashes");
         $results = [];
 
         // Static select part
@@ -423,6 +432,8 @@ class ApiRequestController extends Controller {
             $result["apps"] = $apps->values()->all();
         }
 
+        $this->updateApiStatus($api_id, "finished");
+
         return response()->json($results, 200);
     }
 
@@ -453,18 +464,21 @@ class ApiRequestController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+        // Getting file name from apk
+        $apk_original_file_name = $request->file('apk_file')->getClientOriginalName();
+
         // API request registration
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[2]);
+        $api_id = $this->registerApiRequest(
+            $request->input('auth_key'), $request->ip(), REQUEST_TYPES[2], $apk_original_file_name);
 
         $apk_file_name = $this->saveApkFile($request->file('apk_file'));
-        $apk_original_file_name = $request->file('apk_file')->getClientOriginalName();
         $process_id = uniqid('ext_api_', true);
         $channel_id = null;
         $hash_types = ["JA3"];
 
         // Dispatching queue job
         CreateHashFromAPK::dispatch(
-            $apk_file_name, $hash_types, $request->ip(), $channel_id, $process_id, $apk_file_name
+            $apk_file_name, $hash_types, $request->ip(), $channel_id, $process_id, $apk_file_name, $api_id
         )->onQueue('process_queue');
 
         return response()
@@ -514,7 +528,8 @@ class ApiRequestController extends Controller {
         }
 
         // API request registration
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[3]);
+        $api_id = $this->registerApiRequest(
+            $request->input('auth_key'), $request->ip(), REQUEST_TYPES[3], $request->input('package_name'));
 
         $process_id = 'ext_api_'.Str::random(20);
         $hash_types = ["JA3"];
@@ -523,7 +538,7 @@ class ApiRequestController extends Controller {
         // Dispatching queue job
         CreateHashFromAppName::dispatch(
             $request->input('package_name'), $hash_types,
-            $request->ip(), $channel_id, $process_id,
+            $request->ip(), $channel_id, $process_id, $api_id
         )->onQueue('process_queue');
 
         $response = "Task for create hashes from package name (";
@@ -559,8 +574,12 @@ class ApiRequestController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+        // Getting file name from apk
+        $pcap_original_file_name = $request->file('pcap_file')->getClientOriginalName();
+
         // API request registration
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[4]);
+        $api_id = $this->registerApiRequest(
+            $request->input('auth_key'), $request->ip(), REQUEST_TYPES[4], $pcap_original_file_name);
 
         $app_data = [
             'app_name' => $request->input('app_name'), 'package_name' => $request->input('package_name'),
@@ -574,6 +593,8 @@ class ApiRequestController extends Controller {
         // Create new hashes
         $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types);
         $hashes = $pcap_hash->createAndSave($app_data);
+
+        $this->updateApiStatus($api_id, "finished");
 
         return response()->json($hashes, 200);
     }
@@ -655,9 +676,10 @@ class ApiRequestController extends Controller {
      * @param String $auth_key User auth key
      * @param String $ip_address User IP address
      * @param String $type API request type
-     * @return void
+     * @param String $description
+     * @return int API request ID
      */
-    private function registerApiRequest(String $auth_key, String $ip_address, String $type): void {
+    private function registerApiRequest(String $auth_key, String $ip_address, String $type, String $description): int {
 
         $user = User::where('api_auth_key', '=', $auth_key)->first();
 
@@ -665,9 +687,23 @@ class ApiRequestController extends Controller {
             'user_id' => $user->id,
             'ip_address' => $ip_address,
             'type' => $type,
+            'description' => $description,
+            'status' => 'processing',
         ]);
 
         $api_request->save();
+
+        return $api_request->id;
+    }
+
+    /**
+     * @brief The function serves updating Api status
+     * @param int $api_id api request id
+     * @param String $status new status
+     * @return void
+     */
+    private function updateApiStatus(int $api_id, String $status):void {
+        DB::table('api_requests')->where('id', '=', $api_id)->update(['status' => $status]);
     }
 
     /**
@@ -696,8 +732,11 @@ class ApiRequestController extends Controller {
             return response()->json(['errors' => $validator->errors()], 400);
         }
 
+        $netflow_original_file_name = $request->file('flowmon_file')->getClientOriginalName();
+
         // API request registration
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[5]);
+        $api_id = $this->registerApiRequest(
+            $request->input('auth_key'), $request->ip(), REQUEST_TYPES[5], $netflow_original_file_name);
 
         $netflow_data = $this->getNetflowData($request->file('flowmon_file'));
         $results = [];
@@ -765,6 +804,8 @@ class ApiRequestController extends Controller {
             $result["apps"] = $apps->values()->all();
         }
 
+        $this->updateApiStatus($api_id, "finished");
+
         return response()->json($results, 200);
     }
 
@@ -799,5 +840,11 @@ class ApiRequestController extends Controller {
         }
 
         return $data;
+    }
+
+    public function deleteApiRequest(Request $request):JsonResponse {
+        DB::table('api_requests')->where('id', '=', $request->api_request_id)->delete();
+
+        return response()->json('File was deleted!');
     }
 }

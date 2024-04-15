@@ -34,8 +34,8 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
      * @brief Create a new job instance
      * @return void
      */
-    public function __construct($package_name, $hash_types, $ip_address, $channel_id, $process_id){
-        parent::__construct($hash_types, PACKAGE_NAME_INPUT_TYPE, $process_id, $ip_address, $channel_id, $package_name);
+    public function __construct($package_name, $hash_types, $ip_address, $channel_id, $process_id, $api_id){
+        parent::__construct($hash_types, PACKAGE_NAME_INPUT_TYPE, $process_id, $ip_address, $channel_id, $package_name, $api_id);
         $this->package_name = $package_name;
     }
 

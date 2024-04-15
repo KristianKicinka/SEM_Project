@@ -34,8 +34,8 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
      * @brief Create a new job instance.
      * @return void
      */
-    public function __construct($apk_file_name, $hash_types, $ip_address, $channel_id, $process_id, $process_name){
-        parent::__construct($hash_types, APK_INPUT_TYPE, $process_id, $ip_address, $channel_id, $process_name);
+    public function __construct($apk_file_name, $hash_types, $ip_address, $channel_id, $process_id, $process_name, $api_id){
+        parent::__construct($hash_types, APK_INPUT_TYPE, $process_id, $ip_address, $channel_id, $process_name, $api_id);
         $this->apk_file_name = $apk_file_name;
     }
 

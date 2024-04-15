@@ -4,6 +4,8 @@ namespace App\Objects;
 
 use App\Models\Process as ProcessModel;
 use App\Events\ProcessUpdate;
+use Brick\Math\BigInteger;
+use Illuminate\Support\Facades\DB;
 
 // Status messages for processing creation hashes from app name
 const APP_NAME_MESSAGES = [
@@ -40,6 +42,7 @@ class HashProcessData {
     private string $process_id;
     private string $process_name;
     private ?string $channel_id;
+    private ?int $api_id;
     private string $ip_address;
     private string $status;
     private int $progress;
@@ -54,12 +57,13 @@ class HashProcessData {
      * @param string $process_name Name of currently processing hash process
      */
     public function __construct(
-        string $process_id, string $type, string $ip_address, ?string $channel_id, string $process_name){
+        string $process_id, string $type, string $ip_address, ?string $channel_id, string $process_name, ?int $api_id){
 
         $this->process_id = $process_id;
         $this->process_name = $process_name;
         $this->channel_id = $channel_id;
         $this->ip_address = $ip_address;
+        $this->api_id = $api_id;
         $this->preset();
         $this->setMessagesArray($type);
 
@@ -164,5 +168,11 @@ class HashProcessData {
                 $this->channel_id, $this->process_id, $this->status,
                 $this->progress, $this->message, $this->process_name
             );
+
+        // Update api status if task was created from api
+        if($this->api_id){
+            DB::table('api_requests')
+                ->where('id', '=', $this->api_id)->update(['status' => $this->status]);
+        }
     }
 }

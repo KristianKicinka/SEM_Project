@@ -40,12 +40,12 @@ class CreateHash {
     protected string $ip_address;
     protected HashProcessData $hash_process_data;
 
-    public function __construct($hash_types, $input_type, $process_id, $ip_address, $channel_id, $process_name) {
+    public function __construct($hash_types, $input_type, $process_id, $ip_address, $channel_id, $process_name, $api_id) {
 
         $this->hash_types = $hash_types;
         $this->process_id = $process_id;
         $this->ip_address = $ip_address;
-        $this->hash_process_data = new HashProcessData($process_id, $input_type, $ip_address, $channel_id, $process_name);
+        $this->hash_process_data = new HashProcessData($process_id, $input_type, $ip_address, $channel_id, $process_name, $api_id);
     }
 
     /**
