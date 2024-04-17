@@ -162,7 +162,7 @@ class HashController extends Controller {
 
         $process = [
             "process_id" => $process_id, "name" => $request->package_name,
-            "message" => "Waiting in queue", "progress" => 0, "status" => "processing"
+            "message" => "Waiting in queue", "progress" => 0, "status" => "in_queue"
         ];
         $processes[] = $process;
 

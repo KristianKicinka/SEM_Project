@@ -29,6 +29,15 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
         return result;
     });
 
+    /**
+     * @brief The function ensures handling search button event
+     * @param {*} filter Search filter
+     */
+    const handleSearch = (filter) => {
+        setFilter(filter);
+        setCurrentPage(1);
+    }
+
     const indexOfLastRecord = currentPage * recordsPerPage;
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
     const nPages = Math.ceil(filteredData.length / recordsPerPage);
@@ -57,7 +66,7 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                             type="text"
                             className="form-control d-inline float-end"
                             placeholder="search"
-                            onChange={e=>setFilter(e.target.value)}/>
+                            onChange={e=>handleSearch(e.target.value)}/>
                             <span className="input-group-text bg-orange text-white">
                                 <i className="fa-solid fa-magnifying-glass"></i>
                             </span>

@@ -79,7 +79,7 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
      */
     const loadingItem = (process) => {
 
-        let is_processing = (process.status !== 'failed' && process.status !== 'finished');
+        let is_processing = process.status === 'processing';
 
         return (
             <tr key={process.process_id} className="align-middle gx-5">

@@ -67,6 +67,15 @@ const DatabasePage = () => {
     }
 
     /**
+     * @brief The function ensures handling search button event
+     * @param {*} filter Search filter
+     */
+    const handleSearch = (filter) => {
+        setFilter(filter);
+        setCurrentPage(1);
+    }
+
+    /**
      * @brief The function ensures colse JA4X modal box
      */
     const closeJa4xModal = () => {
@@ -110,7 +119,7 @@ const DatabasePage = () => {
                                             placeholder="Search"
                                             aria-label="Search"
                                             aria-describedby="search_btn"
-                                            onChange={e=>setFilter(e.target.value)}
+                                            onChange={e=>handleSearch(e.target.value)}
                                         />
                                         <Button
                                             id="search_btn"

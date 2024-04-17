@@ -71,7 +71,7 @@ const ApkInput = ({ hashTypes }) => {
                 name: apkFile.name,
                 message: "Waiting in queue",
                 progress: 0,
-                status: "processing"
+                status: "in_queue"
             });
             data.append("files[]", apkFile);
         });
