@@ -1,2 +1,15 @@
 node_modules/
 virtualisation/
+
+# Laravel and React
+/public/build
+/public/hot
+/public/storage
+npm-debug.log
+yarn-error.log
+
+# Laravel 4 specific
+bootstrap/compiled.php
+/storage/app/*
+/storage/*.key
+/vendor
