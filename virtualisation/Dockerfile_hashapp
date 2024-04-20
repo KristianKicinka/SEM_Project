@@ -1,0 +1,78 @@
+FROM node:21.6.2-slim as ReactHashApp
+
+# Copy package.json
+RUN mkdir -p /var/www/sem_project/
+COPY ./ /var/www/sem_project/
+
+WORKDIR /var/www/sem_project/
+
+RUN npm install
+RUN npm run build
+
+
+FROM php:8.2.7-zts-bookworm
+
+RUN apt-get update
+RUN apt-get install -y curl wget build-essential autoconf automake cmake
+
+
+# Copy project directory
+RUN mkdir -p /var/www/sem_project
+COPY ./* /var/www/sem_project
+
+# Copy built React applications
+COPY --from=ReactHashApp /var/www/sem_project/public /var/www/sem_project/public
+
+USER root
+
+# Install Wireshark 4.2.4
+WORKDIR /tmp/wireshark
+RUN apt-get install -y libspeexdsp-dev systemd flex qt6-* libgtk-3-dev libpcap-dev libgcrypt20-dev libgpg-error-dev qttools5-dev qttools5-dev-tools libqt5svg5-dev libtool libc-ares2 libc-ares-dev
+# RUN wget https://2.na.dl.wireshark.org/src/wireshark-4.2.4.tar.xz
+RUN wget https://www.wireshark.org/download/src/all-versions/wireshark-4.2.4.tar.xz
+RUN tar -xf wireshark-4.2.4.tar.xz
+WORKDIR /tmp/wireshark/wireshark-4.2.4/
+RUN mkdir build
+WORKDIR /tmp/wireshark/wireshark-4.2.4/build
+RUN groupadd -g 62 wireshark
+RUN cmake ..
+RUN make
+RUN make install
+
+# install Python3.11.2
+RUN mkdir -p /tmp/pythonInstallation
+WORKDIR /tmp/pythonInstallation
+RUN apt-get install -y libncursesw5-dev libssl-dev \
+     libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev libffi-dev zlib1g-dev
+RUN wget https://www.python.org/ftp/python/3.11.2/Python-3.11.2.tgz
+RUN tar -xzf Python-3.11.2.tgz
+WORKDIR /tmp/pythonInstallation/Python-3.11.2
+RUN ./configure --enable-optimizations
+RUN make -j 4
+RUN make altinstall
+
+# check python version
+RUN python3.11 -V
+
+# Install python dependencies:
+# Python dependencies:
+RUN apt-get install -y dbus libdbus-1-3 libdbus-1-dev
+COPY ./installationFiles/requirements.txt /tmp/requirements.txt
+RUN pip3.11 install -r /tmp/requirements.txt
+
+
+# check version
+RUN wireshark -v
+
+# Install aria2c, redis, mariadb
+RUN apt-get install -y aria2 redis mariadb-server apache2
+
+WORKDIR /var/www/
+
+
+# config supervisor /etc/supervisor/conf.d/laravel_queue_workers.conf
+# import DB and DB conf
+# apache conf
+# .env laravelu
+# storage symlink artisan
+
