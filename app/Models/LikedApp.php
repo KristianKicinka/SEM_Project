@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file LikedApp.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Models;
 
@@ -16,6 +22,4 @@ class LikedApp extends Model {
         'app_id',
         'user_id',
     ];
-
-
 }

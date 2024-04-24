@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file Hash.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Models;
 
@@ -10,8 +16,7 @@ class Hash extends Model {
     use HasFactory;
 
      /**
-     * The attributes that are mass assignable.
-     *
+     * @brief The attributes that are mass assignable
      * @var array
      */
     protected $fillable = [
