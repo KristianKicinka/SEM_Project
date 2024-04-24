@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Exceptions\AppUninstalationFailException;
+use App\Exceptions\AppUninstallationFailException;
 use App\Exceptions\HashGenerationProcessFailed;
 use App\Models\Emulator;
 use Illuminate\Bus\Queueable;
@@ -42,7 +42,7 @@ class CreateHashFromAPK extends CreateHash implements ShouldQueue {
     /**
      * @brief Execute the job.
      * @throws HashGenerationProcessFailed
-     * @throws AppUninstalationFailException
+     * @throws AppUninstallationFailException
      */
     public function handle(): void {
 

@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Exceptions\ApkDownloadException;
-use App\Exceptions\AppUninstalationFailException;
+use App\Exceptions\AppUninstallationFailException;
 use App\Exceptions\HashGenerationProcessFailed;
 use App\Models\Emulator;
 use App\Objects\CreateHash;
@@ -42,7 +42,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
     /**
      * @brief Execute the job
      * @throws HashGenerationProcessFailed Hash process failed exception
-     * @throws AppUninstalationFailException
+     * @throws AppUninstallationFailException
      */
     public function handle(): void {
 

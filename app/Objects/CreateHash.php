@@ -2,9 +2,9 @@
 
 namespace App\Objects;
 
-use App\Exceptions\AppInstalationFailException;
+use App\Exceptions\AppInstallationFailException;
 use App\Exceptions\AppNameNotFoundException;
-use App\Exceptions\AppUninstalationFailException;
+use App\Exceptions\AppUninstallationFailException;
 use App\Exceptions\AppVersionNotFoundException;
 use App\Exceptions\CloseAppFailException;
 use App\Exceptions\CreateCommunicationOnEmulatorException;
@@ -211,7 +211,7 @@ class CreateHash {
      * @param Emulator $emulator
      * @param string $apk_file_path
      * @return void
-     * @throws AppInstalationFailException
+     * @throws AppInstallationFailException
      */
     protected function installAppOnEmulator(Emulator $emulator, string $apk_file_path) : void {
 
@@ -227,7 +227,7 @@ class CreateHash {
         $process->run();
 
         if (!$process->isSuccessful()) {
-            throw new AppInstalationFailException($process->getErrorOutput());
+            throw new AppInstallationFailException($process->getErrorOutput());
         }
     }
 
@@ -236,7 +236,7 @@ class CreateHash {
      * @param Emulator $emulator
      * @param string $package_name
      * @return void
-     * @throws AppUninstalationFailException
+     * @throws AppUninstallationFailException
      */
     protected function uninstallAppOnEmulator(Emulator $emulator, string $package_name) : void {
 
@@ -250,7 +250,7 @@ class CreateHash {
         $process->run();
 
         if (!$process->isSuccessful()) {
-            throw new AppUninstalationFailException($process->getErrorOutput());
+            throw new AppUninstallationFailException($process->getErrorOutput());
         }
     }
 
