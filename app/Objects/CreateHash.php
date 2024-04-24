@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file CreateHash.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Objects;
 
@@ -49,10 +55,10 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @param string $name
-     * @param string $type
-     * @param string $path
+     * @brief The function ensures adding new files to file list
+     * @param string $name File name
+     * @param string $type File type
+     * @param string $path File path
      * @return void
      */
     protected function addFileToFiles(string $name, string $type, string $path) : void {
@@ -67,11 +73,11 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @param Emulator $emulator
-     * @param string $pcap_file_name
-     * @param string $apk_path
-     * @return string
+     * @brief The function ensures pcap file creation
+     * @param Emulator $emulator Selected emulator
+     * @param string $pcap_file_name Output pcap file name
+     * @param string $apk_path Apk file intended for analysis
+     * @return string Out pcap file path
      * @throws CloseAppFailException
      * @throws CreateCommunicationOnEmulatorException
      * @throws PackageNameNotFoundException
@@ -102,13 +108,13 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @param string $pcap_file_path
-     * @param string $pcap_file_name
-     * @return array
+     * @brief The function ensures hashes creation
+     * @param string $pcap_file_name Input pcap file name
+     * @param string $pcap_file_path Input pcap file path
+     * @return array Hashes list
      * @throws HashGeneratorFailException
      */
-    private function createHashSniJa3Ja3S(string $pcap_file_path, string $pcap_file_name) : array {
+    public function createHashes(string $pcap_file_name, string $pcap_file_path): array {
 
         $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH);
         $command = $command." ".$pcap_file_path;
@@ -124,20 +130,9 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @param string $pcap_file_name
-     * @param string $pcap_file_path
-     * @return array
-     * @throws HashGeneratorFailException
-     */
-    public function createHashes(string $pcap_file_name, string $pcap_file_path): array {
-        return $this->createHashSniJa3Ja3S($pcap_file_path, $pcap_file_name);
-    }
-
-    /**
-     * @brief
-     * @param Emulator $emulator
-     * @param string $package_name
+     * @brief The function ensures starting app on emulator
+     * @param Emulator $emulator Selected emulator
+     * @param string $package_name Application package name
      * @return void
      * @throws RunAppFailException
      */
@@ -160,8 +155,9 @@ class CreateHash {
     }
 
     /**
-     * @param Emulator $emulator
-     * @param string $package_name
+     * @brief The function ensures application events generation
+     * @param Emulator $emulator Selected emulator
+     * @param string $package_name Application package name
      * @return void
      * @throws CreateCommunicationOnEmulatorException
      */
@@ -184,9 +180,9 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @param Emulator $emulator
-     * @param string $package_name
+     * @brief The function ensures closing app on emulator
+     * @param Emulator $emulator Selected emulator
+     * @param string $package_name Application package name
      * @return void
      * @throws CloseAppFailException
      */
@@ -207,9 +203,9 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @param Emulator $emulator
-     * @param string $apk_file_path
+     * @brief The function ensures app installation on emulator
+     * @param Emulator $emulator Selected emulator
+     * @param string $apk_file_path Path to apk file intended for analysis
      * @return void
      * @throws AppInstallationFailException
      */
@@ -232,9 +228,9 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @param Emulator $emulator
-     * @param string $package_name
+     * @brief The function ensures app uninstallation on emulator
+     * @param Emulator $emulator Selected emulator
+     * @param string $package_name Application package name
      * @return void
      * @throws AppUninstallationFailException
      */
@@ -255,9 +251,10 @@ class CreateHash {
     }
 
     /**
-     * @param Emulator $emulator
-     * @param string $apk_file_path
-     * @return string
+     * @brief The function ensures getting an application package name
+     * @param Emulator $emulator Selected emulator
+     * @param string $apk_file_path Path to apk file intended for analysis
+     * @return string Application package name
      * @throws PackageNameNotFoundException
      */
     protected function getAppPackageName(Emulator $emulator, string $apk_file_path) : string {
@@ -283,10 +280,10 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @param Emulator $emulator
-     * @param string $apk_file_path
-     * @return string
+     * @brief The function ensures getting an application version
+     * @param Emulator $emulator Selected emulator
+     * @param string $apk_file_path Path to apk file intended for analysis
+     * @return string Application version
      * @throws AppVersionNotFoundException
      */
     protected function getAppVersionName(Emulator $emulator, string $apk_file_path) : string {
@@ -309,10 +306,10 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @param Emulator $emulator
-     * @param string $apk_file_path
-     * @return string
+     * @brief The function ensures getting an application name
+     * @param Emulator $emulator Selected emulator
+     * @param string $apk_file_path Path to apk file intended for analysis
+     * @return string Application name
      * @throws AppNameNotFoundException
      */
     protected function getAppName(Emulator $emulator, string $apk_file_path) : string {
@@ -334,8 +331,8 @@ class CreateHash {
     }
 
     /**
-     * @brief
-     * @return array
+     * @brief The function ensures getting preinstalled apps
+     * @return array Preinstalled apps package names
      * @throws LoadingPreinstalledAppsFailed
      */
     protected function getPreInstalledApps(): array {
@@ -370,8 +367,8 @@ class CreateHash {
     }
 
     /**
-     * @brief The function ensures
-     * @param array $data
+     * @brief The function ensures saving hashes to database
+     * @param array $data Database data
      * @return void
      */
     protected function saveHashes(array $data) : void {

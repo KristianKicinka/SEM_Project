@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file CreateHashFromPcap.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Objects;
 
@@ -21,8 +27,8 @@ class CreateHashFromPcap extends CreateHash {
     }
 
     /**
-     * @brief
-     * @return array
+     * @brief The function ensures hash creation
+     * @return array New hashes
      * @throws HashGeneratorFailException
      */
     public function create(): array {
@@ -34,9 +40,9 @@ class CreateHashFromPcap extends CreateHash {
     }
 
     /**
-     * @brief
-     * @param array $app_data
-     * @return array
+     * @brief The function ensures hash creation and saving
+     * @param array $app_data Additional application data
+     * @return array Created hashes
      * @throws HashGeneratorFailException
      */
     public function createAndSave(array $app_data): array {
@@ -62,11 +68,11 @@ class CreateHashFromPcap extends CreateHash {
     }
 
     /**
-     * @brief
-     * @param $data
+     * @brief The function ensures saving hashes to database
+     * @param array $data Data to save
      * @return void
      */
-    private function save_hashes($data): void {
+    private function save_hashes(array $data): void {
 
         $identifier = [
             'name' => $data['app_name'],

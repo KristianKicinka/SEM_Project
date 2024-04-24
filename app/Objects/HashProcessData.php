@@ -1,10 +1,15 @@
 <?php
+/**
+ * @file HashProcessData.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Objects;
 
 use App\Models\Process as ProcessModel;
 use App\Events\ProcessUpdate;
-use Brick\Math\BigInteger;
 use Illuminate\Support\Facades\DB;
 
 // Status messages for processing creation hashes from app name
