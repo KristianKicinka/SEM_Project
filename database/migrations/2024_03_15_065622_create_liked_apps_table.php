@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file 2024_03_15_065622_create_liked_apps_table.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

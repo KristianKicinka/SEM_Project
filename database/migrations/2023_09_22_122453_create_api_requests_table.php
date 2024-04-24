@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file 2023_09_22_122453_create_api_requests_table.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

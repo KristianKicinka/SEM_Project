@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file 2024_02_26_141106_create_emulators_table.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

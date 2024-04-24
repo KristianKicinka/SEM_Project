@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file 2019_08_19_000000_create_failed_jobs_table.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

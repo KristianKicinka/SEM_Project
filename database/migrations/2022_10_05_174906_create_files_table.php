@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file 2022_10_05_174906_create_files_table.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -20,7 +26,7 @@ return new class extends Migration
             $table->string('path');
             $table->bigInteger('app_id')->unsigned()->nullable();
             $table->timestamps();
-            $table->foreign('app_id')->references('id')->on('applications'); 
+            $table->foreign('app_id')->references('id')->on('applications');
         });
     }
 

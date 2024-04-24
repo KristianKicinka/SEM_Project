@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file 2022_10_05_204558_create_hashes_table.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
