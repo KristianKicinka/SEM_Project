@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file logging.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;

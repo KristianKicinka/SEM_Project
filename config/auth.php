@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file auth.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 return [
 
