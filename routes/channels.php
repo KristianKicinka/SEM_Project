@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file channels.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use Illuminate\Support\Facades\Broadcast;
 

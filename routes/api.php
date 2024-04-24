@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file api.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;

@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file web.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\FileController;
