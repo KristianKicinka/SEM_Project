@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file CreateHashFromAppName.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Jobs;
 
@@ -42,7 +48,7 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
     /**
      * @brief Execute the job
      * @throws HashGenerationProcessFailed Hash process failed exception
-     * @throws AppUninstallationFailException
+     * @throws AppUninstallationFailException App uninstallation failed exception
      */
     public function handle(): void {
 
