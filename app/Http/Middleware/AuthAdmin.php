@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file AuthAdmin.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Http\Middleware;
 
@@ -11,6 +17,7 @@ use Illuminate\Http\Response;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthAdmin {
+
     /**
      * @brief The function ensures the admin user authentication
      * @param Request $request HTTP request data
@@ -27,8 +34,8 @@ class AuthAdmin {
                 return $next($request);
             }
 
-            // Return an unauthorized response if the user doesn't have the required role
-            return response()->json(['error' => 'Unauthorized'], 403);
+            // Return forbidden response if the user doesn't have the required role
+            return response()->json(['error' => 'Forbidden'], 403);
         } catch (Exception $e) {
             // Token is invalid or user is not authenticated
             return response()->json(['error' => 'Unauthorized'], 401);
