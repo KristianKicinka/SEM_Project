@@ -1,9 +1,14 @@
 <?php
+/**
+ * @file ApiRequestController.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Http\Controllers;
 
 use App\Exceptions\HashGeneratorFailException;
-use App\Models\Process as ProcessModel;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -18,7 +23,6 @@ use App\Jobs\CreateHashFromAppName;
 use App\Models\ApiRequest;
 
 use App\Objects\CreateHashFromPcap;
-use phpseclib3\Math\BigInteger;
 
 // API request types
 const REQUEST_TYPES = [
@@ -600,64 +604,6 @@ class ApiRequestController extends Controller {
     }
 
     /**
-     * @brief The function ensures PCAP file analysis
-     * @param Request $request HTTP request data
-     * @return JsonResponse Analysis output
-     * @throws HashGeneratorFailException Hash generator fail exception
-     */
-    public function analyzePcapFile(Request $request): JsonResponse {
-
-        // Validator rules
-        $rules = [
-            'auth_key' => 'required|string',
-            'pcap_file' => 'required|file|mimes:pcap',
-        ];
-
-        // Validator error messages
-        $messages = [
-            'auth_key.required' => 'The auth key is required.',
-            'auth_key.string' => 'The auth key must be string.',
-        ];
-
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
-        }
-
-        // API request registration
-        $this->registerApiRequest($request->input('auth_key'), $request->ip(), REQUEST_TYPES[6]);
-
-        $pcap_file_name = $this->savePcapFile($request->file('pcap_file'));
-        $hash_types = ["JA3"];
-
-        // Create hashes from PCAP file
-        $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types);
-        $pcap_hashes = $pcap_hash->create();
-        $response = [];
-
-        // Process hashes by hash type
-        foreach($hash_types as $hash_type){
-            foreach($pcap_hashes[$hash_type] as $hash){
-                $apps = DB::table('applications')
-                ->select(
-                    'applications.name',
-                    'applications.package_name',
-                    'applications.version',
-                    'applications.is_malware'
-                    )
-                ->join('hashes', 'hashes.app_id', '=', 'applications.id')
-                ->where('hashes.hash', '=', $hash)
-                ->get();
-
-                $response[$hash] = $apps;
-            }
-        }
-
-        return response()->json($response, 200);
-    }
-
-    /**
      * @brief The function ensures saving PCAP files to local storage
      * @param UploadedFile $file PCAP file
      * @return string PCAP file name
@@ -842,6 +788,11 @@ class ApiRequestController extends Controller {
         return $data;
     }
 
+    /**
+     * @brief The function serves api request deletion
+     * @param Request $request HTTP request data
+     * @return JsonResponse Success message
+     */
     public function deleteApiRequest(Request $request):JsonResponse {
         DB::table('api_requests')->where('id', '=', $request->api_request_id)->delete();
 

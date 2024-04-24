@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file AuthController.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Http\Controllers;
 
@@ -15,7 +21,7 @@ use App\Models\User;
 class AuthController extends Controller {
 
     /**
-     * @brief The function ensures the return
+     * @brief The function ensures auth response creation
      * @param Authenticatable $user Auth user data
      * @param string $token Auth token string
      * @return array Auth token data

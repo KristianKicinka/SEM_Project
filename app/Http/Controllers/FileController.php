@@ -1,4 +1,10 @@
 <?php
+/**
+ * @file FileController.php
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+ */
 
 namespace App\Http\Controllers;
 
