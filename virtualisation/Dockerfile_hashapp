@@ -85,11 +85,6 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Install dependencies
 RUN composer install
 
-# Configure supervisor
-COPY ./installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
-
-RUN supervisorctl reread && supervisorctl update
-
 # Setup mariaDB
 FROM mariadb:latest
 # Config database data
@@ -113,6 +108,10 @@ CMD php artisan migrate
 CMD php artisan db:seed --class=UserSeeder
 CMD php artisan db:seed --class=EmulatorSeeder
 
-# import DB and DB conf
+# Configure supervisor
+COPY ./installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
+
+RUN supervisorctl reread && supervisorctl update && supervisorctl start laravel_workers_queue.conf
+
 # .env laravelu
 
