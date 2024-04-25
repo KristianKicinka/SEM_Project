@@ -10,7 +10,7 @@ RUN npm install
 RUN npm run build
 
 
-FROM php:8.2.7-zts-bookworm
+FROM php:8.2-apache
 
 RUN apt-get update
 RUN apt-get install -y curl wget build-essential autoconf automake cmake
@@ -27,13 +27,18 @@ USER root
 
 # Install Wireshark 4.2.4
 WORKDIR /tmp/wireshark
-RUN apt-get install -y libspeexdsp-dev systemd flex qt6-* libgtk-3-dev libpcap-dev libgcrypt20-dev libgpg-error-dev qttools5-dev qttools5-dev-tools libqt5svg5-dev libtool libc-ares2 libc-ares-dev
-# RUN wget https://2.na.dl.wireshark.org/src/wireshark-4.2.4.tar.xz
+RUN apt-get install -y libspeexdsp-dev systemd flex qt6-* libgtk-3-dev libpcap-dev libgcrypt20-dev \
+    libgpg-error-dev qttools5-dev qttools5-dev-tools libqt5svg5-dev libtool libc-ares2 libc-ares-dev \
+
 RUN wget https://www.wireshark.org/download/src/all-versions/wireshark-4.2.4.tar.xz
 RUN tar -xf wireshark-4.2.4.tar.xz
+
 WORKDIR /tmp/wireshark/wireshark-4.2.4/
+
 RUN mkdir build
+
 WORKDIR /tmp/wireshark/wireshark-4.2.4/build
+
 RUN groupadd -g 62 wireshark
 RUN cmake ..
 RUN make
@@ -64,15 +69,50 @@ RUN pip3.11 install -r /tmp/requirements.txt
 # check version
 RUN wireshark -v
 
-# Install aria2c, redis, mariadb
-RUN apt-get install -y aria2 redis mariadb-server apache2
+# Install aria2c, redis, supervisor
+RUN apt-get install -y aria2 redis supervisor
 
 WORKDIR /var/www/
 
+# Configure Laravel
+RUN a2enmod rewrite
 
-# config supervisor /etc/supervisor/conf.d/laravel_queue_workers.conf
+RUN docker-php-ext-install pdo_mysql zip
+
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Install dependencies
+RUN composer install
+
+# Configure supervisor
+COPY ./installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
+
+RUN supervisorctl reread && supervisorctl update
+
+# Setup mariaDB
+FROM mariadb:latest
+# Config database data
+ENV MYSQL_DATABASE=sem_project
+ENV MYSQL_ROOT_PASSWORD=root
+EXPOSE 3306
+
+WORKDIR /var/www/sem_project
+
+# run laravel server
+CMD php artisan serve --host=0.0.0.0 --port=8080
+EXPOSE 8080
+
+# Create sotrage simlink
+CMD php artisan storage:link
+
+# migrate database
+CMD php artisan migrate
+
+# seed data to database
+CMD php artisan db:seed --class=UserSeeder
+CMD php artisan db:seed --class=EmulatorSeeder
+
 # import DB and DB conf
-# apache conf
 # .env laravelu
-# storage symlink artisan
 
