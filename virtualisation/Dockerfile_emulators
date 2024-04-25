@@ -13,7 +13,7 @@ WORKDIR /tmp/android_emulator
 RUN curl -o emulator.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
 
 # will unzip and create cmdline-tools dir
-RUN unzip emulator.zip 
+RUN unzip emulator.zip
 
 RUN mkdir -p /opt/android-sdk/
 
@@ -45,18 +45,14 @@ RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT platform-tools
 
 RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT emulator
 
-#RUN emulator --sdk_root=$ANDROID_SDK_ROOT --version
 
 RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-30"
 
 RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "system-images;android-30;google_apis;x86_64"
-#RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "system-images;android-30;google_apis;arm64-v8a"
 
 RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "build-tools;30.0.3"
 
 RUN echo no |avdmanager create avd --force -n android-30-x86_64 -k "system-images;android-30;google_apis;x86_64"
-
-#RUN echo no |avdmanager create avd --force -n android-33-arm64-v8a -k "system-images;android-33;google_apis;arm64-v8a"
 
 RUN cat > /entry.sh <<EOF
 #!/usr/bin/sh
@@ -64,7 +60,6 @@ RUN cat > /entry.sh <<EOF
 #start adb server on port 5057 and start emulator
 adb start-server && \
 emulator -avd android-30-x86_64 -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -nocache
-#emulator -avd android-33-arm64-v8a -no-window 2>&1 >/tmp/android-33-arm64-v8a.log
 EOF
 ENTRYPOINT ["/usr/bin/sh"]
 CMD ["/entry.sh"]
