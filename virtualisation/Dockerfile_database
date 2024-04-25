@@ -1,0 +1,5 @@
+FROM mariadb:latest
+# Config database data
+ENV MYSQL_DATABASE=sem_project
+ENV MYSQL_ROOT_PASSWORD=root
+EXPOSE 3306
