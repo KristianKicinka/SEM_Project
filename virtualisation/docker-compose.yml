@@ -1,6 +1,42 @@
-version: "3"
+version: '3.8'
 
 services:
-    web-app:
+    web:
         build:
+            context: .
+            dockerfile: Dockerfile_hashapp
+        ports:
+            - "8080:80"
+        volumes:
+            - .:/var/www/sem_project
+        depends_on:
+            - db
 
+    db:
+        image: mariadb:latest
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: sem_project
+            MYSQL_USER: sem_project
+            MYSQL_PASSWORD: password
+        ports:
+            - "3306:3306"
+    
+    emulator_01:
+        build:
+            context: .
+            dockerfile: Dockerfile_emulators
+        
+        depends_on:
+            - web
+
+    emulator_02:
+        build:
+            context: .
+            dockerfile: Dockerfile_emulators
+        
+        depends_on:
+            - web
+
+    
