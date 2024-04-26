@@ -2,18 +2,21 @@ version: '3.8'
 
 services:
     web:
+        image: hashapp:latest
+        container_name: hashapp_web
         build:
+            target: web
             context: .
-            dockerfile: Dockerfile_hashapp
+        env_file:
+            - ../.env
         ports:
-            - "8080:80"
-        volumes:
-            - .:/var/www/sem_project
+            - "8081:80"
         depends_on:
             - db
 
     db:
-        image: mariadb:latest
+        image: mariadb
+        container_name: hashapp_db
         restart: always
         environment:
             MYSQL_ROOT_PASSWORD: root
@@ -22,21 +25,25 @@ services:
             MYSQL_PASSWORD: password
         ports:
             - "3306:3306"
-    
-    emulator_01:
-        build:
-            context: .
-            dockerfile: Dockerfile_emulators
-        
-        depends_on:
-            - web
 
-    emulator_02:
-        build:
-            context: .
-            dockerfile: Dockerfile_emulators
-        
-        depends_on:
-            - web
+networks:
+    app:
+        driver: bridge
+    
+#    emulator_01:
+#        build:
+#            context: .
+#            dockerfile: Dockerfile_emulators
+#        
+#        depends_on:
+#            - web
+#
+#    emulator_02:
+#        build:
+#            context: .
+#            dockerfile: Dockerfile_emulators
+#        
+#        depends_on:
+#            - web
 
     
