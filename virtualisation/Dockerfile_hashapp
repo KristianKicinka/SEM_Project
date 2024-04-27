@@ -134,6 +134,6 @@ RUN apt update && sudo apt install supervisor
 COPY ./installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
 
 #Start supervisor
-RUN supervisord -c /etc/supervisor/supervisord.conf
+CMD supervisord -c /etc/supervisor/supervisord.conf
 
 # .env laravelu
