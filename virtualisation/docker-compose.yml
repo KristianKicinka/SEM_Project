@@ -5,13 +5,13 @@ services:
     web:
         image: hashapp:latest
         container_name: hashapp_web
+        privileged: true
         build:
             target: web
             context: .
         env_file:
             - ../.env
-        ports:
-            - "8081:80"
+        network_mode: host
         depends_on:
             - db
         volumes:
@@ -27,17 +27,22 @@ services:
             MYSQL_DATABASE: sem_project
             MYSQL_USER: sem_project
             MYSQL_PASSWORD: password
-        ports:
-            - "3306:3306"
+        network_mode: host
 
     # Android emulator container 01
     emulator_01:
         image: emulator_vm:latest
         container_name: emulator_01
+        privileged: true
+        deploy:
+            resources:
+                limits:
+                    cpus: "4.0"
+                    memory: 4g
         networks:
             - em_net_01
         volumes:
-            -   shared_dir:/mnt/storage
+            - shared_dir:/mnt/storage
         depends_on:
             - web
 
@@ -45,6 +50,12 @@ services:
     emulator_02:
         image: emulator_vm:latest
         container_name: emulator_02
+        privileged: true
+        deploy:
+            resources:
+                limits:
+                    cpus: "4.0"
+                    memory: 4g
         networks:
             - em_net_02
         volumes:
