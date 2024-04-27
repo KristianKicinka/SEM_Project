@@ -85,13 +85,20 @@ RUN mkdir build
 
 WORKDIR /tmp/wireshark/wireshark-4.2.4/build
 
-RUN groupadd -g 62 wireshark
 RUN cmake ..
 RUN make
 RUN make install
 
 # check version
 RUN wireshark -v
+
+# Setup wireshark for none root users
+RUN groupadd wireshark
+RUN usermod -a -G wireshark www-data
+
+# change permissions for dumpcap
+RUN chgrp wireshark /usr/local/bin/dumpcap
+RUN chmod 4750 /usr/local/bin/dumpcap
 
 WORKDIR /var/www/html
 
