@@ -3,18 +3,16 @@ version: '3.8'
 services:
     # Main app container
     web:
-        image: hashapp:latest
+        image: sem_hashapp:latest
         container_name: hashapp_web
         privileged: true
-        build:
-            target: web
-            context: .
         env_file:
             - ../.env
         network_mode: host
         depends_on:
             - db
         volumes:
+            -   /var/run/docker.sock:/var/run/docker.sock
             -   shared_dir:/var/www/html/storage
 
     # Database container
@@ -29,9 +27,16 @@ services:
             MYSQL_PASSWORD: password
         network_mode: host
 
+    # Redis
+    redis:
+        image: redis:bookworm
+        container_name: hashapp_redis
+        command: redis-server --save 20 1 --loglevel warning
+        network_mode: host
+
     # Android emulator container 01
     emulator_01:
-        image: emulator_vm:latest
+        image: sem_emulator_vm:latest
         container_name: emulator_01
         privileged: true
         deploy:
@@ -48,7 +53,7 @@ services:
 
     # Android emulator container 02
     emulator_02:
-        image: emulator_vm:latest
+        image: sem_emulator_vm:latest
         container_name: emulator_02
         privileged: true
         deploy:
@@ -81,4 +86,3 @@ networks:
 volumes:
     shared_dir:
         driver: local
-
