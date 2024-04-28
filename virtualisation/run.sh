@@ -1,16 +1,19 @@
 #!/bin/bash
+##
+# @file run.sh
+# @author Kristián Kičinka (xkicin02)
+#
+# @copyright Copyright (c) 2024
+#
 
 # Start Docker Compose
 echo "Starting Docker Compose..."
 docker-compose up -d
 
+# Create database structure
 echo "Creating database structure..."
-docker exec -it hashapp_web bash -c "sudo -u www-data bash -c \"php artisan migrate;\""
 docker exec -it hashapp_web bash -c "sudo -u www-data bash -c \"php artisan migrate:fresh;\""
-docker exec -it hashapp_web bash -c "sudo -u www-data bash -c \"php artisan db:seed --class=UserSeeder\""
-docker exec -it hashapp_web bash -c "sudo -u www-data bash -c \"php artisan db:seed --class=EmulatorSeeder\""
-
-echo "Importing data to database..."
 
 # Create network interfaces
-#RUN mysql -u root -p root sem_project < ./installationFiles/sem_project_db_data.sql
+echo "Importing data to database..."
+docker exec -it hashapp_web bash -c "sudo -u www-data bash -c \"mysql -h 0.0.0.0 -P 3306 -u sem_project --password=password -D sem_project < ./installationFiles/sem_project_db_data.sql\""

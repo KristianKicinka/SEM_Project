@@ -1,20 +1,29 @@
+##
+# @file Dockerfile_hashapp
+# @author Kristián Kičinka (xkicin02)
+#
+# @copyright Copyright (c) 2024
+#
+
 FROM node:21.6.2-slim as ReactHashApp
 
 USER root
 # Copy package.json
 RUN mkdir -p /var/www/sem_project/
 RUN chown -R www-data:www-data /var/www/
+
+# Copy React data
 USER www-data
 COPY ./ /var/www/sem_project/
 
+# Change directory ownership
 USER root
-
 RUN chown -R www-data:www-data /var/www/sem_project/
 
 USER www-data
-
 WORKDIR /var/www/sem_project/
 
+# Build frontend
 RUN npm install
 RUN npm run build
 
@@ -27,6 +36,7 @@ USER root
 # Set max file and post size limits
 COPY ./installationFiles/custom_php_settings.ini /usr/local/etc/php/conf.d/custom_php_settings.ini
 
+# Install needed dependencies
 RUN apt-get update
 RUN apt-get install -y curl wget build-essential autoconf automake cmake sudo aria2 libzip-dev
 
@@ -43,16 +53,18 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
+# Set custom port to web server
 ENV APACHE_HTTP_PORT=8081
 RUN sed -i "s/Listen 80/Listen $APACHE_HTTP_PORT/" /etc/apache2/ports.conf
 RUN sed -i "s/<VirtualHost \*:80>/<VirtualHost *:$APACHE_HTTP_PORT>/" /etc/apache2/sites-available/000-default.conf
 
 ##########
-# Docker
+# Docker #
 ##########
 
 ARG DOCKER_GROUP_ID
 
+# Create docker installation file
 RUN cat > /mnt/docker_install.sh <<EOF
 # Add Docker's official GPG key:
     apt-get update
@@ -72,6 +84,7 @@ RUN cat > /mnt/docker_install.sh <<EOF
     usermod -aG docker www-data
 EOF
 
+# Docker installation
 RUN sh /mnt/docker_install.sh
 
 # Changing docker group gid to gid of docker group in host system
@@ -83,7 +96,6 @@ RUN mkdir -p /var/www/html
 COPY . /var/www/html
 
 WORKDIR /var/www/html
-
 USER root
 
 # Set permissions
@@ -94,13 +106,14 @@ RUN chmod -R 0776 /var/www/html/storage /var/www/html/bootstrap/cache
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 USER www-data
 
-# Install dependencies
+# Install composer dependencies
 RUN composer install
 
 # Copy built React applications
 COPY --from=ReactHashApp /var/www/sem_project/public /var/www/html/public
 
 USER root
+# Install networking and database tools
 RUN apt update
 RUN apt install -y vim iproute2 net-tools iputils-ping mariadb-client
 

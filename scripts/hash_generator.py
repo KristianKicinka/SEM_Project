@@ -1,3 +1,10 @@
+"""
+ * @file hash_generator.py
+ * @author Kristián Kičinka (xkicin02)
+ *
+ * @copyright Copyright (c) 2024
+"""
+
 import sys
 import subprocess
 
@@ -26,7 +33,6 @@ import warnings
 warnings.filterwarnings('ignore')
 
 BLACK_LIST_FILE_1 = "./black_lists/domain_black_list.txt"
-BLACK_LIST_FILE_2 = "./black_lists/ad-list.txt"
 
 black_list_files = [BLACK_LIST_FILE_1]
 
@@ -521,7 +527,6 @@ def create_JA3S_string(version, ciphers, extensions):
 
     return full_string
 
-
 def create_JA3_hash(packet):
     """
     The function ensures JA3 hash generation
@@ -564,8 +569,18 @@ def create_JA3S_hash(packet):
 
     return result.hexdigest()
 
-#source: https://github.com/FoxIO-LLC/ja4/blob/main/python/ja4x.py#L16
 def encode_variable_length_quantity(v):
+    """
+        The function ensures encoding variable length
+
+        Parameters:
+        v (int): oid variable.
+
+        Returns:
+        array: encoded variable length.
+
+        source: https://github.com/FoxIO-LLC/ja4/blob/main/python/ja4x.py#L16
+    """
     m = 0x00
     output = []
     while v >= 0x80:
@@ -575,8 +590,18 @@ def encode_variable_length_quantity(v):
     output.insert(0, v | m)
     return output
 
-#source: https://github.com/FoxIO-LLC/ja4/blob/main/python/ja4x.py#L26
 def oid_to_hex(oid):
+    """
+        The function ensures encoding oid to hex
+
+        Parameters:
+        oid (string): oid value.
+
+        Returns:
+        string: oid in hex format.
+
+        source: https://github.com/FoxIO-LLC/ja4/blob/main/python/ja4x.py#L26
+    """
     a = [int(x) for x in oid.split(".")]
     oid = [a[0] * 40 + a[1]]
     for n in a[2:]:
