@@ -31,3 +31,4 @@ Route::post('/search-app', [SearchController::class, 'index']);
 Route::post('/save-app-list-file', [FileController::class, 'saveNamesListFile']);
 Route::post('/download-apk-file', [FileController::class, 'downloadApkFile']);
 Route::post('/get-app-data', [ApplicationController::class, 'getApplicationDataForWeb']);
+Route::post('/export-to-csv', [ApplicationController::class, 'exportAppDataToCSV']);

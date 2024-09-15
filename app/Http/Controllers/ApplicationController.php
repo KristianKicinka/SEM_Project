@@ -11,6 +11,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ApplicationController extends Controller {
 
@@ -83,5 +84,50 @@ class ApplicationController extends Controller {
             ->where('hashes.hash_type','=', $hash_type)
             ->where('applications.version','=',$app_version)
             ->pluck('hash');
+    }
+
+    /**
+     * @brief The function ensures getting applications data for main website
+     * @return JsonResponse Applications data
+     */
+    public function exportAppDataToCSV() {
+
+        $data = DB::table('applications')
+            ->select('hashes.id AS id','name','package_name','version','ja3_hash', 'sni', 'ja3s_hash',
+            'ja4_hash', 'ja4s_hash', 'ja4x_hash', 'is_dangerous', 'is_malware',
+            'ip_src', 'port_src', 'ip_dest', 'port_dest', 'hashes.created_at AS created_at')
+            ->distinct()
+            ->join('hashes','applications.id','=','hashes.app_id')
+            ->get();
+
+        // Streamed response to handle large datasets efficiently
+        $response = new StreamedResponse(function() use ($data) {
+            $handle = fopen('php://output', 'w');
+
+            // Write the CSV column headers
+            fputcsv($handle, [
+                'ID', 'Name', 'Package Name', 'Version', 'JA3 Hash', 'SNI', 
+                'JA3S Hash', 'JA4 Hash', 'JA4S Hash', 'JA4X Hash', 'Is Dangerous', 
+                'Is Malware', 'IP Source', 'Port Source', 'IP Destination', 'Port Destination', 'Created At'
+            ]);
+
+            // Write each row of data
+            foreach ($data as $row) {
+                fputcsv($handle, [
+                    $row->id, $row->name, $row->package_name, $row->version, $row->ja3_hash, $row->sni, 
+                    $row->ja3s_hash, $row->ja4_hash, $row->ja4s_hash, $row->ja4x_hash, $row->is_dangerous, 
+                    $row->is_malware, $row->ip_src, $row->port_src, $row->ip_dest, $row->port_dest, $row->created_at
+                ]);
+            }
+
+            // Close the file stream
+            fclose($handle);
+        });
+
+        // Set appropriate headers for CSV download
+        $response->headers->set('Content-Type', 'text/csv');
+        $response->headers->set('Content-Disposition', 'attachment; filename="hashapp-database.csv"');
+
+        return $response;
     }
 }

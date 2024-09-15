@@ -83,6 +83,36 @@ const DatabasePage = () => {
     }
 
     /**
+     * @brief The function ensures handling CSV export click
+     */
+    const handleCSVexport = async () => {
+        try {
+            // Make POST request to export CSV
+            const response = await axios.post('/export-to-csv', {}, { responseType: 'blob' });
+
+            // Create a Blob from the response data
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+
+            // Set the link href to the Blob URL
+            link.href = url;
+
+            // Set the filename for the download
+            link.setAttribute('download', 'hashapp-database.csv');
+
+            // Append the link to the body and trigger the download
+            document.body.appendChild(link);
+            link.click();
+
+            // Remove the link after triggering the download
+            link.remove();
+        } catch (error) {
+            toast.error('There was an error exporting the CSV!');
+            console.error('There was an error exporting the CSV:', error);
+        }
+    };
+
+    /**
      * @brief The function ensures getting data from database
      */
     const getData = async () => {
@@ -114,21 +144,30 @@ const DatabasePage = () => {
                                 </div>
                                 <div className="col"></div>
                                 <div className="col">
-                                    <InputGroup className="mb-3">
-                                        <Form.Control
-                                            placeholder="Search"
-                                            aria-label="Search"
-                                            aria-describedby="search_btn"
-                                            onChange={e=>handleSearch(e.target.value)}
-                                        />
-                                        <Button
-                                            id="search_btn"
-                                            type="submit"
-                                            className="btn-search text-light"
-                                        >
-                                            <i className="fa-solid fa-magnifying-glass"></i>
-                                        </Button>
-                                    </InputGroup>
+                                    <div className="row">
+                                        <div className="col">
+                                            <InputGroup className="mb-3">
+                                            <Form.Control
+                                                placeholder="Search"
+                                                aria-label="Search"
+                                                aria-describedby="search_btn"
+                                                onChange={e=>handleSearch(e.target.value)}
+                                            />
+                                            <Button
+                                                id="search_btn"
+                                                type="submit"
+                                                className="btn-search text-light"
+                                            ><i className="fa-solid fa-magnifying-glass"></i>
+                                                </Button>
+                                            </InputGroup>
+                                        </div>
+                                        <div className="col-4">
+                                            <Button className="btn-search text-light" onClick={handleCSVexport}>
+                                                <small className="px-1">CSV export</small>
+                                                <i className="fa-solid fa-file-export"></i>
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="row px-1 py-2 table-responsive">
