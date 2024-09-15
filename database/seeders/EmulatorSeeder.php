@@ -22,14 +22,14 @@ class EmulatorSeeder extends Seeder {
         // Inserting emulator 01
         Emulator::create([
             'name' => 'emulator_01',
-            'network_interface' => 'br-em_01',
+            'network_interface' => 'br-em-01',
             'is_working' => false,
         ]);
 
         // Inserting emulator 02
         Emulator::create([
             'name' => 'emulator_02',
-            'network_interface' => 'br-em_02',
+            'network_interface' => 'br-em-02',
             'is_working' => false,
         ]);
     }

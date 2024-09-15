@@ -1,3 +1,7 @@
+--
+-- @brief Database data template
+-- @author Kristiián Kičinka (xkicin02)
+--
 -- phpMyAdmin SQL Dump
 -- version 5.2.1deb1
 -- https://www.phpmyadmin.net/
@@ -10,6 +14,7 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
+SET FOREIGN_KEY_CHECKS=0;
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -22,7 +27,7 @@ SET time_zone = "+00:00";
 --
 
 --
--- Dumping data for table `api_requests`
+-- Dumping data for table `applications`
 --
 
 INSERT INTO `api_requests` (`id`, `user_id`, `ip_address`, `type`, `description`, `status`, `created_at`, `updated_at`) VALUES
@@ -44,7 +49,7 @@ INSERT INTO `api_requests` (`id`, `user_id`, `ip_address`, `type`, `description`
 (40, 2, '192.168.0.119', 'get_app_hashes', 'Get apps hashes', 'finished', '2024-04-23 19:42:42', '2024-04-23 19:42:42');
 
 --
--- Dumping data for table `applications`
+-- Dumping data for table `api_requests`
 --
 
 INSERT INTO `applications` (`id`, `name`, `package_name`, `version`, `is_malware`, `is_dangerous`, `created_at`, `updated_at`) VALUES
@@ -107,8 +112,8 @@ INSERT INTO `applications` (`id`, `name`, `package_name`, `version`, `is_malware
 --
 
 INSERT INTO `emulators` (`id`, `name`, `network_interface`, `is_working`, `created_at`, `updated_at`) VALUES
-(1, 'emulator_01', 'br-1d0059aa9163', 0, NULL, '2024-04-25 07:28:55'),
-(2, 'emulator_02', 'br-9b1487b2b068', 0, NULL, '2024-04-15 04:34:58');
+(1, 'emulator_01', 'br-em-01', 0, NULL, '2024-04-25 07:28:55'),
+(2, 'emulator_02', 'br-em-02', 0, NULL, '2024-04-15 04:34:58');
 
 --
 -- Dumping data for table `files`
@@ -665,9 +670,9 @@ INSERT INTO `processes` (`id`, `job_id`, `ip_address`, `status`, `progress`, `me
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `surname`, `email`, `phone`, `email_verified_at`, `password`, `role`, `api_auth_key`, `remember_token`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'User', 'admin@example.com', '+421911369367', NULL, '$2y$10$oaMWNLny.XekudYlEfSexO3chL62B.NP/s5ObA0lAWYSdIYXEwqx2', 'admin', 'YuPzeVpjb5pjQxpOP4DOATnRXFK99W', NULL, '2024-04-13 14:20:53', '2024-04-15 10:16:18'),
-(2, 'Basic', 'User', 'user@example.com', '+421911369365', NULL, '$2y$10$wX5kmSFlU5rTO61B8PP7oOKxWY5IVrGj/owqPG39OvbhqWlSg7sge', 'basic_user', 'ypqGlCRPr96HMz4oU5DE4OeqnxxZm1', NULL, '2024-04-13 14:21:48', '2024-04-15 10:45:25');
+INSERT INTO `users` (`id`, `name`, `surname`, `email`, `phone`, `password`, `role`, `api_auth_key`, `created_at`, `updated_at`) VALUES
+(1, 'Admin', 'User', 'admin@example.com', '+421911369367', '$2y$10$oaMWNLny.XekudYlEfSexO3chL62B.NP/s5ObA0lAWYSdIYXEwqx2', 'admin', 'YuPzeVpjb5pjQxpOP4DOATnRXFK99W', '2024-04-13 14:20:53', '2024-04-15 10:16:18'),
+(2, 'Basic', 'User', 'user@example.com', '+421911369365', '$2y$10$wX5kmSFlU5rTO61B8PP7oOKxWY5IVrGj/owqPG39OvbhqWlSg7sge', 'basic_user', 'ypqGlCRPr96HMz4oU5DE4OeqnxxZm1', '2024-04-13 14:21:48', '2024-04-15 10:45:25');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
