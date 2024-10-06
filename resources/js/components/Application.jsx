@@ -24,6 +24,7 @@ import AdminSettings from './web/admin/Settings';
 import AdminAPI from './web/admin/API';
 import AdminDashboard from './web/admin/Dashboard';
 import AdminFiles from './web/admin/Files';
+import AdminEmulators from './web/admin/Emulators';
 
 import BasicUserDashboard from './web/user/Dashboard';
 import BasicUserAPI from './web/user/API';
@@ -52,6 +53,7 @@ const Application = () => {
                     <Route path='/admin/settings' element={<ProtectedRoute userType='admin'><AdminSettings/></ProtectedRoute>} />
                     <Route path='/admin/api' element={<ProtectedRoute userType='admin'><AdminAPI/></ProtectedRoute>} />
                     <Route path='/admin/files' element={<ProtectedRoute userType='admin'><AdminFiles/></ProtectedRoute>} />
+                    <Route path='/admin/emulators' element={<ProtectedRoute userType='admin'><AdminEmulators/></ProtectedRoute>} />
 
                     <Route path='/user/dashboard' element={<ProtectedRoute userType='basic_user'><BasicUserDashboard/></ProtectedRoute>} />
                     <Route path='/user/api' element={<ProtectedRoute userType='basic_user'><BasicUserAPI/></ProtectedRoute>} />

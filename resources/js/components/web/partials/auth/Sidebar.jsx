@@ -21,6 +21,7 @@ const Sidebar = ({sidebarType}) => {
         {id:4, text: "Settings" , url: "/admin/settings", icon_class: "fa-solid fa-gear pe-2"},
         {id:5, text: "Users" , url: "/admin/users", icon_class: "fa-solid fa-users pe-2"},
         {id:6, text: "Files" , url: "/admin/files", icon_class: "fa-solid fa-file pe-2"},
+        {id:7, text: "Emulators" , url: "/admin/emulators", icon_class: "fa-solid fa-server pe-2"},
     ];
 
     // Sidebar items for basic users
