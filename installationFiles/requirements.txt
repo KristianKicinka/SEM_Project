@@ -50,7 +50,7 @@ PyGObject
 PyJWT==2.6.0
 pyparsing
 pycairo
-PySimpleSOAP==1.16.2
+#PySimpleSOAP==1.16.2
 python-dateutil
 python-debian
 python-debianbts

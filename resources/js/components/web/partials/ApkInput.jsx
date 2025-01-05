@@ -115,7 +115,7 @@ const ApkInput = ({ hashTypes }) => {
                 <h3 className='pb-2'>Insert APK file</h3>
                 <Form.Group controlId="formFileAPK" className="row">
                     <Form.Control type="file" className='col'
-                        onChange={e=>{setApkFiles(Array.from(e.target.files))}} accept='.apk' required multiple/>
+                        onChange={e=>{setApkFiles(Array.from(e.target.files))}} accept='.apk,.xapk' required multiple/>
                     <Button id="submit_apk_files" type='submit' className='btn-search text-light col-2 mx-2'>
                         <i className='fa-solid fa-file-import'></i>
                     </Button>

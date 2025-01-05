@@ -19,9 +19,13 @@ return new class extends Migration
     {
         Schema::create('emulators', function (Blueprint $table) {
             $table->id();
+            $table->string("docker_id");
             $table->string("name");
             $table->string("network_interface");
             $table->boolean("is_working")->default(0);
+            $table->integer("memory");
+            $table->integer("cpu_count");
+            $table->string("image");
             $table->timestamps();
         });
     }

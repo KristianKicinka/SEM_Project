@@ -11,6 +11,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -23,6 +24,7 @@ use App\Models\Process as ProcessModel;
 use App\Models\Application;
 use App\Models\Hash;
 use \App\Exceptions\HashGeneratorFailException;
+use App\Jobs\CreateHashFromXAPK;
 
 const PCAP_PATH = 'app/public/uploads/pcap_inserted/';
 
@@ -51,22 +53,26 @@ class HashController extends Controller {
         $hash_types = json_decode($request->input('hash_types'));
         $processes = json_decode($request->input('processes'), true);
 
-        $apk_files = $request->file("files");
+        $input_files = $request->file("files");
 
-        foreach ($apk_files as $apk_file){
-            $process_name = $apk_file->getClientOriginalName();
-            $apk_file_name = $this->saveApkFile($apk_file);
-            $process_id = collect($processes)->where('name', $process_name)->pluck('process_id')->first();
+        foreach ($input_files as $input_file){
+            $process_name = $input_file->getClientOriginalName();
 
-            CreateHashFromAPK::dispatch(
-                $apk_file_name,
-                $hash_types,
-                $ip_address,
-                $channel_id,
-                $process_id,
-                $process_name,
-                null
-            )->onQueue('process_queue');
+            if (Str::endsWith($input_file->getClientOriginalName(), '.xapk')){
+                $xapk_file_name = $this->saveXapkFile($input_file);
+                $process_id = collect($processes)->where('name', $process_name)->pluck('process_id')->first();
+
+                CreateHashFromXAPK::dispatch(
+                    $xapk_file_name, $hash_types, $ip_address, $channel_id, $process_id, $process_name, null
+                )->onQueue('process_queue');
+            } else {
+                $apk_file_name = $this->saveApkFile($input_file);
+                $process_id = collect($processes)->where('name', $process_name)->pluck('process_id')->first();
+
+                CreateHashFromAPK::dispatch(
+                    $apk_file_name, $hash_types, $ip_address, $channel_id, $process_id, $process_name, null
+                )->onQueue('process_queue');
+            }
         }
 
         return response()->json([
@@ -82,6 +88,19 @@ class HashController extends Controller {
         $file_name = $file->getClientOriginalName();
         $final_name = date('his') .'_'. $file_name;
         $file->storeAs('uploads/apk_inserted',$final_name,'public');
+
+        return $final_name;
+    }
+
+    /**
+     * @brief The function ensures saving xapk files
+     * @param UploadedFile $file XAPK file
+     * @return string XAPK file name
+     */
+    private function saveXapkFile(UploadedFile $file): string {
+        $file_name = $file->getClientOriginalName();
+        $final_name = date('his') .'_'. $file_name;
+        $file->storeAs('uploads/xapk_inserted',$final_name,'public');
 
         return $final_name;
     }

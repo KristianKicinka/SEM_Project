@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "beluga-php/docker-php": "^1.45",
         "doctrine/dbal": "^4.0",
         "guzzlehttp/guzzle": "^7.8",
         "laravel/framework": "^10.0",
@@ -66,7 +67,8 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "dev",

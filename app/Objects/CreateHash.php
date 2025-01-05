@@ -18,7 +18,7 @@ use App\Exceptions\HashGeneratorFailException;
 use App\Exceptions\LoadingPreinstalledAppsFailed;
 use App\Exceptions\PackageNameNotFoundException;
 use App\Exceptions\RunAppFailException;
-
+use App\Exceptions\XapkFileExtractException;
 use App\Models\Application;
 use App\Models\Emulator;
 use App\Models\File;
@@ -29,6 +29,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
+use ZipArchive;
 
 // Hash generator python script path
 const HASH_SCRIPT_PATH = 'scripts/hash_generator.py';
@@ -36,6 +37,8 @@ const HASH_SCRIPT_PATH = 'scripts/hash_generator.py';
 const PCAP_PATH = 'app/public/pcaps/';
 // Path to preinstalled apps list file
 const PRE_INSTALLED_APPS_FILE = 'scripts/pre_installed_apps.txt';
+// Path to tmp_xapk directory in server storage
+const TMP_XAPK_PATH = 'app/public/tmp_xapk/';
 
 class CreateHash {
 
@@ -76,16 +79,15 @@ class CreateHash {
      * @brief The function ensures pcap file creation
      * @param Emulator $emulator Selected emulator
      * @param string $pcap_file_name Output pcap file name
-     * @param string $apk_path Apk file intended for analysis
+     * @param string $package_name Application package name
      * @return string Out pcap file path
      * @throws CloseAppFailException
      * @throws CreateCommunicationOnEmulatorException
      * @throws PackageNameNotFoundException
      * @throws RunAppFailException
      */
-    public function createPcapFile(Emulator $emulator, string $pcap_file_name, string $apk_path) : string {
+    public function createPcapFile(Emulator $emulator, string $pcap_file_name, string $package_name) : string {
 
-        $package_name = trim($this->getAppPackageName($emulator, $apk_path));
         $pcap_out_path = storage_path(PCAP_PATH).$pcap_file_name;
 
         $this->addFileToFiles($pcap_file_name, 'PCAP', $pcap_out_path);
@@ -203,15 +205,32 @@ class CreateHash {
     }
 
     /**
-     * @brief The function ensures app installation on emulator
-     * @param Emulator $emulator Selected emulator
-     * @param string $apk_file_path Path to apk file intended for analysis
+     * @brief TODO
+     * @param string $file_path Path to apk file intended for analysis
+     * @return bool
+     */
+    private function isXAPK(string $file_path) : bool {
+        return strtolower(pathinfo($file_path, PATHINFO_EXTENSION)) === 'xapk';
+    }
+
+    /**
+     * @brief TODO
+     * @param string $file_path Path to apk file intended for analysis
+     * @return bool
+     */
+    private function isAPK(string $file_path) : bool {
+        return strtolower(pathinfo($file_path, PATHINFO_EXTENSION)) === 'apk';
+    }
+
+    /**
+     * @brief TODO
+     * @param Emulator $emulator
+     * @param string $file_path Path to apk file intended for analysis
      * @return void
      * @throws AppInstallationFailException
      */
-    protected function installAppOnEmulator(Emulator $emulator, string $apk_file_path) : void {
-
-        $command = 'adb install '.$apk_file_path;
+    private function installAPK(Emulator $emulator, string $file_path) : void {
+        $command = 'adb install '.$file_path;
 
         if (env("ENVIRONMENT", "local") == "server"){
             $command = 'docker exec '.$emulator->name.' '.$command;
@@ -224,6 +243,85 @@ class CreateHash {
 
         if (!$process->isSuccessful()) {
             throw new AppInstallationFailException($process->getErrorOutput());
+        }
+    }
+
+    protected function extractXAPKfile(string $file_path) : string {
+        Log::channel('devlog')->info('FILE PATH {path}', ['path' => $file_path]);
+        $xapk_file = Storage::path($file_path);
+        Log::channel('devlog')->info('XAPK FILE PATH {path}', ['path' => $xapk_file]);
+
+        // create tmp folder
+        $tmp_folder_name = uniqid() . pathinfo($xapk_file, PATHINFO_FILENAME);
+        $xapk_unzipped_path = storage_path(TMP_XAPK_PATH . $tmp_folder_name);
+
+        // Unzip the .xapk file
+        $zip = new ZipArchive;
+        if ($zip->open($xapk_file) === TRUE) {
+            $zip->extractTo($xapk_unzipped_path);
+            $zip->close();
+        } else {
+            Storage::deleteDirectory($xapk_unzipped_path);
+            throw new XapkFileExtractException('Failed to unzip .xapk file!');
+        }
+
+        return $xapk_unzipped_path;
+    }
+
+
+    /**
+     * @brief TODO
+     * @param Emulator $emulator
+     * @param string $file_path Path to apk file intended for analysis
+     * @return void
+     * @throws AppInstallationFailException
+     */
+    private function installXAPK(Emulator $emulator, string $xapk_folder_path) : void {
+
+        // Ensure the folder path has a trailing slash
+        $folder_path = rtrim($xapk_folder_path, '/') . '/';
+
+        // Get all .apk files from the unzipped directory
+        $apk_files = glob($folder_path . '*.apk');
+
+        if (empty($apk_files)) {
+            throw new AppInstallationFailException('No APK files found in the .xapk package!');
+        }
+
+        // update path for emulator
+        $apk_files = array_map(function ($path) {
+            return preg_replace('~^.*(?=/storage)~', '/mnt', $path);
+        }, $apk_files);
+
+        Log::channel('devlog')->info('APK FILES FROM XAPK: {xapk_files}', ['xapk_files' => $apk_files]);
+
+        // Use adb install-multiple for multiple APK files
+        $static_part_command = ['docker', 'exec', $emulator->name, 'adb', 'install-multiple'];
+        $command = array_merge($static_part_command, $apk_files);
+        $process = new Process($command);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            throw new AppInstallationFailException('Failed to install APKs: ' . $process->getErrorOutput());
+        }
+    }
+
+
+    /**
+     * @brief The function ensures app installation on emulator
+     * @param Emulator $emulator Selected emulator
+     * @param string $input_file_path
+     * @return void
+     * @throws AppInstallationFailException
+     */
+    protected function installAppOnEmulator(Emulator $emulator, string $input_path, string $input_type) : void {
+
+        if ($input_type == "XAPK") {
+            // Handle .xapk installation
+            $this->installXAPK($emulator, $input_path);
+        } elseif ($input_type == "APK") {
+            // Handle .apk installation
+            $this->installAPK($emulator, $input_path);
         }
     }
 

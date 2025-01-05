@@ -41,38 +41,38 @@ const Dashboard = () => {
                             <div className="row p-3"></div>
                             <div className="row px-4">
                                 <div className="col">
-                                    <div class="card">
-                                        <div class="card-header">
+                                    <div className="card h-100">
+                                        <div className="card-header">
                                             Manage Users
                                         </div>
-                                        <div class="card-body">
-                                            <h5 class="card-title">User management panel</h5>
-                                            <p class="card-text">The module enables the administration of system user accounts.</p>
-                                            <Link to="/admin/users" class="btn btn-search-outline">Open panel</Link>
+                                        <div className="card-body">
+                                            <h5 className="card-title">User management panel</h5>
+                                            <p className="card-text">The module enables the administration of system user accounts.</p>
+                                            <Link to="/admin/users" className="btn btn-search-outline">Open panel</Link>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="col">
-                                    <div class="card">
-                                        <div class="card-header">
+                                    <div className="card h-100">
+                                        <div className="card-header">
                                             Manage API requests
                                         </div>
-                                        <div class="card-body">
-                                            <h5 class="card-title">API request management panel</h5>
-                                            <p class="card-text">The module manages the API interface and its requests.</p>
-                                            <Link to="/admin/api" class="btn btn-search-outline">Open panel</Link>
+                                        <div className="card-body">
+                                            <h5 className="card-title">API request management panel</h5>
+                                            <p className="card-text">The module manages the API interface and its requests.</p>
+                                            <Link to="/admin/api" className="btn btn-search-outline">Open panel</Link>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="col">
-                                    <div class="card">
-                                        <div class="card-header">
+                                    <div className="card h-100">
+                                        <div className="card-header">
                                             Manage Emulators
                                         </div>
-                                        <div class="card-body">
-                                            <h5 class="card-title">Server emulators management panel</h5>
-                                            <p class="card-text">The module provides management of virtual devices installed on the server.</p>
-                                            <Link to="/admin/emulators" class="btn btn-search-outline">Open panel</Link>
+                                        <div className="card-body">
+                                            <h5 className="card-title">Server emulators management panel</h5>
+                                            <p className="card-text">The module provides management of virtual devices installed on the server.</p>
+                                            <Link to="/admin/emulators" className="btn btn-search-outline">Open panel</Link>
                                         </div>
                                     </div>
                                 </div>

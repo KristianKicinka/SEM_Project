@@ -31,6 +31,16 @@ const APK_FILE_MESSAGES = [
     "Uploading fingerprints to the database system",
 ];
 
+// Status messages for processing creation hashes from XAPK file
+const XAPK_FILE_MESSAGES = [
+    "Getting an XAPK file",
+    "Extracting APK files from XAPK",
+    "Installing an application in a virtual environment",
+    "Network communication analysis",
+    "Creating application fingerprints",
+    "Uploading fingerprints to the database system",
+];
+
 // Status messages for processing creation hashes from app names file
 const APPS_NAMES_FILE_MESSAGES = [
     "Loading app parameters from file",
@@ -96,6 +106,8 @@ class HashProcessData {
             $this->messages = APP_NAME_MESSAGES;
         if($type == "APK_FILE")
             $this->messages = APK_FILE_MESSAGES;
+        if($type == "XAPK_FILE")
+            $this->messages = XAPK_FILE_MESSAGES;
         if($type == "NAMES_FILE")
             $this->messages = APPS_NAMES_FILE_MESSAGES;
     }

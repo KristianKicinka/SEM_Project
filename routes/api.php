@@ -14,6 +14,7 @@ use App\Http\Controllers\FileController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ApiRequestController;
+use App\Http\Controllers\EmulatorController;
 use App\Http\Controllers\LikedAppController;
 
 /*
@@ -56,6 +57,12 @@ Route::group(['middleware' => ['auth:api', 'admin']], function () {
     Route::post('/admin/user/delete', [UserController::class, 'deleteUser']);
     Route::post('/admin/files', [FileController::class, 'getFilesForAdmin']);
     Route::post('/admin/file/delete', [FileController::class, 'deleteFile']);
+    Route::post('/admin/emulators', [EmulatorController::class, 'getEmulatorsForAdmin']);
+    Route::post('/admin/emulator/create', [EmulatorController::class, 'createEmulator']);
+    Route::post('/admin/emulator/delete', [EmulatorController::class, 'deleteEmulator']);
+    Route::post('/admin/emulator/start', [EmulatorController::class, 'startEmulator']);
+    Route::post('/admin/emulator/stop', [EmulatorController::class, 'stopEmulator']);
+    Route::post('/admin/emulator/status', [EmulatorController::class, 'getEmulatorStatus']);
     Route::post('/admin/api/delete-request', [ApiRequestController::class, 'deleteApiRequest']);
     Route::post('/admin/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
     Route::post('/admin/get-api-key', [ApiRequestController::class, 'getApiKey']);

@@ -103,6 +103,20 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                                                         <i className="fa-solid fa-pen-to-square"/>
                                                     </button>
                                                     :null}
+                                                    {buttons.has('startButton') ?
+                                                    <button
+                                                        className="btn btn-link text-success"
+                                                        onClick={() => buttons.get('startButton')(item)}>
+                                                        <i className="fa-solid fa-play"/>
+                                                    </button>
+                                                    :null}
+                                                    {buttons.has('stopButton') ?
+                                                    <button
+                                                        className="btn btn-link text-danger"
+                                                        onClick={() => buttons.get('stopButton')(item)}>
+                                                        <i className="fa-solid fa-stop"/>
+                                                    </button>
+                                                    :null}
                                                     {buttons.has('deleteButton') ?
                                                     <button
                                                         className="btn btn-link text-danger"

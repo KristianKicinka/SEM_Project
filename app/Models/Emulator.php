@@ -23,6 +23,10 @@ class Emulator extends Model {
         'name',
         'network_interface',
         'is_running',
+        'docker_id',
+        'memory',
+        'cpu_count',
+        'image'
     ];
 
 }
