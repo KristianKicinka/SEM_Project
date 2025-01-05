@@ -16,7 +16,10 @@ use Docker\API\Model\HostConfig;
 use Docker\API\Model\NetworkingConfig;
 use Docker\API\Model\EndpointSettings;
 
+use Symfony\Component\Process\Process;
+
 use App\Models\Emulator;
+use Exception;
 
 class EmulatorController extends Controller
 {
@@ -208,13 +211,17 @@ class EmulatorController extends Controller
 
         $containerName = $request->input('container_name');
 
-        try {
+        $command = 'adb -s emulator-5554 emu kill';
 
-            // Stop the container
-            $this->docker->containerStop($containerName);
-            
-        } catch (\Exception $e) {
-            return response()->json(['errors' => $e->getMessage()], 400);
+        if (env("ENVIRONMENT", "local") == "server"){
+            $command = 'docker exec '.$containerName.' '.$command;
+        }
+
+        $process = Process::fromShellCommandline($command);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+            return response()->json(['errors' => $containerName], 400);
         }
 
         return response()->json(['status' => 'success'], 200);
