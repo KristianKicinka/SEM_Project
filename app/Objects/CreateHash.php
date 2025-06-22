@@ -165,7 +165,17 @@ class CreateHash {
      */
     private function createCommunicationOnEmulator(Emulator $emulator, string $package_name): void {
 
-        $command = 'adb shell monkey -p '.trim($package_name).' --ignore-crashes -v 500';
+       $command = 'adb shell monkey -p ' . escapeshellarg(trim($package_name)) .
+        ' --ignore-crashes' .
+        ' --ignore-timeouts' .
+        ' --ignore-security-exceptions' .
+        ' --monitor-native-crashes' .
+        ' --throttle 200' .
+        ' --pct-syskeys 0' .
+        ' --pct-appswitch 0' .
+        ' --pct-anyevent 0' .
+        ' -v -v -v 500';
+
 
         if (env("ENVIRONMENT", "local") == "server"){
             $command = 'docker exec '.$emulator->name.' '.$command;
