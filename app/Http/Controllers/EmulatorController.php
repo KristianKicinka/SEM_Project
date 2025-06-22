@@ -50,6 +50,7 @@ class EmulatorController extends Controller
             'network_name' => 'required|string',
             'mount_source' => 'required|string',
             'mount_target' => 'required|string',
+            'image' => 'required|string',
             'memory' => 'required|integer|min:128',
             'cpu_count' => 'required|integer|min:1',
         ]);
@@ -66,7 +67,7 @@ class EmulatorController extends Controller
             $memory = (int) $request->memory * 1024 * 1024; // Convert MB to bytes
             $cpu_count = (int) $request->cpu_count;
 
-            $image = 'emulator_vm:latest';
+            $image = $request->image;
 
             // Create the Docker network
             $networkBody = new NetworksCreatePostBody();

@@ -66,7 +66,7 @@ RUN cat > /entry.sh <<EOF
 
 #start adb server on port 5057 and start emulator
 adb start-server && \
-emulator -avd android-30-arm64-v8a -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -nocache -no-snapshot-load -wipe-data
+emulator -avd android-30-arm64-v8a -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -nocache -no-snapshot-load -wipe-data -qemu -cpu cortex-a76
 EOF
 ENTRYPOINT ["/usr/bin/sh"]
 CMD ["/entry.sh"]

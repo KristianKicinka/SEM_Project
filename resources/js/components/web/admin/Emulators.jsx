@@ -19,8 +19,8 @@ import CreateEmulator from "./partials/emulators/CreateEmulator";
 import DeleteEmulator from "./partials/emulators/DeleteEmulator";
 
 // Table headers
-const columnNames = ["ID", "Emulator name", "Docker ID", "Network interface", "Working state", "Memory [MB]", "CPU count", "Emulator status"];
-const dataIndexes = ["id", "name", "docker_id", "network_interface", "is_working", "memory", "cpu_count", "status"];
+const columnNames = ["ID", "Emulator name", "Docker ID", "Network interface", "Working state", "Memory [MB]", "Image", "CPU count", "Emulator status"];
+const dataIndexes = ["id", "name", "docker_id", "network_interface", "is_working", "memory", "image" ,"cpu_count", "status"];
 
 
 const Emulators = () => {
