@@ -1,0 +1,13 @@
+.*\\.ads\\..*
+.*adservice.*
+.*doubleclick\\.net
+.*metrics\\..*
+.*track(er)?\\..*
+.*analytics\\..*
+.*app-measurement\\.com
+.*sdk.*analytics.*
+.*crashlytics\\.com
+.*firebase.*\\.com
+.*cloudfront.*\\.net
+.*akamai.*\\..*
+.*\\.gstatic\\..*

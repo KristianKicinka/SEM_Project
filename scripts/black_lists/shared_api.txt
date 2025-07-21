@@ -1,0 +1,13 @@
+googleapis
+gstatic
+firebaseio
+graph.facebook.com
+facebook.net
+s3.amazonaws.com
+msftconnecttest
+twimg
+itunes.apple.com
+cdn.apple.com
+api.github.com
+appsflyersdk
+appsflyer

@@ -1,0 +1,11 @@
+cloudfront
+cdn
+fbcdn
+akamaized
+googleusercontent
+cdninstagram
+cdndiscordapp
+azureedge
+fastly
+akamaihd
+cdn77

@@ -25,6 +25,8 @@ from cryptography import x509
 from cryptography.x509.oid import ExtensionOID, NameOID
 from hashlib import sha256
 
+from filter_manager import should_filter
+
 import hashlib
 import os
 import json
@@ -869,7 +871,8 @@ if __name__ == '__main__':
         array_results.append(obj)
 
     # Remove advertisements servers
-    array_results = remove_adds(array_results)
+    # array_results = remove_adds(array_results)
+    array_results = [res for res in array_results if not should_filter(res.get("sni"))]
 
     # Filter out duplicate dictionaries
     filtered_results = remove_duplicities(array_results)

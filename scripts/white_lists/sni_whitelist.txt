@@ -1,0 +1,3 @@
+cdn.discordapp.com
+cdn.tiktokcdn.com
+firebaseinstallations.googleapis.com
