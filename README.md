@@ -1,66 +1,70 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<img src="./FIT_barevne_RGB_CZ.png" width="50%">
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
 
-## About Laravel
+# Platforma pro automatizované vytváření otisků mobilních aplikací
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Fakulta informačních technologií Vysokého učení technického v Brně\
+Bakalárska práca\
+Autor: Kristián kičinka (xkicin02@vutbr.cz)\
+Vedúci práce: doc. Ing. Petr Matoušek Ph.D., M.A.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Popis projektu
+Cieľom práce bolo vyvinúť platformu, ktorá by umožnila automatizované vytváranie odtlačkov TLS mobilných aplikácií pre platformu Android. Webová platforma podporuje viaceré typy odtlačkov TLS, medzi ktoré patria odtlačky: _JA3_, _JA3S_, _JA4_, _JA4S_, _JA4X_. Webová platforma je rozdelená do piatich samostatných, medzi ktoré patrí:
+- získavanie súborov APK
+- inštalácia a spúšťanie aplikácií
+- analýza sieťovej komunikácie
+- vytváranie odtlačkov mobilných aplikácií
+- ukladanie a prezentácia výsledkov. 
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Aplikácia podporuje viaceré typy vstupov od používateľa, medzi ktoré patrí vstup prostredníctvom súborov APK, názvu mobilnej aplikácie, ako aj súboru s názvami balíčkov mobilných aplikácií. Platforma disponuje taktiež možnosťou analyzovať zadané odtlačky TLS, prípadne súbory NetFlow a poskytnúť používateľovi informácie z internej databázy.
 
-## Learning Laravel
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Demo
+Vytvorená webová platforma je nasadená na adrese :
+<a href="https://hashapp.netology.sk">https://hashapp.netology.sk</a>
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Prihlasovacie údaje:
+* Administrátor:
+  * email: admin@example.com
+  * password: AdminPass123
+  
+* Registrovaný používateľ:
+  * email: user@example.com
+  * password: UserPass123
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Nasadenie
 
-## Laravel Sponsors
+Nasadenie vytvorenej webovej platformy je realizované prostredníctvom Docker kontajnerov. V prípade, že je nasadenie spúšťané na hosťovskom zariadení po prvý krát je nutné mať zbuildené a dostupné docker images. Ich vytvorenie je možné zabezpečiť spustením skriptu `build.sh` umiestneného v adresári `/virtualzation`.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Spustením skriptu `run.sh` umiestneného v adresári `/virtualzation` je zahájený proces nasadenia systému. Skript postupne vykoná načítanie priložených Docker obrazov zodpovedných za AVD zariadenia, MariaDB server, Redis server, nastavenia jazyka PHP, Python a programu Wireshark. 
 
-### Premium Partners
+V ďalšiom kroku skript spustí preklad a nastavenie hlavnej časti aplikácie a vytvorí obraz hashapp:latest. Následne je vykonané vytvorenie a spustenie potrebných Docker kontajnerov, vytvorenie štruktúry databázového systému a importovanie testovacích dát. 
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+Po úspešnom dokončení nasadenia bude webová platforma k dispozícii na adrese <a href="http://localhost:8081">http://localhost:8081</a>. Databázový server bude nasadený na porte `3306` a redis server na porte `6379`. Pre správne fungovanie nasadenia je nutné, aby boli dané porty v rámci hosťovského zariadenia dostupné. 
 
-## Contributing
+V rámci automatizácie nasadenia bol taktiež vytvorený skript `clean.sh`, ktorý dokáže zastaviť, prípadne aj zmazať docker kontajnery, ako aj obrazy a sieťové rozhrania. 
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Použitie
 
-## Code of Conduct
+Používateľ má k dispozícii webové a API rozhranie. Webové rozhranie je zložené z hlavnej stránky, stránky popisujúcej rozhranie API, databázovej stránky a rohrania registrovaného používateľa a administrátora. Prostredníctvom hlavnej stránky má používateľ možnosť vytvárať odtlačky mobilných aplikácií, vyhľadávať mobilné aplikácie, ako aj zobrazovať proces generovania a výsledky. Databázová stránka slúži na prehľadávanie už vytvorených odtlačkov mobilných aplikácií. Stránka popisujúca rozhranie API obsahuje príklady volaní a odpovedí tohto rozhrania. Po prihlásení má registrovaný používateľ možnosť zobrazovať a upravovať obľubené aplikácie, zobrazovať ním vykonané žiadosti rozhania API, ako aj vytvárať nové autentfikačné kľúče. Prostredníctvom rozhrania API je možné vykonávať analýzy zadaných odltačkov alebo mobilných aplikácií, analyzovať NetFlow súbory, ako aj vytvárať nové odtlačky mobilných aplikácií.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Využívané technológie
 
-## Security Vulnerabilities
+V rámci výboja projektu boli využívané nasledujúce technológie:
+- **[Laravel](https://laravel.com)**
+- **[React](https://react.dev)**
+- **[Pusher](https://pusher.com)**
+- **[Python 3.11.2](https://www.python.org/downloads/release/python-3112/)**
+- **[Wireshark 4.2.4](https://www.wireshark.org/docs/relnotes/wireshark-4.2.4.html)**
+- **[PHP 8.2](https://www.php.net/releases/8.2/en.php)**
+- **[Bootstrap 5](https://getbootstrap.com)**
+- **[React Bootstrap](https://react-bootstrap.netlify.app)**
+- **[Scapy](https://scapy.net)**
+- **[Docker](https://www.docker.com)**
+- **[JWT](https://jwt.io/introduction)**
+- **[Redis](https://redis.io)**
+- **[MariaDB](https://mariadb.com)**
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Poďakovanie
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Rád by som poďakoval svojmu školiteľovi bakalárskej práce __doc. Ing. Petrovi Matouškovi, Ph.D., M.A.__ za odbornú pomoc, usmernenia a cenné rady pri vypracovávaní mojej bakalárskej práce.

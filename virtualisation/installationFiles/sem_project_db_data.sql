@@ -111,9 +111,9 @@ INSERT INTO `applications` (`id`, `name`, `package_name`, `version`, `is_malware
 -- Dumping data for table `emulators`
 --
 
-INSERT INTO `emulators` (`id`, `name`, `network_interface`, `is_working`, `created_at`, `updated_at`) VALUES
-(1, 'emulator_01', 'br-em-01', 0, NULL, '2024-04-25 07:28:55'),
-(2, 'emulator_02', 'br-em-02', 0, NULL, '2024-04-15 04:34:58');
+INSERT INTO `emulators` (`id`, `docker_id`, `name`, `network_interface`, `is_working`, `memory`, `cpu_count`, `image`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'emulator_01', 'br-em-01', 0, 4096, 4, 'sem_emulator_vm:latest', NULL, '2024-04-25 07:28:55'),
+(2, NULL, 'emulator_02', 'br-em-02', 0, 4096, 4, 'sem_emulator_vm:latest', NULL, '2024-04-15 04:34:58');
 
 --
 -- Dumping data for table `files`
