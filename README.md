@@ -32,17 +32,34 @@ Prihlasovacie údaje:
   * email: user@example.com
   * password: UserPass123
 
-## Nasadenie
+## Nasadenie na lokálnom zariadení
 
-Nasadenie vytvorenej webovej platformy je realizované prostredníctvom Docker kontajnerov. V prípade, že je nasadenie spúšťané na hosťovskom zariadení po prvý krát je nutné mať zbuildené a dostupné docker images. Ich vytvorenie je možné zabezpečiť spustením skriptu `build.sh` umiestneného v adresári `/virtualzation`.
+Nasadenie vytvorenej webovej platformy je realizované prostredníctvom Docker kontajnerov. V prípade, že je nasadenie spúšťané na hosťovskom zariadení po prvý krát je nutné mať zbuildené a dostupné docker images. Ich vytvorenie je možné zabezpečiť spustením skriptu `build.sh` umiestneného v adresári `/virtualisation`. 
 
-Spustením skriptu `run.sh` umiestneného v adresári `/virtualzation` je zahájený proces nasadenia systému. Skript postupne vykoná načítanie priložených Docker obrazov zodpovedných za AVD zariadenia, MariaDB server, Redis server, nastavenia jazyka PHP, Python a programu Wireshark. 
+Príklad spustenia buildu docker obrazov:
+```bash
+bash build.sh
+```
+
+Spustením skriptu `run.sh` umiestneného v adresári `/virtualisation` je zahájený proces nasadenia systému. Skript postupne vykoná načítanie priložených Docker obrazov zodpovedných za AVD zariadenia, MariaDB server, Redis server, nastavenia jazyka PHP, Python a programu Wireshark. 
 
 V ďalšiom kroku skript spustí preklad a nastavenie hlavnej časti aplikácie a vytvorí obraz hashapp:latest. Následne je vykonané vytvorenie a spustenie potrebných Docker kontajnerov, vytvorenie štruktúry databázového systému a importovanie testovacích dát. 
 
 Po úspešnom dokončení nasadenia bude webová platforma k dispozícii na adrese <a href="http://localhost:8081">http://localhost:8081</a>. Databázový server bude nasadený na porte `3306` a redis server na porte `6379`. Pre správne fungovanie nasadenia je nutné, aby boli dané porty v rámci hosťovského zariadenia dostupné. 
 
-V rámci automatizácie nasadenia bol taktiež vytvorený skript `clean.sh`, ktorý dokáže zastaviť, prípadne aj zmazať docker kontajnery, ako aj obrazy a sieťové rozhrania. 
+Príklad nasadenia aplikácie po builde obrazov:
+```bash
+bash run.sh
+```
+
+V rámci automatizácie nasadenia bol taktiež vytvorený skript `clean.sh`, ktorý dokáže zastaviť, prípadne aj zmazať docker kontajnery, ako aj obrazy a sieťové rozhrania.
+
+Príklad odstránenia aplikácie z hosťovského zariadenia vrátane docker obrazov:
+```bash
+bash clean.sh --full
+```
+
+Aplikácia je určená pre platformu x86_64 čiže AMD/Intel CPU.
 
 ## Použitie
 
