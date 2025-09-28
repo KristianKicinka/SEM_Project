@@ -42,6 +42,8 @@ class HashController extends Controller {
             'channel_id' => 'required|string',
             'files.*' => 'required',
             'processes' => 'required',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ]);
 
         if ($validator->fails()) {
@@ -52,6 +54,23 @@ class HashController extends Controller {
         $channel_id = $request->input('channel_id');
         $hash_types = json_decode($request->input('hash_types'));
         $processes = json_decode($request->input('processes'), true);
+
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = auth()->user();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
 
         $input_files = $request->file("files");
 
@@ -166,6 +185,8 @@ class HashController extends Controller {
             'channel_id' => 'required|string',
             'package_name' => 'required|string',
             'hash_types' => 'required',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ]);
 
         if ($validator->fails()) {
@@ -175,10 +196,28 @@ class HashController extends Controller {
         $ip_address = $request->ip();
         $channel_id = $request->input('channel_id');
         $process_id = uniqid('int_api_', true);
+        $hash_types = $request->hash_types;
+
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = auth()->user();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
 
         CreateHashFromAppName::dispatch(
             $request->package_name,
-            $request->hash_types,
+            $hash_types,
             $ip_address,
             $channel_id,
             $process_id,
@@ -285,6 +324,8 @@ class HashController extends Controller {
             'text_file' => 'required|file|mimes:txt',
             'hash_types' => 'required',
             'channel_id' => 'required|string',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ]);
 
         if ($validator->fails()) {
@@ -295,6 +336,23 @@ class HashController extends Controller {
         $ip_address = $request->ip();
         $channel_id = $request->input("channel_id");
         $text_file_path = $this->saveTextFile($request->file('text_file'));
+
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = auth()->user();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
 
         $package_names = file($text_file_path);
 

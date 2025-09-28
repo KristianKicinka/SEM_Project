@@ -26,6 +26,8 @@ from cryptography.x509.oid import ExtensionOID, NameOID
 from hashlib import sha256
 
 from filter_manager import should_filter
+from custom_hash_generators import custom_hash_manager
+from dynamic_hash_loader import load_custom_hash_types_from_database
 
 import hashlib
 import os
@@ -765,6 +767,59 @@ def get_results_with_ja4x(pcap_file, results):
     return results
 
 
+def generate_custom_hashes(packet, sni=None, custom_generators=None):
+    """
+    The function ensures generation of custom hashes using custom hash generators
+
+    Parameters:
+    packet (Packet): packet to process.
+    sni (string): Server name indicator.
+    custom_generators (list): List of custom generator names to use.
+
+    Returns:
+    dict: Dictionary with custom hash results.
+    """
+    if custom_generators is None:
+        custom_generators = []
+    
+    if not custom_generators:
+        return {}
+    
+    try:
+        # Check if manual configuration mode is enabled
+        use_manual_config = os.getenv('USE_MANUAL_CONFIG', 'false').lower() == 'true'
+        
+        # Load custom hash types from database or manual config
+        db_generators = load_custom_hash_types_from_database(custom_generators, use_manual_config)
+        
+        # If generators found, use them
+        if db_generators:
+            results = {}
+            for name, generator in db_generators.items():
+                if generator.validate_packet(packet):
+                    try:
+                        hash_value = generator.generate_hash(packet, sni)
+                        # Prefix custom hash names to avoid conflicts with built-in hashes
+                        results[f'custom_{name}'] = hash_value
+                    except Exception as e:
+                        print(f"Error generating hash for {name}: {e}")
+                        results[f'custom_{name}'] = None
+                else:
+                    results[f'custom_{name}'] = None
+            return results
+        else:
+            # Fallback to existing system
+            fallback_results = custom_hash_manager.generate_hashes(packet, sni, custom_generators)
+            # Prefix fallback results too
+            prefixed_results = {}
+            for name, value in fallback_results.items():
+                prefixed_results[f'custom_{name}'] = value
+            return prefixed_results
+            
+    except Exception as e:
+        print(f"Error generating custom hashes: {e}")
+        return {}
+
 def remove_duplicities(data):
     """
     The function ensures removing duplicities from results
@@ -779,7 +834,13 @@ def remove_duplicities(data):
     results = []
 
     for item in data:
-        key = (item["ja3_hash"], item["ja3s_hash"], item["ja4_hash"], item["ja4s_hash"], item["sni"])
+        # Include custom hashes in uniqueness check
+        custom_hash_values = []
+        for key, value in item.items():
+            if key.startswith('custom_') and value is not None:
+                custom_hash_values.append(value)
+        
+        key = (item["ja3_hash"], item["ja3s_hash"], item["ja4_hash"], item["ja4s_hash"], item["sni"]) + tuple(custom_hash_values)
 
         if key not in unique_keys:
             unique_keys.add(key)
@@ -791,6 +852,15 @@ if __name__ == '__main__':
     load_layer('tls')
 
     pcap_file = sys.argv[1]
+    
+    # Parse custom generators from command line arguments
+    custom_generators = []
+    if len(sys.argv) > 2:
+        try:
+            custom_generators = json.loads(sys.argv[2])
+        except (json.JSONDecodeError, IndexError):
+            custom_generators = []
+    
     scapy_cap = rdpcap(pcap_file)
 
     results = {}
@@ -814,41 +884,61 @@ if __name__ == '__main__':
 
                 ja3_hash = create_JA3_hash(packet)
                 ja4_hash = create_JA4_hash(packet, sni)
+                
+                # Generate custom hashes
+                custom_hashes = generate_custom_hashes(packet, sni, custom_generators)
 
                 key = (ip_src, port_src, ip_dest, port_dest)
 
                 # Insert from client hello packets data to results
                 if key not in results:
-                    results[key] = {
+                    result_entry = {
                         "ip_src" : ip_src, "port_src":port_src,
                         "ip_dest":ip_dest, "port_dest":port_dest,
                         "ja3_hash": ja3_hash, "sni": sni, "ja3s_hash": None,
                         "ja4_hash": ja4_hash, "ja4s_hash": None, "ja4x_hash": []
                     }
+                    # Add custom hashes
+                    for custom_name, custom_value in custom_hashes.items():
+                        result_entry[f"custom_{custom_name}"] = custom_value
+                    results[key] = result_entry
                 else:
                     results[key]["ja3_hash"] = ja3_hash
                     results[key]["sni"] = sni
                     results[key]["ja4_hash"] = ja4_hash
+                    # Update custom hashes
+                    for custom_name, custom_value in custom_hashes.items():
+                        results[key][f"custom_{custom_name}"] = custom_value
 
             # Process ServerHello packets
             if tls_layers.haslayer(TLSServerHello):
 
                 ja3s_hash = create_JA3S_hash(packet)
                 ja4s_hash = create_JA4S_hash(packet)
+                
+                # Generate custom hashes for server hello
+                custom_hashes = generate_custom_hashes(packet, None, custom_generators)
 
                 key = (ip_dest, port_dest, ip_src, port_src)
 
                 # Insert from server hello packets data to results
                 if key not in results:
-                    results[key] = {
+                    result_entry = {
                         "ip_src" : ip_src, "port_src":port_src,
                         "ip_dest":ip_dest, "port_dest":port_dest,
                         "ja3_hash": None, "sni": None, "ja3s_hash": ja3s_hash,
                         "ja4_hash": None, "ja4s_hash": ja4s_hash, "ja4x_hash": []
                     }
+                    # Add custom hashes
+                    for custom_name, custom_value in custom_hashes.items():
+                        result_entry[f"custom_{custom_name}"] = custom_value
+                    results[key] = result_entry
                 else:
                     results[key]["ja3s_hash"] = ja3s_hash
                     results[key]["ja4s_hash"] = ja4s_hash
+                    # Update custom hashes
+                    for custom_name, custom_value in custom_hashes.items():
+                        results[key][f"custom_{custom_name}"] = custom_value
 
     # Add ja4x hashes to results
     results = get_results_with_ja4x(pcap_file, results)
@@ -868,6 +958,12 @@ if __name__ == '__main__':
             "ja4s_hash": results[key]["ja4s_hash"],
             "ja4x_hash": results[key]["ja4x_hash"]
         }
+        
+        # Add custom hashes to the result object
+        for result_key, result_value in results[key].items():
+            if result_key.startswith('custom_'):
+                obj[result_key] = result_value
+        
         array_results.append(obj)
 
     # Remove advertisements servers

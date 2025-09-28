@@ -10,6 +10,7 @@ import ReactDOM from "react-dom";
 
 import Navbar from "../partials/auth/Navbar";
 import Sidebar from "../partials/auth/Sidebar";
+import PageHeader from "../partials/PageHeader";
 
 import { Link } from "react-router-dom";
 
@@ -25,19 +26,10 @@ const Dashboard = () => {
                     <Navbar />
                     <div className="page container-fluid pt-md-3 px-4">
                        <div className="container-fluid shadow bg-white text-dark p-3">
-                            <div className="row p-3">
-                                <div className="col">
-                                    <h4 className="p-2">Dashboard</h4>
-                                </div>
-                                <div className="col"></div>
-                                <div className="col"></div>
-                            </div>
-                            <div className="row px-4">
-                                <p>
-                                    Welcome to admin panel. There you can manage web application settings like app users,
-                                    created hashes, server emulators or API interface.
-                                </p>
-                            </div>
+                            <PageHeader 
+                                title="Dashboard"
+                                description="Welcome to admin panel. There you can manage web application settings like app users, created hashes, server emulators or API interface."
+                            />
                             <div className="row p-3"></div>
                             <div className="row px-4">
                                 <div className="col">

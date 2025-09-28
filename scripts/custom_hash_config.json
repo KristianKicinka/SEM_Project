@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "description": "Configuration for custom hash generators for SEM Project",
+  "generators": [
+    {
+      "name": "CUSTOM_TLS_SIMPLE",
+      "type": "simple_tls",
+      "description": "Simple TLS hash based on version and cipher suite",
+      "configuration": {
+        "fields": ["version", "ciphers"]
+      }
+    },
+    {
+      "name": "CUSTOM_IP_HASH",
+      "type": "custom_algorithm",
+      "description": "Hash based on IP addresses and ports",
+      "configuration": {
+        "algorithm": "sha256",
+        "fields": ["ip_src", "ip_dst", "port_src", "port_dst"]
+      }
+    },
+    {
+      "name": "CUSTOM_TIMESTAMP_HASH",
+      "type": "custom_algorithm",
+      "description": "Hash based on timestamp and packet size",
+      "configuration": {
+        "algorithm": "md5",
+        "fields": ["timestamp", "packet_size", "sni"]
+      }
+    },
+    {
+      "name": "CUSTOM_TLS_EXTENDED",
+      "type": "simple_tls",
+      "description": "Extended TLS hash with extensions and SNI",
+      "configuration": {
+        "fields": ["version", "ciphers", "extensions", "sni", "compression_methods"]
+      }
+    },
+    {
+      "name": "CUSTOM_NETWORK_DETAILED",
+      "type": "custom_algorithm",
+      "description": "Detailed network layer hash with TCP flags and IP options",
+      "configuration": {
+        "algorithm": "sha512",
+        "fields": ["ip_src", "ip_dst", "ip_ttl", "ip_flags", "tcp_flags", "tcp_window", "timestamp"]
+      }
+    },
+    {
+      "name": "CUSTOM_TLS_ADVANCED",
+      "type": "simple_tls",
+      "description": "Advanced TLS hash with all available TLS fields",
+      "configuration": {
+        "fields": ["version", "ciphers", "extensions", "compression_methods", "supported_versions", "signature_algorithms", "elliptic_curves", "alpn_protocols", "sni"]
+      }
+    }
+  ],
+  "settings": {
+    "auto_load": true,
+    "log_errors": true,
+    "fallback_to_default": true
+  }
+}
+

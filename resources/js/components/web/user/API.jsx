@@ -51,13 +51,15 @@ const API = () => {
                 <Sidebar sidebarType="basic_user" />
                 <div className="col-md-10 px-0">
                     <Navbar />
-                    <div className="container-fluid">
+                    <div className="page container-fluid pt-md-3 px-4">
                         <TableComponent
                             data={apiRequests}
                             dataIndexes={dataIndexes}
                             columnNames={columnNames}
                             buttons={buttons}
                             tableName={"API Requests"}
+                            title={"API Requests"}
+                            description={"View and manage your API request history and usage statistics"}
                         />
                     </div>
                 </div>

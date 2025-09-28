@@ -120,6 +120,17 @@ class CreateHash {
 
         $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH);
         $command = $command." ".$pcap_file_path;
+        
+        // Add custom generators as second argument if any are specified
+        if (!empty($this->hash_types)) {
+            $custom_generators = array_filter($this->hash_types, function($type) {
+                return strpos($type, 'CUSTOM_') === 0;
+            });
+            
+            if (!empty($custom_generators)) {
+                $command = $command." ".escapeshellarg(json_encode($custom_generators));
+            }
+        }
 
         $process = Process::fromShellCommandline($command);
         $process->run();
@@ -511,6 +522,14 @@ class CreateHash {
 
             Log::channel('devlog')->info('Hashes : {name}', ['name' => $hash]);
 
+            // Extract custom hashes from the hash object
+            $custom_hashes = [];
+            foreach($hash as $key => $value) {
+                if(strpos($key, 'custom_') === 0) {
+                    $custom_hashes[$key] = $value;
+                }
+            }
+
             $new_record = [
                 'app_id' => $application->id,
                 'process_id' => $process_id,
@@ -520,6 +539,7 @@ class CreateHash {
                 'ja4_hash' => $hash->ja4_hash,
                 'ja4s_hash' => $hash->ja4s_hash,
                 'ja4x_hash' => json_encode($hash->ja4x_hash),
+                'custom_hashes' => !empty($custom_hashes) ? json_encode($custom_hashes) : null,
                 'ip_src' => $hash->ip_src,
                 'port_src' => $hash->port_src,
                 'ip_dest' => $hash->ip_dest,

@@ -21,7 +21,7 @@ Aplikácia podporuje viaceré typy vstupov od používateľa, medzi ktoré patr�
 
 ## Demo
 Vytvorená webová platforma je nasadená na adrese :
-<a href="https://hashapp.netology.sk:8081">https://hashapp.netology.sk:8081</a>
+<a href="https://hashapp.netology.sk">https://hashapp.netology.sk</a>
 
 Prihlasovacie údaje:
 * Administrátor:

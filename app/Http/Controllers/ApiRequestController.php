@@ -452,6 +452,8 @@ class ApiRequestController extends Controller {
         $rules = [
             'auth_key' => 'required|string',
             'apk_file' => 'required|file|mimes:apk,zip',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ];
 
         // Validator error messages
@@ -479,6 +481,23 @@ class ApiRequestController extends Controller {
         $process_id = uniqid('ext_api_', true);
         $channel_id = null;
         $hash_types = ["JA3"];
+
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = User::where('api_auth_key', $request->input('auth_key'))->first();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
 
         // Dispatching queue job
         CreateHashFromAPK::dispatch(
@@ -515,6 +534,8 @@ class ApiRequestController extends Controller {
         $rules = [
             'auth_key' => 'required|string',
             'package_name' => 'required|string',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ];
 
         // Validator error messages
@@ -539,6 +560,23 @@ class ApiRequestController extends Controller {
         $hash_types = ["JA3"];
         $channel_id = null;
 
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = User::where('api_auth_key', $request->input('auth_key'))->first();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
+
         // Dispatching queue job
         CreateHashFromAppName::dispatch(
             $request->input('package_name'), $hash_types,
@@ -548,6 +586,44 @@ class ApiRequestController extends Controller {
         $response = "Task for create hashes from package name (";
         $response = $response.$request->input("package_name").") was added to queue.";
         return response()->json($response, 200);
+    }
+
+    /**
+     * @brief Get available custom hash types for API user
+     * @param Request $request HTTP request data
+     * @return JsonResponse Available custom hash types
+     */
+    public function getCustomHashTypes(Request $request): JsonResponse {
+        // Validator rules
+        $rules = [
+            'auth_key' => 'required|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        // Get user by auth key
+        $user = User::where('api_auth_key', $request->input('auth_key'))->first();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Invalid auth key'], 401);
+        }
+
+        // Get available custom hash types
+        $customHashTypes = \App\Models\CustomHashType::where(function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->orWhere('is_public', true);
+        })
+        ->where('is_active', true)
+        ->select('id', 'name', 'display_name', 'description', 'type', 'usage_count')
+        ->get();
+
+        return response()->json([
+            'custom_hash_types' => $customHashTypes
+        ]);
     }
 
     /**

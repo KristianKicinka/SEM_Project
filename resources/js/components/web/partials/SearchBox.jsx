@@ -13,6 +13,7 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 
 import axios from 'axios';
+import AuthUser from '../../../AuthUser';
 
 import ImportSection from './ImportSection';
 import ContentBox from './ContentBox';
@@ -26,6 +27,8 @@ const SearchBox = ({ hashTypes, setHashTypes }) => {
     const [appName, setAppName] = useState();
     const [appItems, setAppItems] = useState();
     const [appItemsLoaded, setAppItemsLoaded] = useState(false);
+    const [customHashTypes, setCustomHashTypes] = useState([]);
+    const { http, token } = AuthUser();
 
     /**
      * @brief The function ensures searching applications
@@ -53,9 +56,24 @@ const SearchBox = ({ hashTypes, setHashTypes }) => {
        setAppItemsLoaded(true);
     }
 
+    /**
+     * @brief Load custom hash types for authenticated users
+     */
+    const loadCustomHashTypes = async () => {
+        if (!token) return;
+        
+        try {
+            const response = await http.get('/custom-hash-types');
+            setCustomHashTypes(response.data.data || response.data);
+        } catch (error) {
+            console.error('Error loading custom hash types:', error);
+        }
+    };
+
     useEffect(() => {
         first_load_apps();
-    }, []);
+        loadCustomHashTypes();
+    }, [token]);
 
     // Component body
     return (
@@ -63,7 +81,7 @@ const SearchBox = ({ hashTypes, setHashTypes }) => {
             <header className='bg-primary bg-gradient text-white pb-0'>
                 <div className='container text-center py-2 pb-4'>
                     <HashTypePicker hashTypes={hashTypes} setHashTypes={setHashTypes} />
-                    <ImportSection  hashTypes={hashTypes} />
+                    <ImportSection  hashTypes={hashTypes} customHashTypes={customHashTypes} />
                 </div>
                 <div className='container px-4 text-center pt-5'>
                     <h1 className='fw-bolder'>Enter name of the application</h1>

@@ -15,7 +15,7 @@ import pusher from "../../../pusher";
 import Results from "../partials/Results";
 
 
-const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
+const LoadingModal = ({ channel_id, processes, onClose , hashTypes, customHashTypes = [] }) => {
 
     const [updatedProcesses, setUpdatedProcesses] = useState(processes);
     const [showResults, setShowResults] = useState(false);
@@ -128,7 +128,7 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes }) => {
                     </div>
                 </Modal.Body>
             </Modal>
-            {showResults && (<Results results={results} onClose={closeResults} hashTypes={hashTypes} />)}
+            {showResults && (<Results results={results} onClose={closeResults} hashTypes={hashTypes} customHashTypes={customHashTypes} />)}
         </div>
     );
 };

@@ -16,6 +16,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ApiRequestController;
 use App\Http\Controllers\EmulatorController;
 use App\Http\Controllers\LikedAppController;
+use App\Http\Controllers\CustomHashTypeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,11 +75,26 @@ Route::group(['middleware' => ['auth:api', 'user']], function () {
     Route::post('/user/api-requests', [ApiRequestController::class, 'getRequestsUser']);
     Route::post('/user/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
     Route::post('/user/get-api-key', [ApiRequestController::class, 'getApiKey']);
-    Route::post('/user/edit', [UserController::class, 'editBasicUser']);
+    Route::post('/user/edit', [UserController::class, 'editUserField']);
     Route::post('/user/change-password', [UserController::class, 'changePasswordBasicUser']);
+    Route::post('/user/profile-photo', [UserController::class, 'uploadProfilePhoto']);
     Route::post('/user/get-liked-apps-hashes', [LikedAppController::class, 'getLikedAppsHashes']);
     Route::post('/user/get-liked-apps', [LikedAppController::class, 'index']);
     Route::post('/user/edit-liked-apps', [LikedAppController::class, 'editLikedApps']);
+    
+    // Custom Hash Types API routes
+    Route::get('/custom-hash-types', [CustomHashTypeController::class, 'apiIndex']);
+    Route::post('/custom-hash-types', [CustomHashTypeController::class, 'store']);
+    Route::get('/custom-hash-types/{customHashType}', [CustomHashTypeController::class, 'show']);
+    Route::put('/custom-hash-types/{customHashType}', [CustomHashTypeController::class, 'update']);
+    Route::delete('/custom-hash-types/{customHashType}', [CustomHashTypeController::class, 'destroy']);
+    Route::post('/custom-hash-types/{customHashType}/test', [CustomHashTypeController::class, 'test']);
+    Route::post('/custom-hash-types/python-generator', [CustomHashTypeController::class, 'getForPythonGenerator']);
+});
+
+// Python script routes (no authentication required, but API key validation)
+Route::group(['middleware' => ['python']], function () {
+    Route::post('/custom-hash-types/python-generator', [CustomHashTypeController::class, 'getForPythonGenerator']);
 });
 
 // External API routes
@@ -89,4 +105,5 @@ Route::group(['middleware' => ['external']], function () {
     Route::post('/create-hash-from-package-name', [ApiRequestController::class, 'createHashFromPackageName']);
     Route::post('/create-hash-from-pcap', [ApiRequestController::class, 'createHashFromPcap']);
     Route::post('/analyze-netflow-file', [ApiRequestController::class, 'analyzeNetFlowFile']);
+    Route::post('/get-custom-hash-types', [ApiRequestController::class, 'getCustomHashTypes']);
 });

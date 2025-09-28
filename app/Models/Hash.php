@@ -29,9 +29,29 @@ class Hash extends Model {
         'ja4_hash',
         'ja4s_hash',
         'ja4x_hash',
+        'custom_hashes',
+        'custom_hash_type_id',
         'ip_src',
         'port_src',
         'ip_dest',
         'port_dest',
     ];
+
+    /**
+     * @brief The attributes that should be cast
+     * @var array
+     */
+    protected $casts = [
+        'ja4x_hash' => 'array',
+        'custom_hashes' => 'array',
+    ];
+
+    /**
+     * @brief Get the custom hash type that owns the hash
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function customHashType(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(CustomHashType::class);
+    }
 }

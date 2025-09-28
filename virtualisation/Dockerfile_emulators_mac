@@ -1,0 +1,55 @@
+FROM debian:bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+# Android SDK env
+ENV ANDROID_SDK_ROOT=/opt/android-sdk \
+    ANDROID_HOME=/opt/android-sdk
+ENV PATH="$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/platform-tools"
+# Java (JRE stačí, ale nastavíme JAVA_HOME, sdkmanager je Java appka)
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+
+# 1) Minimum runtime deps (headless) + CA certs pre HTTPS
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    openjdk-17-jre-headless curl unzip zip \
+    libnss3 libdbus-1-3 \
+    libx11-6 libxext6 libxrender1 libxrandr2 libxfixes3 \
+ && rm -rf /var/lib/apt/lists/* && update-ca-certificates
+
+# 2) Command-line tools (sdkmanager/avdmanager)
+RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools /tmp/android && \
+    cd /tmp/android && \
+    curl -fSL -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip && \
+    unzip cmdline-tools.zip -d cmdline-tools && \
+    mv cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest && \
+    rm -rf /tmp/android
+
+# 3) sdkmanager: licencie + update indexov
+RUN mkdir -p /root/.android && touch /root/.android/repositories.cfg && \
+    yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses && \
+    sdkmanager --sdk_root=$ANDROID_SDK_ROOT --update
+
+# 4) Nainštaluj len to, čo treba (emulátor + ADB + platforma + ARM64 system image)
+RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "emulator" \
+    "platforms;android-30" "system-images;android-30;google_apis;arm64-v8a"
+
+# 5) Vytvor 1 AVD (ARM64)
+RUN echo no | avdmanager create avd \
+    --name android-30-arm64-v8a \
+    --package "system-images;android-30;google_apis;arm64-v8a" \
+    --force
+
+# 6) Entry skript (headless, bez akcelerácie; vhodné na macOS Docker Desktop)
+RUN cat >/entry.sh <<'EOF'
+#!/bin/sh
+set -e
+adb start-server || true
+exec emulator -avd android-30-arm64-v8a \
+  -no-window -no-audio -no-boot-anim -accel off \
+  -gpu off -wipe-data -ports 5554,5555
+EOF
+RUN chmod +x /entry.sh
+
+EXPOSE 5555
+ENTRYPOINT ["/bin/sh","-c"]
+CMD ["/entry.sh"]

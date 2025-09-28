@@ -70,5 +70,6 @@ class Kernel extends HttpKernel
         'admin' => \App\Http\Middleware\AuthAdmin::class,
         'user' => \App\Http\Middleware\AuthBasicUser::class,
         'external' => \App\Http\Middleware\AuthExternalAPI::class,
+        'python' => \App\Http\Middleware\AuthPythonScript::class,
     ];
 }

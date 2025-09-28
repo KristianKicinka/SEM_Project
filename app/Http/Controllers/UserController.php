@@ -158,6 +158,43 @@ class UserController extends Controller {
     }
 
     /**
+     * @brief The function ensures editing individual user field
+     * @param Request $request HTTP request data
+     * @return JsonResponse Operation status message
+     */
+    public function editUserField(Request $request): JsonResponse {
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|numeric',
+            'name' => 'sometimes|required|string',
+            'surname' => 'sometimes|required|string',
+            'email' => 'sometimes|required|email:strict|unique:users,email,' . $request->user_id,
+            'phone' => 'sometimes|required|regex:/^((\+)?[0-9]{3} ?)?[0-9]{3} ?[0-9]{3} ?[0-9]{3} ?$/m|unique:users,phone,' . $request->user_id,
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $updateData = [];
+        $allowedFields = ['name', 'surname', 'email', 'phone'];
+        
+        foreach ($allowedFields as $field) {
+            if ($request->has($field)) {
+                $updateData[$field] = $request->$field;
+            }
+        }
+
+        if (empty($updateData)) {
+            return response()->json(['error' => 'No valid fields to update'], 400);
+        }
+
+        User::where('id', '=', $request->user_id)->update($updateData);
+        $user = User::find($request->user_id);
+
+        return response()->json($user, 200);
+    }
+
+    /**
      * @brief The function ensures changing password in user GUI
      * @param Request $request HTTP request data
      * @return JsonResponse Operation status message
@@ -180,5 +217,39 @@ class UserController extends Controller {
         User::where('id', '=', $request->user_id)->update([ 'password' => $password,]);
 
         return response()->json(['status' => 'success'], 200);
+    }
+
+    /**
+     * @brief Upload profile photo for authenticated user
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function uploadProfilePhoto(Request $request): JsonResponse {
+        $validator = Validator::make($request->all(), [
+            'profile_photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 400);
+        }
+
+        $user = auth()->user();
+        
+        if ($request->hasFile('profile_photo')) {
+            $file = $request->file('profile_photo');
+            $filename = time() . '_' . $user->id . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('profile_photos', $filename, 'public');
+            
+            // Update user profile photo
+            User::where('id', '=', $user->id)->update(['profile_photo' => $path]);
+            $updatedUser = User::find($user->id);
+            
+            return response()->json([
+                'status' => 'success',
+                'user' => $updatedUser
+            ], 200);
+        }
+
+        return response()->json(['error' => 'No file uploaded'], 400);
     }
 }

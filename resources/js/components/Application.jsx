@@ -25,6 +25,7 @@ import AdminAPI from './web/admin/API';
 import AdminDashboard from './web/admin/Dashboard';
 import AdminFiles from './web/admin/Files';
 import AdminEmulators from './web/admin/Emulators';
+import CustomHashTypes from './web/admin/CustomHashTypes';
 
 import BasicUserDashboard from './web/user/Dashboard';
 import BasicUserAPI from './web/user/API';
@@ -50,6 +51,7 @@ const Application = () => {
                     <Route path='/admin/dashboard' element={<ProtectedRoute userType='admin'><AdminDashboard/></ProtectedRoute>} />
                     <Route path='/admin/users' element={<ProtectedRoute userType='admin'><AdminUsers/></ProtectedRoute>} />
                     <Route path='/admin/hashes' element={<ProtectedRoute userType='admin'><AdminHashes/></ProtectedRoute>} />
+                    <Route path='/admin/custom-hash-types' element={<ProtectedRoute userType='admin'><CustomHashTypes/></ProtectedRoute>} />
                     <Route path='/admin/settings' element={<ProtectedRoute userType='admin'><AdminSettings/></ProtectedRoute>} />
                     <Route path='/admin/api' element={<ProtectedRoute userType='admin'><AdminAPI/></ProtectedRoute>} />
                     <Route path='/admin/files' element={<ProtectedRoute userType='admin'><AdminFiles/></ProtectedRoute>} />
@@ -57,6 +59,7 @@ const Application = () => {
 
                     <Route path='/user/dashboard' element={<ProtectedRoute userType='basic_user'><BasicUserDashboard/></ProtectedRoute>} />
                     <Route path='/user/api' element={<ProtectedRoute userType='basic_user'><BasicUserAPI/></ProtectedRoute>} />
+                    <Route path='/user/custom-hash-types' element={<ProtectedRoute userType='basic_user'><CustomHashTypes/></ProtectedRoute>} />
                     <Route path='/user/applications' element={<ProtectedRoute userType='basic_user'><BasicUserApps/></ProtectedRoute>} />
                     <Route path='/user/profile' element={<ProtectedRoute userType='basic_user'><BasicUserProfile/></ProtectedRoute>} />
                 </Routes>

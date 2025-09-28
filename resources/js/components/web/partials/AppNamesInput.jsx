@@ -14,14 +14,17 @@ import Button from 'react-bootstrap/Button';
 import { setNewActiveChannel, setNewActiveProcess } from '../../../processManagement';
 import { toast } from 'react-toastify';
 import LoadingModal from './LoadingModal';
+import AuthUser from '../../../AuthUser';
 
 
-const AppNamesInput = ({ hashTypes }) => {
+const AppNamesInput = ({ hashTypes, customHashTypes = [] }) => {
 
     const [file, setFile] = useState(null);
     const [showLoading, setShowLoading] = useState(false);
     const [channelID, setChannelID] = useState(false);
     const [processes, setProcesses] = useState([]);
+    const { http, token } = AuthUser();
+
 
     /**
      * @brief The function ensures handling file input changes
@@ -50,6 +53,16 @@ const AppNamesInput = ({ hashTypes }) => {
         data.append("text_file", file);
         data.append("channel_id", channel_id);
         data.append("hash_types", JSON.stringify(hashTypes));
+
+        // Add custom hash types if user is authenticated and has selected them
+        if (token && customHashTypes.length > 0) {
+            const selectedCustomTypes = customHashTypes.filter(customType => 
+                hashTypes.includes(customType.name)
+            );
+            if (selectedCustomTypes.length > 0) {
+                data.append("custom_hash_types", JSON.stringify(selectedCustomTypes.map(type => type.id)));
+            }
+        }
 
         try {
             let results = await axios.post('/api/create-hash-textfile', data );
@@ -92,7 +105,7 @@ const AppNamesInput = ({ hashTypes }) => {
                 </Form.Group>
             </Form>
             {showLoading && (
-                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} />
+                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} customHashTypes={customHashTypes} />
             )}
         </div>
     );

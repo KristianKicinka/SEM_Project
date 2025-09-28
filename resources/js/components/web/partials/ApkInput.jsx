@@ -15,17 +15,20 @@ import axios from 'axios';
 import { setNewActiveChannel, setNewActiveProcess } from '../../../processManagement';
 import { toast } from 'react-toastify';
 import LoadingModal from './LoadingModal';
+import AuthUser from '../../../AuthUser';
 
 
-const ApkInput = ({ hashTypes }) => {
+const ApkInput = ({ hashTypes, customHashTypes = [] }) => {
 
     const [apkFiles, setApkFiles] = useState([]);
     const [showLoading, setShowLoading] = useState(false);
     const [channelID, setChannelID] = useState(false);
     const [processes, setProcesses] = useState([]);
+    const { http, token } = AuthUser();
 
     // Max file size supported
     const maxFileSize = 950 * 1024 * 1024;
+
 
     /**
      * @brief The function ensures calling API request for hash generation from APK file
@@ -80,6 +83,16 @@ const ApkInput = ({ hashTypes }) => {
         data.append("hash_types", JSON.stringify(hashTypes));
         data.append("channel_id", channel_id);
 
+        // Add custom hash types if user is authenticated and has selected them
+        if (token && customHashTypes.length > 0) {
+            const selectedCustomTypes = customHashTypes.filter(customType => 
+                hashTypes.includes(customType.name)
+            );
+            if (selectedCustomTypes.length > 0) {
+                data.append("custom_hash_types", JSON.stringify(selectedCustomTypes.map(type => type.id)));
+            }
+        }
+
         setProcesses(processes);
         setShowLoading(true);
 
@@ -122,7 +135,7 @@ const ApkInput = ({ hashTypes }) => {
                 </Form.Group>
             </Form>
             {showLoading && (
-                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} />
+                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} customHashTypes={customHashTypes} />
             )}
         </div>
     );
