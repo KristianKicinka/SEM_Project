@@ -496,36 +496,64 @@ generator = SimpleTLSHashGenerator(
 )
 ```
 
-## Custom hash typy - Testovanie
+## Custom hash typy - Testovanie (Aktualizované 2024-12-27)
 
-### Test databázovej integrácie
+### Kompletný test systém
 ```bash
-cd scripts/tests
-python3 test_api_integration.py
+# Hlavný test súbor: scripts/tests/test_custom_hash_system.py
+cd /home/xbwolf02/www/sem_project/scripts/tests
+python3 test_custom_hash_system.py --test all
+
+# Test základných generátorov
+python3 test_custom_hash_system.py --test basic
+
+# Test databázového pripojenia
+python3 test_custom_hash_system.py --test database
+
+# Test manuálnej konfigurácie
+python3 test_custom_hash_system.py --test manual
+
+# Test s PCAP súborom
+python3 test_custom_hash_system.py --test all --pcap /path/to/file.pcap
 ```
 
-### Test manuálnej konfigurácie
+### Testovanie custom hash generovania
 ```bash
-cd scripts/tests
-python3 test_config_only.py
-```
+# Test s databázovými custom hash types
+cd /home/xbwolf02/www/sem_project/scripts
+LARAVEL_BASE_URL=http://localhost:8000 LARAVEL_API_KEY=python_hash_generator_key_test \
+python3.11 hash_generator.py /path/to/file.pcap '["CUSTOM_TLS_01"]'
 
-### Test Hash Generátora
-```bash
-# Databázový režim
-cd scripts
-python3 hash_generator.py test.pcap '["CUSTOM_TLS_SIMPLE"]'
+# Test s viacerými custom hash types
+LARAVEL_BASE_URL=http://localhost:8000 LARAVEL_API_KEY=python_hash_generator_key_test \
+python3.11 hash_generator.py /path/to/file.pcap '["CUSTOM_TLS_01", "CUSTOM_IP_HASH"]'
 
-# Manuálny režim
+# Test s manuálnou konfiguráciou
 export USE_MANUAL_CONFIG=true
-python3 hash_generator.py test.pcap '["CUSTOM_TLS_SIMPLE"]'
+python3.11 hash_generator.py /path/to/file.pcap '["CUSTOM_TLS_SIMPLE"]'
 ```
 
-### Test Custom Hash Types
+### Testovanie performance a caching
 ```bash
-# Test konkrétnych generátorov
-cd scripts/tests
-python3 test_manual_config.py
+# Test caching mechanizmu (malo by sa načítať len raz)
+LARAVEL_BASE_URL=http://localhost:8000 LARAVEL_API_KEY=python_hash_generator_key_test \
+python3.11 hash_generator.py /path/to/file.pcap '["CUSTOM_TLS_01"]' | grep "Loading custom generators"
+
+# Výstup by mal byť:
+# Loading custom generators for: ['CUSTOM_TLS_01']
+```
+
+### Testovanie fallback logiky
+```python
+# Test s packety bez TLS vrstvy
+from scapy.all import *
+from scripts.hash_generator import generate_custom_hashes
+
+packet = IP(src="192.168.1.1", dst="192.168.1.2") / TCP(sport=80, dport=443)
+custom_hashes = generate_custom_hashes(packet, None, ['CUSTOM_TLS_01'])
+print(f"Fallback hashe: {custom_hashes}")
+# Výstup by mal obsahovať custom hash aj pre non-TLS packet
+```
 ```
 
 ## Custom hash typy - Riešenie problémov
@@ -598,17 +626,66 @@ generators = load_custom_hash_types_from_database(use_manual_config=True)
 - Názvy polí sú obmedzené na podporované hodnoty
 - Cesty k skriptom sa validujú
 
-## Custom hash typy - Performance
+## Custom hash typy - Performance (Aktualizované 2024-12-27)
 
-### Caching
-- Custom hash types sa cachujú v Python skripte
-- API odpovede sa cachujú
-- Databázové queries sú optimalizované
+### Global Caching System
+```python
+# Global cache for custom hash generators
+_custom_generators_cache = {}
+
+def load_custom_generators_once(custom_generators, use_manual_config):
+    """
+    Load custom generators only once and cache them for performance optimization.
+    Eliminates rate limiting by loading generators only once per session.
+    """
+    cache_key = f"{use_manual_config}_{','.join(sorted(custom_generators))}"
+    
+    if cache_key not in _custom_generators_cache:
+        print(f"Loading custom generators for: {custom_generators}")
+        _custom_generators_cache[cache_key] = load_custom_hash_types_from_database(custom_generators, use_manual_config)
+    
+    return _custom_generators_cache[cache_key]
+```
+
+### Optimized Hash Generation
+- **Single API call**: Generátory sa načítavajú len raz na začiatku
+- **Memory efficient**: Caching zabraňuje opakovanému načítavaniu
+- **Rate limiting protection**: Eliminuje 429 Too Many Requests chyby
+- **Non-TLS processing**: Custom hashe sa generujú aj pre packety bez TLS vrstvy
+
+### Enhanced Processing
+```python
+# Process custom hashes for non-TLS packets (or packets without decoded TLS)
+elif packet.haslayer(TCP) and custom_generators:
+    # Generate custom hashes for non-TLS packets
+    custom_hashes = generate_custom_hashes(packet, None, custom_generators)
+    
+    # Insert or update custom hashes for non-TLS packets
+    if key not in results:
+        result_entry = {
+            "ja3_hash": None,
+            "sni": None,
+            "ip_src": ip_src,
+            "port_src": port_src,
+            "ip_dest": ip_dest,
+            "port_dest": port_dest,
+            "ja3s_hash": None,
+            "ja4_hash": None,
+            "ja4s_hash": None,
+            "ja4x_hash": []
+        }
+        # Add custom hashes
+        for custom_name, custom_value in custom_hashes.items():
+            clean_name = custom_name.replace('custom_', '') if custom_name.startswith('custom_') else custom_name
+            result_entry[f"custom_{clean_name}"] = custom_value
+        results[key] = result_entry
+```
 
 ### Fallback systém
 - Ak API zlyhá, používa sa fallback na JSON config
 - Manuálny režim pre development
 - Graceful degradation
+- TLS generátory môžu spracovať aj packety bez TLS vrstvy pomocou fallback polí
 
 ### Environment variables
 - `LARAVEL_BASE_URL` - URL Laravel servera

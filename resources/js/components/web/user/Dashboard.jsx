@@ -20,9 +20,9 @@ const Dashboard = () => {
     // Component body
     return (
         <div className="Dashboard container-fluid">
-            <div className="row">
+            <div className="row d-flex">
                 <Sidebar sidebarType="basic_user" />
-                <div className="col-md-10 px-0">
+                <div className="col px-0" style={{flex: '1'}}>
                     <Navbar />
                     <div className="page container-fluid pt-md-3 px-4">
                         <div className="container-fluid shadow bg-white text-dark p-3">

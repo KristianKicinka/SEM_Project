@@ -62,7 +62,7 @@ const LoadingModal = ({ channel_id, processes, onClose , hashTypes, customHashTy
             data.append("process_id", process_id);
 
             let results = await axios.post('/api/get-process-results', data);
-
+            
             setResults(results.data);
             setShowResults(true);
         } catch (error) {

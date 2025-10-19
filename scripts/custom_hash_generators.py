@@ -6,6 +6,36 @@
  * 
  * Modular system for custom hash generators
  * Allows users to create custom mobile application fingerprint types
+ * 
+ * This module provides a comprehensive framework for creating custom hash generators
+ * that can extract specific fields from network packets and generate unique hashes.
+ * The system supports multiple generator types including TLS-based, algorithm-based,
+ * and Python script-based generators.
+ * 
+ * Key Components:
+ * - CustomHashGenerator: Abstract base class for all generators
+ * - SimpleTLSHashGenerator: TLS-specific field extraction and hashing
+ * - CustomAlgorithmHashGenerator: Algorithm-based hashing with custom fields
+ * - PythonScriptHashGenerator: External Python script execution
+ * - CustomHashManager: Central management system for all generators
+ * 
+ * Features:
+ * - Fallback support for non-TLS packets
+ * - Comprehensive field extraction from multiple network layers
+ * - Support for various hash algorithms (MD5, SHA1, SHA256, SHA512)
+ * - Integration with Laravel backend via API
+ * - Manual configuration support for development
+ * 
+ * Usage:
+ *     # Create a TLS generator
+ *     generator = SimpleTLSHashGenerator(
+ *         name="CUSTOM_TLS_01",
+ *         description="Custom TLS fingerprint",
+ *         fields=["version", "ciphers", "extensions", "sni"]
+ *     )
+ *     
+ *     # Generate hash from packet
+ *     hash_value = generator.generate_hash(packet, sni)
 """
 
 import json
@@ -16,38 +46,71 @@ from typing import Dict, List, Any, Optional
 from scapy.all import *
 from scapy.layers.tls.record import TLS
 from scapy.layers.tls.handshake import TLSClientHello, TLSServerHello
+from scapy.layers.tls.extensions import TLS_Ext_ServerName
+from scapy.layers.inet import IP, TCP, UDP
+from scapy.layers.l2 import Ether
+from scapy.packet import Raw
 
 class CustomHashGenerator(ABC):
     """
-    Abstract base class for custom hash generators
+    Abstract base class for custom hash generators.
+    
+    This class defines the interface that all custom hash generators must implement.
+    It provides common functionality for packet validation and hash generation,
+    while allowing specific implementations to define their own field extraction
+    and hashing logic.
+    
+    Attributes:
+        name (str): Unique identifier for the generator
+        description (str): Human-readable description of the generator's purpose
+        
+    Methods:
+        generate_hash: Abstract method for hash generation (must be implemented)
+        validate_packet: Validates packet compatibility with generator requirements
+        get_required_layers: Abstract method for layer requirements (must be implemented)
     """
     
     def __init__(self, name: str, description: str = ""):
+        """
+        Initialize the custom hash generator.
+        
+        Args:
+            name (str): Unique identifier for the generator
+            description (str): Human-readable description of the generator's purpose
+        """
         self.name = name
         self.description = description
     
     @abstractmethod
     def generate_hash(self, packet, sni: Optional[str] = None, **kwargs) -> Optional[str]:
         """
-        Generate hash for given packet
+        Generate hash from packet data.
+        
+        This method must be implemented by all concrete generator classes.
+        It should extract relevant fields from the packet and generate a hash
+        based on the generator's specific logic.
         
         Args:
-            packet: Scapy packet object
-            sni: Server Name Indicator (optional)
-            **kwargs: Additional parameters specific to generator
+            packet: Scapy packet object to process
+            sni (str, optional): Server Name Indicator from TLS handshake
+            **kwargs: Additional keyword arguments for generator-specific options
             
         Returns:
-            Generated hash or None if hash cannot be generated
+            str or None: Generated hash string, or None if generation fails
         """
         pass
     
     @abstractmethod
     def get_required_layers(self) -> List[str]:
         """
-        Return list of layers that generator needs
+        Get list of required network layers for this generator.
+        
+        This method must be implemented by all concrete generator classes.
+        It should return a list of layer names that the packet must contain
+        for the generator to work properly.
         
         Returns:
-            List of layer names (e.g. ['TLS', 'TCP'])
+            List[str]: List of required layer names (e.g., ['IP', 'TCP', 'TLS'])
         """
         pass
     
@@ -115,17 +178,19 @@ class CustomHashManager:
         generator_type = config.get("type")
         
         if generator_type == "simple_tls":
+            configuration = config.get("configuration", {})
             return SimpleTLSHashGenerator(
                 name=config["name"],
                 description=config.get("description", ""),
-                fields=config.get("fields", [])
+                fields=configuration.get("fields", [])
             )
         elif generator_type == "custom_algorithm":
+            configuration = config.get("configuration", {})
             return CustomAlgorithmHashGenerator(
                 name=config["name"],
                 description=config.get("description", ""),
-                algorithm=config.get("algorithm", "md5"),
-                fields=config.get("fields", [])
+                algorithm=configuration.get("algorithm", "md5"),
+                fields=configuration.get("fields", [])
             )
         elif generator_type == "python_script":
             return PythonScriptHashGenerator(
@@ -204,7 +269,7 @@ class SimpleTLSHashGenerator(CustomHashGenerator):
         if not values:
             return None
         
-        # Vytvorí hash z hodnôt
+        # Create hash from values
         hash_string = "-".join(values)
         return hashlib.md5(hash_string.encode()).hexdigest()
     
@@ -212,59 +277,95 @@ class SimpleTLSHashGenerator(CustomHashGenerator):
         """Extract value from TLS packet based on field name"""
         try:
             if packet.haslayer(TLS):
-                tls_layer = packet[TLS]
+                tls_layers = packet[TLS]
                 
                 # TLS Client Hello fields
-                if field == "version" and tls_layer.haslayer(TLSClientHello):
-                    return tls_layer[TLSClientHello].version
-                elif field == "ciphers" and tls_layer.haslayer(TLSClientHello):
-                    ciphers = tls_layer[TLSClientHello].ciphers
+                if field == "version" and tls_layers.haslayer(TLSClientHello):
+                    return tls_layers[TLSClientHello].version
+                elif field == "ciphers" and tls_layers.haslayer(TLSClientHello):
+                    ciphers = tls_layers[TLSClientHello].ciphers
                     return ",".join(map(str, ciphers)) if ciphers else None
-                elif field == "extensions" and tls_layer.haslayer(TLSClientHello):
-                    extensions = tls_layer[TLSClientHello].ext
+                elif field == "extensions" and tls_layers.haslayer(TLSClientHello):
+                    extensions = tls_layers[TLSClientHello].ext
                     return ",".join(map(str, [ext.type for ext in extensions])) if extensions else None
-                elif field == "compression_methods" and tls_layer.haslayer(TLSClientHello):
-                    comp_methods = tls_layer[TLSClientHello].comp
+                elif field == "compression_methods" and tls_layers.haslayer(TLSClientHello):
+                    comp_methods = tls_layers[TLSClientHello].comp
                     return ",".join(map(str, comp_methods)) if comp_methods else None
-                elif field == "supported_versions" and tls_layer.haslayer(TLSClientHello):
+                elif field == "supported_versions" and tls_layers.haslayer(TLSClientHello):
                     # Extract supported versions from extensions
-                    if hasattr(tls_layer[TLSClientHello], 'ext'):
-                        for ext in tls_layer[TLSClientHello].ext:
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
                             if hasattr(ext, 'versions'):
                                 return ",".join(map(str, ext.versions))
                     return None
-                elif field == "signature_algorithms" and tls_layer.haslayer(TLSClientHello):
+                elif field == "signature_algorithms" and tls_layers.haslayer(TLSClientHello):
                     # Extract signature algorithms from extensions
-                    if hasattr(tls_layer[TLSClientHello], 'ext'):
-                        for ext in tls_layer[TLSClientHello].ext:
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
                             if hasattr(ext, 'algs'):
                                 return ",".join(map(str, ext.algs))
                     return None
-                elif field == "elliptic_curves" and tls_layer.haslayer(TLSClientHello):
+                elif field == "elliptic_curves" and tls_layers.haslayer(TLSClientHello):
                     # Extract elliptic curves from extensions
-                    if hasattr(tls_layer[TLSClientHello], 'ext'):
-                        for ext in tls_layer[TLSClientHello].ext:
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
                             if hasattr(ext, 'groups'):
                                 return ",".join(map(str, ext.groups))
                     return None
-                elif field == "ec_point_formats" and tls_layer.haslayer(TLSClientHello):
+                elif field == "ec_point_formats" and tls_layers.haslayer(TLSClientHello):
                     # Extract EC point formats from extensions
-                    if hasattr(tls_layer[TLSClientHello], 'ext'):
-                        for ext in tls_layer[TLSClientHello].ext:
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
                             if hasattr(ext, 'point_formats'):
                                 return ",".join(map(str, ext.point_formats))
                     return None
-                elif field == "alpn_protocols" and tls_layer.haslayer(TLSClientHello):
+                elif field == "alpn_protocols" and tls_layers.haslayer(TLSClientHello):
                     # Extract ALPN protocols from extensions
-                    if hasattr(tls_layer[TLSClientHello], 'ext'):
-                        for ext in tls_layer[TLSClientHello].ext:
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
                             if hasattr(ext, 'protocols'):
                                 return ",".join(ext.protocols)
                     return None
-                elif field == "sni" and sni:
-                    return sni
+                elif field == "sni":
+                    # Extract SNI from extensions - same as get_sni function
+                    if tls_layers.haslayer(TLS_Ext_ServerName):
+                        sni_field = tls_layers[TLS_Ext_ServerName].servernames
+                        if sni_field:
+                            return sni_field[0].servername.decode()
+                    return None
                 elif field == "timestamp":
                     return int(packet.time)
+                
+                return None
+            else:
+                # Fallback for non-TLS packets - try to extract basic network info
+                if field == "ip_src" and packet.haslayer(IP):
+                    return packet[IP].src
+                elif field == "ip_dst" and packet.haslayer(IP):
+                    return packet[IP].dst
+                elif field == "port_src" and packet.haslayer(TCP):
+                    return packet[TCP].sport
+                elif field == "port_dst" and packet.haslayer(TCP):
+                    return packet[TCP].dport
+                elif field == "timestamp":
+                    return int(packet.time)
+                elif field == "packet_size":
+                    return len(packet)
+                elif field == "sni":
+                    return None  # No SNI for non-TLS packets
+                elif field == "version":
+                    # Fallback for version - use IP version
+                    return packet[IP].version if packet.haslayer(IP) else None
+                elif field == "ciphers":
+                    # Fallback for ciphers - use TCP ports
+                    if packet.haslayer(TCP):
+                        return f"{packet[TCP].sport}_{packet[TCP].dport}"
+                    return None
+                elif field == "extensions":
+                    # Fallback for extensions - use IP options
+                    return f"IP_{packet[IP].src}_{packet[IP].dst}" if packet.haslayer(IP) else None
+                
+                return None
                 
         except Exception as e:
             print(f"Error extracting field {field}: {e}")
@@ -272,7 +373,7 @@ class SimpleTLSHashGenerator(CustomHashGenerator):
         return None
     
     def get_required_layers(self) -> List[str]:
-        return ['TLS']
+        return ['IP', 'TCP', 'TLS']  # TLS generators require TLS layer
 
 class CustomAlgorithmHashGenerator(CustomHashGenerator):
     """
@@ -300,7 +401,7 @@ class CustomAlgorithmHashGenerator(CustomHashGenerator):
         if not values:
             return None
         
-        # Vytvorí hash z hodnôt
+        # Create hash from values
         hash_string = "|".join(values)
         
         if self.algorithm == "md5":
@@ -318,7 +419,66 @@ class CustomAlgorithmHashGenerator(CustomHashGenerator):
     def _extract_field_value(self, packet, field: str) -> Optional[Any]:
         """Extract value from packet based on field name"""
         try:
-            # Network layer fields
+            # TLS layer fields (same logic as SimpleTLSHashGenerator)
+            if packet.haslayer(TLS) and field in ["version", "ciphers", "extensions", "compression_methods", "supported_versions", "signature_algorithms", "elliptic_curves", "ec_point_formats", "alpn_protocols", "sni"]:
+                tls_layers = packet[TLS]
+                
+                # TLS Client Hello fields
+                if field == "version" and tls_layers.haslayer(TLSClientHello):
+                    return tls_layers[TLSClientHello].version
+                elif field == "ciphers" and tls_layers.haslayer(TLSClientHello):
+                    ciphers = tls_layers[TLSClientHello].ciphers
+                    return ",".join(map(str, ciphers)) if ciphers else None
+                elif field == "extensions" and tls_layers.haslayer(TLSClientHello):
+                    extensions = tls_layers[TLSClientHello].ext
+                    return ",".join(map(str, [ext.type for ext in extensions])) if extensions else None
+                elif field == "compression_methods" and tls_layers.haslayer(TLSClientHello):
+                    comp_methods = tls_layers[TLSClientHello].comp
+                    return ",".join(map(str, comp_methods)) if comp_methods else None
+                elif field == "supported_versions" and tls_layers.haslayer(TLSClientHello):
+                    # Extract supported versions from extensions
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
+                            if hasattr(ext, 'versions'):
+                                return ",".join(map(str, ext.versions))
+                    return None
+                elif field == "signature_algorithms" and tls_layers.haslayer(TLSClientHello):
+                    # Extract signature algorithms from extensions
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
+                            if hasattr(ext, 'algs'):
+                                return ",".join(map(str, ext.algs))
+                    return None
+                elif field == "elliptic_curves" and tls_layers.haslayer(TLSClientHello):
+                    # Extract elliptic curves from extensions
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
+                            if hasattr(ext, 'groups'):
+                                return ",".join(map(str, ext.groups))
+                    return None
+                elif field == "ec_point_formats" and tls_layers.haslayer(TLSClientHello):
+                    # Extract EC point formats from extensions
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
+                            if hasattr(ext, 'point_formats'):
+                                return ",".join(map(str, ext.point_formats))
+                    return None
+                elif field == "alpn_protocols" and tls_layers.haslayer(TLSClientHello):
+                    # Extract ALPN protocols from extensions
+                    if hasattr(tls_layers[TLSClientHello], 'ext'):
+                        for ext in tls_layers[TLSClientHello].ext:
+                            if hasattr(ext, 'protocols'):
+                                return ",".join(ext.protocols)
+                    return None
+                elif field == "sni":
+                    # Extract SNI from extensions - same as get_sni function
+                    if tls_layers.haslayer(TLS_Ext_ServerName):
+                        sni_field = tls_layers[TLS_Ext_ServerName].servernames
+                        if sni_field:
+                            return sni_field[0].servername.decode()
+                    return None
+            
+            # Network layer fields (work for both TLS and non-TLS packets)
             if field == "ip_src" and packet.haslayer(IP):
                 return packet[IP].src
             elif field == "ip_dst" and packet.haslayer(IP):
@@ -363,8 +523,8 @@ class CustomAlgorithmHashGenerator(CustomHashGenerator):
                 return int(packet.time)
             elif field == "packet_size":
                 return len(packet)
-            elif field == "sni" and sni:
-                return sni
+            elif field == "sni":
+                return None  # No SNI for non-TLS packets
             elif field == "tls_version" and packet.haslayer(TLS):
                 return packet[TLS].version
             elif field == "tls_content_type" and packet.haslayer(TLS):
@@ -396,7 +556,7 @@ class CustomAlgorithmHashGenerator(CustomHashGenerator):
         return None
     
     def get_required_layers(self) -> List[str]:
-        return ['IP']  # Minimálne IP vrstva
+        return ['IP']  # Minimum IP layer
 
 class PythonScriptHashGenerator(CustomHashGenerator):
     """
@@ -413,13 +573,13 @@ class PythonScriptHashGenerator(CustomHashGenerator):
             return None
         
         try:
-            # Importuje a spustí externý skript
+            # Import and execute external script
             import importlib.util
             spec = importlib.util.spec_from_file_location("custom_script", self.script_path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             
-            # Volá funkciu generate_hash ak existuje
+            # Call generate_hash function if it exists
             if hasattr(module, 'generate_hash'):
                 return module.generate_hash(packet, sni, **kwargs)
             
@@ -429,8 +589,8 @@ class PythonScriptHashGenerator(CustomHashGenerator):
         return None
     
     def get_required_layers(self) -> List[str]:
-        return []  # Externý skript si určí sám
+        return []  # External script determines its own requirements
 
-# Globálna inštancia správcu
+# Global manager instance
 custom_hash_manager = CustomHashManager()
 

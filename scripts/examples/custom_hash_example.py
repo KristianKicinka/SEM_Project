@@ -4,8 +4,8 @@
  *
  * @copyright Copyright (c) 2024
  * 
- * Príklad vlastného hash generátora
- * Tento súbor demonštruje, ako vytvoriť vlastný hash generátor
+ * Example of custom hash generator
+ * This file demonstrates how to create a custom hash generator
 """
 
 import hashlib
@@ -15,74 +15,74 @@ from scapy.layers.tls.handshake import TLSClientHello, TLSServerHello
 
 def generate_hash(packet, sni=None, **kwargs):
     """
-    Príklad vlastného hash generátora
+    Example of custom hash generator
     
     Args:
-        packet: Scapy packet objekt
+        packet: Scapy packet object
         sni: Server Name Indicator
-        **kwargs: Ďalšie parametre
+        **kwargs: Additional parameters
         
     Returns:
-        Vygenerovaný hash alebo None
+        Generated hash or None
     """
     try:
-        # Kontrola, či packet obsahuje TLS vrstvu
+        # Check if packet contains TLS layer
         if not packet.haslayer(TLS):
             return None
         
         tls_layer = packet[TLS]
         values = []
         
-        # Extrakcia TLS verzie
+        # Extract TLS version
         if tls_layer.haslayer(TLSClientHello):
             version = tls_layer[TLSClientHello].version
             values.append(f"v{version}")
             
-            # Extrakcia cipher suites
+            # Extract cipher suites
             ciphers = tls_layer[TLSClientHello].ciphers
             if ciphers:
-                cipher_str = ",".join(map(str, ciphers[:5]))  # Prvých 5 cipher suites
+                cipher_str = ",".join(map(str, ciphers[:5]))  # First 5 cipher suites
                 values.append(f"c{cipher_str}")
             
-            # Extrakcia extensions
+            # Extract extensions
             extensions = tls_layer[TLSClientHello].ext
             if extensions:
-                ext_types = [str(ext.type) for ext in extensions[:10]]  # Prvých 10 extensions
+                ext_types = [str(ext.type) for ext in extensions[:10]]  # First 10 extensions
                 values.append(f"e{','.join(ext_types)}")
         
-        # Pridanie SNI ak je dostupné
+        # Add SNI if available
         if sni:
             values.append(f"s{sni}")
         
-        # Pridanie timestamp
+        # Add timestamp
         timestamp = int(packet.time)
         values.append(f"t{timestamp}")
         
-        # Vytvorenie hash
+        # Create hash
         if values:
             hash_string = "|".join(values)
-            return hashlib.sha256(hash_string.encode()).hexdigest()[:16]  # Prvých 16 znakov
+            return hashlib.sha256(hash_string.encode()).hexdigest()[:16]  # First 16 characters
         
         return None
         
     except Exception as e:
-        print(f"Chyba v custom hash generátore: {e}")
+        print(f"Error in custom hash generator: {e}")
         return None
 
 def get_required_layers():
     """
-    Vracia zoznam vrstiev, ktoré generátor potrebuje
+    Returns list of layers that generator needs
     
     Returns:
-        Zoznam názvov vrstiev
+        List of layer names
     """
     return ['TLS']
 
-# Príklad použitia v konfigurácii:
+# Example usage in configuration:
 # {
 #   "name": "CUSTOM_EXAMPLE",
 #   "type": "python_script",
-#   "description": "Príklad vlastného hash generátora",
+#   "description": "Example of custom hash generator",
 #   "script_path": "scripts/examples/custom_hash_example.py"
 # }
 

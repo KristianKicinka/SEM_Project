@@ -45,6 +45,9 @@ class EmulatorController extends Controller
 
     public function createEmulator(Request $request): JsonResponse {
 
+        // Debug: Log the request data
+        \Log::info('Emulator create request:', $request->all());
+
         $validator = Validator::make($request->all(), [
             'container_name' => 'required|string',
             'network_name' => 'required|string',
@@ -56,13 +59,29 @@ class EmulatorController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         try {
 
             $mountTarget = $request->mount_target;
             $mountSource = $request->mount_source;
+            
+            // Expand tilde to absolute path
+            if (strpos($mountSource, '~') === 0) {
+                $mountSource = str_replace('~', $_SERVER['HOME'] ?? getenv('HOME'), $mountSource);
+            }
+            
+            // Validate that mount source exists
+            if (!is_dir($mountSource)) {
+                return response()->json([
+                    'message' => 'Mount source directory does not exist',
+                    'error' => "Directory '{$mountSource}' not found"
+                ], 400);
+            }
 
             $memory = (int) $request->memory * 1024 * 1024; // Convert MB to bytes
             $cpu_count = (int) $request->cpu_count;
@@ -95,6 +114,16 @@ class EmulatorController extends Controller
                 ->setBinds(["$mountSource:$mountTarget"])
                 ->setMemory($memory)
                 ->setCpuQuota($cpu_count * 100000);
+                
+            // Debug: Log Docker configuration
+            \Log::info('Docker configuration:', [
+                'mount_source' => $mountSource,
+                'mount_target' => $mountTarget,
+                'memory' => $memory,
+                'cpu_count' => $cpu_count,
+                'image' => $image,
+                'container_name' => $request->container_name
+            ]);
 
 
             // Create the container
@@ -124,7 +153,11 @@ class EmulatorController extends Controller
             $emulator->save();
             
         } catch (\Exception $e) {
-            return response()->json(['errors' => $e->getMessage()], 400);
+            return response()->json([
+                'message' => 'Docker operation failed',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 400);
         }
 
         return response()->json(['status' => 'success'], 200);
@@ -212,20 +245,75 @@ class EmulatorController extends Controller
 
         $containerName = $request->input('container_name');
 
-        $command = 'adb -s emulator-5554 emu kill';
+        try {
+            // First, check if container is running
+            $containerDetails = $this->docker->containerInspect($containerName);
+            if (!$containerDetails->getState()->getRunning()) {
+                return response()->json(['status' => 'success', 'message' => 'Emulator is already stopped'], 200);
+            }
 
-        if (env("ENVIRONMENT", "local") == "server"){
-            $command = 'docker exec '.$containerName.' '.$command;
+            // Try to stop the emulator gracefully inside the container
+            // First try common emulator ports
+            $ports = ['emulator-5554', 'emulator-5556', 'emulator-5558'];
+            $command = '';
+            
+            foreach ($ports as $port) {
+                $testCommand = 'adb -s ' . $port . ' emu kill';
+                if (env("ENVIRONMENT", "local") == "server"){
+                    $testCommand = 'docker exec '.$containerName.' '.$testCommand;
+                }
+                
+                $testProcess = Process::fromShellCommandline($testCommand);
+                $testProcess->setTimeout(5);
+                $testProcess->run();
+                
+                if ($testProcess->isSuccessful()) {
+                    $command = $testCommand;
+                    break;
+                }
+            }
+            
+            // If no specific port worked, try to kill all emulator processes
+            if (empty($command)) {
+                $command = 'pkill -f emulator';
+                if (env("ENVIRONMENT", "local") == "server"){
+                    $command = 'docker exec '.$containerName.' '.$command;
+                }
+            }
+
+            if (!empty($command)) {
+                $process = Process::fromShellCommandline($command);
+                $process->setTimeout(10);
+                $process->run();
+                
+                // Log the result
+                \Log::info("Stop emulator command: " . $command);
+                \Log::info("Command output: " . $process->getOutput());
+                \Log::info("Command error: " . $process->getErrorOutput());
+            }
+
+            // Wait a moment for graceful shutdown
+            sleep(3);
+
+            // Check if container is still running
+            $containerDetails = $this->docker->containerInspect($containerName);
+            if ($containerDetails->getState()->getRunning()) {
+                // If still running, stop the container directly
+                \Log::info("Container still running, stopping directly");
+                $this->docker->containerStop($containerName);
+            }
+
+            return response()->json(['status' => 'success'], 200);
+            
+        } catch (\Exception $e) {
+            // If all else fails, try to stop the container directly
+            try {
+                $this->docker->containerStop($containerName);
+                return response()->json(['status' => 'success'], 200);
+            } catch (\Exception $stopException) {
+                return response()->json(['errors' => 'Failed to stop emulator: ' . $stopException->getMessage()], 400);
+            }
         }
-
-        $process = Process::fromShellCommandline($command);
-        $process->run();
-
-        if (!$process->isSuccessful()) {
-            return response()->json(['errors' => $containerName], 400);
-        }
-
-        return response()->json(['status' => 'success'], 200);
     }
 
 

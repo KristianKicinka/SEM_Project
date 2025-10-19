@@ -24,6 +24,7 @@ const ApkInput = ({ hashTypes, customHashTypes = [] }) => {
     const [showLoading, setShowLoading] = useState(false);
     const [channelID, setChannelID] = useState(false);
     const [processes, setProcesses] = useState([]);
+    const [selectedCustomTypes, setSelectedCustomTypes] = useState([]);
     const { http, token } = AuthUser();
 
     // Max file size supported
@@ -84,17 +85,27 @@ const ApkInput = ({ hashTypes, customHashTypes = [] }) => {
         data.append("channel_id", channel_id);
 
         // Add custom hash types if user is authenticated and has selected them
+        let filteredCustomTypes = [];
         if (token && customHashTypes.length > 0) {
-            const selectedCustomTypes = customHashTypes.filter(customType => 
+            filteredCustomTypes = customHashTypes.filter(customType => 
                 hashTypes.includes(customType.name)
             );
-            if (selectedCustomTypes.length > 0) {
-                data.append("custom_hash_types", JSON.stringify(selectedCustomTypes.map(type => type.id)));
+            if (filteredCustomTypes.length > 0) {
+                // Append each custom hash type ID as a separate form field
+                filteredCustomTypes.forEach(type => {
+                    data.append("custom_hash_types[]", type.id);
+                });
             }
         }
-
+        
+        // Set selected custom types for LoadingModal
+        setSelectedCustomTypes(filteredCustomTypes);
         setProcesses(processes);
-        setShowLoading(true);
+        
+        // Wait for state to update before showing loading modal
+        setTimeout(() => {
+            setShowLoading(true);
+        }, 100);
 
         try {
             let results = await axios.post('/api/create-hash-apk', data, {
@@ -135,7 +146,7 @@ const ApkInput = ({ hashTypes, customHashTypes = [] }) => {
                 </Form.Group>
             </Form>
             {showLoading && (
-                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} customHashTypes={customHashTypes} />
+                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} customHashTypes={selectedCustomTypes} />
             )}
         </div>
     );

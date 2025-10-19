@@ -4,7 +4,7 @@
  *
  * @copyright Copyright (c) 2024
  * 
- * Dynamické načítavanie custom hash types z databázy
+ * Dynamic loading of custom hash types from database
 """
 
 import json
@@ -17,7 +17,7 @@ from custom_hash_generators import CustomHashGenerator, CustomHashManager
 
 class DatabaseHashLoader:
     """
-    Načítava custom hash types z databázy cez Laravel API
+    Loads custom hash types from database via Laravel API
     """
     
     def __init__(self, base_url: str = None, api_key: str = None):

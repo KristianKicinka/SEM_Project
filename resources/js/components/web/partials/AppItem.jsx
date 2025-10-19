@@ -5,7 +5,7 @@
  * @copyright Copyright (c) 2024
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ReactDOM from "react-dom";
 import axios from "axios";
 
@@ -14,7 +14,11 @@ import { toast } from 'react-toastify';
 import LoadingModal from './LoadingModal';
 
 
-const AppItem = ({ item, hashTypes }) => {
+const AppItem = ({ item, hashTypes, customHashTypes = [] }) => {
+    console.log('Debug - AppItem rendered for:', item.package_name);
+    
+    // Memoize the component to prevent unnecessary re-renders
+    const memoizedItem = useMemo(() => item, [item.package_name]);
 
     const [showLoading, setShowLoading] = useState(false);
     const [channelID, setChannelID] = useState(false);
@@ -26,7 +30,7 @@ const AppItem = ({ item, hashTypes }) => {
      * @brief The function ensures calling API request for creation hashes from application name
      * @param {*} event OnClick event
      */
-    const createHash = async (event) => {
+    const createHash = useCallback(async (event) => {
         event.preventDefault();
 
         if(hashTypes.length === 0){
@@ -43,6 +47,16 @@ const AppItem = ({ item, hashTypes }) => {
             'channel_id': channel_id,
         }
 
+        // Add custom hash types if user is authenticated and has selected them
+        if (customHashTypes.length > 0) {
+            let filteredCustomTypes = customHashTypes.filter(customType => 
+                hashTypes.includes(customType.name)
+            );
+            if (filteredCustomTypes.length > 0) {
+                data['custom_hash_types'] = filteredCustomTypes.map(type => type.id);
+            }
+        }
+
         try {
             let results = await axios.post('/api/create-hash-appname', data);
 
@@ -53,7 +67,7 @@ const AppItem = ({ item, hashTypes }) => {
             toast.error('Hash generation error!');
             console.log(`ERROR: ${error}`);
         }
-    }
+    }, [item.package_name, hashTypes, customHashTypes]);
 
     /**
      * @brief The function ensures close loading modal box
@@ -126,6 +140,7 @@ const AppItem = ({ item, hashTypes }) => {
                                     className="btn btn-sm bg-orange text-white rounded-pill px-3"
                                     onClick={(e) => {
                                         e.preventDefault();
+                                        e.stopPropagation();
                                         createHash(e);
                                     }}
                                 >
@@ -138,7 +153,7 @@ const AppItem = ({ item, hashTypes }) => {
                 </div>
             </a>
             {showLoading && (
-                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} />
+                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} customHashTypes={customHashTypes} />
             )}
         </div>
     );

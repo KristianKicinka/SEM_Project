@@ -73,7 +73,7 @@ const Navbar = () => {
     // Component body
     return (
         <nav className="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow py-2">
-            <div className="container">
+            <div className="container-fluid">
                 <div className="row w-100">
                     <div className="col-md-4"></div>
                     <div className="col-md-4"></div>

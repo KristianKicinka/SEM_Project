@@ -68,6 +68,14 @@ Route::group(['middleware' => ['auth:api', 'admin']], function () {
     Route::post('/admin/api-key-generate', [ApiRequestController::class, 'generateApiKey']);
     Route::post('/admin/get-api-key', [ApiRequestController::class, 'getApiKey']);
     Route::post('/admin/requests', [ApiRequestController::class, 'getRequests']);
+    
+    // Custom Hash Types API routes for admin
+    Route::get('/custom-hash-types', [CustomHashTypeController::class, 'apiIndex']);
+    Route::post('/custom-hash-types', [CustomHashTypeController::class, 'store']);
+    Route::get('/custom-hash-types/{customHashType}', [CustomHashTypeController::class, 'show']);
+    Route::put('/custom-hash-types/{customHashType}', [CustomHashTypeController::class, 'update']);
+    Route::delete('/custom-hash-types/{customHashType}', [CustomHashTypeController::class, 'destroy']);
+    Route::post('/custom-hash-types/{customHashType}/test', [CustomHashTypeController::class, 'test']);
 });
 
 // User routes

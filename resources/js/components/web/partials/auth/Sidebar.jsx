@@ -38,7 +38,7 @@ const Sidebar = ({sidebarType}) => {
 
     // Component body
     return (
-        <div className="p-3 text-white bg-dark col vh-100" style={{minWidth: '200px', maxWidth: '250px'}}>
+        <div className="p-3 text-white bg-dark col vh-100" style={{minWidth: '200px', maxWidth: '250px', width: '250px', flex: '0 0 250px'}}>
             <Link className="d-flex align-items-center px-3 mb-3 mb-md-0 me-md-auto text-white text-decoration-none" to="/">
                 <div className="sidebar-brand-text mx-3 text-truncate" style={{maxWidth: '150px'}}>HashApp generator</div>
             </Link>

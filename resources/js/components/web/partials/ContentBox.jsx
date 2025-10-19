@@ -10,7 +10,7 @@ import ReactDOM from 'react-dom';
 import AppItem from './AppItem';
 
 
-const ContentBox = ({ items, hashTypes }) => {
+const ContentBox = ({ items, hashTypes, customHashTypes = [] }) => {
 
     // Component body
     return (
@@ -20,7 +20,7 @@ const ContentBox = ({ items, hashTypes }) => {
                     {items.map((item, index) => {
                         return (
                             <div key={index} id='appItem' className="col-12 col-sm-6 col-md-4 col-lg-3">
-                                <AppItem item={item} hashTypes={hashTypes} />
+                                <AppItem item={item} hashTypes={hashTypes} customHashTypes={customHashTypes} />
                             </div>
                         )
                     })}

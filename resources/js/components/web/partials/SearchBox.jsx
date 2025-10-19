@@ -110,7 +110,7 @@ const SearchBox = ({ hashTypes, setHashTypes }) => {
                     </div>
                 </div>
             </header>
-            {appItemsLoaded ? <ContentBox items={appItems} hashTypes={hashTypes} /> : null}
+            {appItemsLoaded ? <ContentBox items={appItems} hashTypes={hashTypes} customHashTypes={customHashTypes} /> : null}
         </div>
     );
 }

@@ -19,10 +19,8 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
     const [ja4xToShow, setJa4xToShow] = useState(null);
     const [showJa4xModal, setShowJa4xModal] = useState(false);
 
-    // Get custom hash types that are selected
-    const selectedCustomTypes = customHashTypes.filter(customType => 
-        hashTypes.includes(customType.name)
-    );
+    // Get custom hash types that are available (they are always shown if available)
+    const selectedCustomTypes = customHashTypes;
 
     /**
      * @brief The function ensures data item creation
@@ -48,11 +46,19 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
                     </button>
                 </td> : null}
                 {/* Dynamic custom hash columns */}
-                {selectedCustomTypes.map((customType) => (
-                    <td key={customType.id}>
-                        <CopyClipboard text={row[`custom_${customType.name}`] || 'N/A'} />
-                    </td>
-                ))}
+                {selectedCustomTypes.map((customType) => {
+                    // Extract custom hash value from custom_hashes (handle both string and object)
+                    const parsed = typeof row.custom_hashes === 'string' ? JSON.parse(row.custom_hashes) : row.custom_hashes;
+                    
+                    // Try both with and without custom_ prefix to handle different formats
+                    let customHashValue = parsed?.[`custom_${customType.name}`] ?? parsed?.[customType.name] ?? 'N/A';
+                
+                    return (
+                        <td key={`custom_${customType.name}`}>
+                            <CopyClipboard text={customHashValue} />
+                        </td>
+                    );
+                })}
             </tr>
         );
     }
@@ -94,9 +100,10 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
                                 {(hashTypes.includes("JA4S")) ? <th>JA4S hash</th> : null}
                                 {(hashTypes.includes("JA4X")) ? <th>JA4X hash</th> : null}
                                 {/* Dynamic custom hash headers */}
-                                {selectedCustomTypes.map((customType) => (
-                                    <th key={customType.id}>{customType.display_name}</th>
-                                ))}
+                                {selectedCustomTypes.map((customType) => {
+                                    console.log('Creating header forss customType:', customType);
+                                    return <th key={customType.id}>{customType.display_name}</th>;
+                                })}
                             </tr>
                         </thead>
                     <tbody className="text-nowrap">

@@ -333,7 +333,11 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
                                 <h6 className="mb-0">Configuration</h6>
                             </Card.Header>
                             <Card.Body>
-                                {configurationFields.map(field => renderConfigurationField(field))}
+                                {configurationFields.map(field => (
+                                    <div key={field.key}>
+                                        {renderConfigurationField(field)}
+                                    </div>
+                                ))}
                                 {errors.configuration && (
                                     <Alert variant="danger" className="mt-2">
                                         {errors.configuration}
@@ -350,7 +354,7 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
                                 id="is_public"
                                 label="Make Public"
                                 name="is_public"
-                                checked={formData.is_public}
+                                checked={formData.is_public || false}
                                 onChange={handleInputChange}
                             />
                             <Form.Text className="text-muted">
@@ -363,7 +367,7 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
                                 id="is_active"
                                 label="Active"
                                 name="is_active"
-                                checked={formData.is_active}
+                                checked={formData.is_active || false}
                                 onChange={handleInputChange}
                             />
                             <Form.Text className="text-muted">

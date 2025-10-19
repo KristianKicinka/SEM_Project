@@ -726,10 +726,20 @@ def get_results_with_ja4x(pcap_file, results):
         "-e", "tls.handshake.certificate", "-r", pcap_file,
     ]
 
-    result = subprocess.run(command, capture_output=True, text=True, check=True, encoding="utf-8")
+    result = subprocess.run(command, capture_output=True, text=True, check=False, encoding="utf-8")
+    
+    # Check if tshark failed completely
+    if result.returncode != 0:
+        # If tshark failed, return original results without JA4X
+        return results
+    
     json_string = re.sub(r'(in tap )?pkt\[\d+\]:.*\n', '', result.stdout)
 
-    packets = json.loads(json_string)
+    try:
+        packets = json.loads(json_string)
+    except json.JSONDecodeError:
+        # If JSON parsing fails, return original results without JA4X
+        return results
 
     for packet in packets:
         layers = packet["_source"]["layers"]
@@ -767,57 +777,172 @@ def get_results_with_ja4x(pcap_file, results):
     return results
 
 
+# Global cache for custom hash generators
+# This cache stores loaded custom hash generators to prevent repeated API calls
+# and eliminate rate limiting issues. Each cache entry is keyed by the combination
+# of manual config flag and sorted generator names.
+_custom_generators_cache = {}
+
+def load_custom_generators_once(custom_generators, use_manual_config):
+    """
+    Load custom generators only once and cache them for performance optimization.
+    
+    This function implements a caching mechanism to prevent repeated API calls
+    to the Laravel backend when processing multiple packets. The cache key is
+    based on the manual config flag and the sorted list of generator names.
+    
+    Performance benefits:
+    - Eliminates rate limiting (429 Too Many Requests errors)
+    - Reduces API load on Laravel backend
+    - Improves processing speed for large PCAP files
+    - Memory efficient - generators loaded only once per session
+    
+    Args:
+        custom_generators (list): List of generator names to load from database
+        use_manual_config (bool): Whether to use manual JSON config instead of database
+        
+    Returns:
+        dict: Dictionary mapping generator names to generator instances
+        
+    Example:
+        >>> generators = load_custom_generators_once(['CUSTOM_TLS_01'], False)
+        >>> print(generators['CUSTOM_TLS_01'].description)
+        'Test 01'
+    """
+    # Create unique cache key based on config mode and generator names
+    # Sorting ensures consistent cache keys regardless of input order
+    cache_key = f"{use_manual_config}_{','.join(sorted(custom_generators))}"
+    
+    # Check if generators are already cached
+    if cache_key not in _custom_generators_cache:
+        # Debug: Loading custom generators (commented out to avoid stdout pollution)
+        # print(f"Loading custom generators for: {custom_generators}")
+        # Load generators from database or manual config
+        _custom_generators_cache[cache_key] = load_custom_hash_types_from_database(custom_generators, use_manual_config)
+    
+    return _custom_generators_cache[cache_key]
+
+def _has_relevant_data_for_generator(packet, generator):
+    """
+    Check if packet has relevant data for the specific generator type.
+    
+    This function validates whether a packet contains the necessary data
+    for a specific generator type (TLS, network, or combination).
+    
+    Args:
+        packet: Scapy packet object to validate
+        generator: CustomHashGenerator instance to check against
+        
+    Returns:
+        bool: True if packet has relevant data for this generator type
+    """
+    # Strict validation: only generate hashes for packets with relevant data
+    if hasattr(generator, 'fields') and generator.fields:
+        # For generators with specific fields, check if packet has relevant data
+        if hasattr(generator, '__class__') and 'TLS' in generator.__class__.__name__:
+            # TLS generators require TLS layer with valid data
+            if not packet.haslayer(TLS):
+                return False
+            # Check if TLS layer has meaningful data (not just encrypted content)
+            if packet.haslayer(TLSClientHello) or packet.haslayer(TLSServerHello):
+                return True
+            return False
+        elif hasattr(generator, '__class__') and 'Algorithm' in generator.__class__.__name__:
+            # Algorithm generators can work with any packet that has basic network data
+            return packet.haslayer(IP) and (packet.haslayer(TCP) or packet.haslayer(UDP))
+        else:
+            # Default: require basic network data
+            return packet.haslayer(IP)
+    
+    # For generators without specific fields, use basic validation
+    return packet.haslayer(IP)
+
 def generate_custom_hashes(packet, sni=None, custom_generators=None):
     """
-    The function ensures generation of custom hashes using custom hash generators
-
-    Parameters:
-    packet (Packet): packet to process.
-    sni (string): Server name indicator.
-    custom_generators (list): List of custom generator names to use.
-
-    Returns:
-    dict: Dictionary with custom hash results.
-    """
-    if custom_generators is None:
-        custom_generators = []
+    Generate custom hashes using cached generators for optimal performance.
     
+    This function is the main entry point for custom hash generation. It uses
+    the cached generator system to efficiently process packets and generate
+    custom hash values. The function handles both TLS and non-TLS packets
+    with appropriate fallback mechanisms.
+    
+    Key features:
+    - Uses cached generators to avoid repeated API calls
+    - Supports both TLS and non-TLS packet processing
+    - Implements fallback system for database failures
+    - Handles packet validation and error recovery
+    - Returns results with 'custom_' prefix to avoid conflicts
+    
+    Args:
+        packet (scapy.packet.Packet): Scapy packet object to process
+        sni (str, optional): Server Name Indicator from TLS handshake
+        custom_generators (list, optional): List of generator names to use
+        
+    Returns:
+        dict: Dictionary with custom hash results, keys prefixed with 'custom_'
+               Values are either hash strings or None for failed generations
+        
+    Example:
+        >>> packet = IP()/TCP()
+        >>> hashes = generate_custom_hashes(packet, None, ['CUSTOM_TLS_01'])
+        >>> print(hashes)
+        {'custom_CUSTOM_TLS_01': 'a1b2c3d4e5f6...'}
+        
+    Performance notes:
+    - First call loads generators from database (slower)
+    - Subsequent calls use cached generators (faster)
+    - Memory usage scales with number of unique generator combinations
+    """
+    # Early return for empty generator list
     if not custom_generators:
         return {}
     
     try:
-        # Check if manual configuration mode is enabled
+        # Determine configuration mode from environment variable
+        # Manual config mode uses JSON files instead of database
         use_manual_config = os.getenv('USE_MANUAL_CONFIG', 'false').lower() == 'true'
         
-        # Load custom hash types from database or manual config
-        db_generators = load_custom_hash_types_from_database(custom_generators, use_manual_config)
+        # Load custom generators using caching mechanism
+        # This will only make API calls on first use for each generator set
+        db_generators = load_custom_generators_once(custom_generators, use_manual_config)
         
-        # If generators found, use them
-        if db_generators:
-            results = {}
-            for name, generator in db_generators.items():
-                if generator.validate_packet(packet):
+        # Fallback to existing system if no generators found
+        # This handles cases where database is unavailable or generators don't exist
+        if not db_generators:
+            # Debug: No custom generators found (commented out to avoid stdout pollution)
+            # print("No custom generators found, using fallback system")
+            fallback_results = custom_hash_manager.generate_hashes(packet, sni, custom_generators)
+            return {f'custom_{name}': value for name, value in fallback_results.items()}
+        
+        # Process each generator and generate hashes
+        results = {}
+        for name, generator in db_generators.items():
+            # Validate packet compatibility with generator requirements
+            if generator.validate_packet(packet):
+                # Additional validation: check if packet has relevant data for this generator type
+                if _has_relevant_data_for_generator(packet, generator):
                     try:
+                        # Generate hash using the specific generator
                         hash_value = generator.generate_hash(packet, sni)
-                        # Prefix custom hash names to avoid conflicts with built-in hashes
                         results[f'custom_{name}'] = hash_value
                     except Exception as e:
-                        print(f"Error generating hash for {name}: {e}")
+                        # Handle generator-specific errors gracefully
+                        # Debug: Error generating hash (commented out to avoid stdout pollution)
+                        # print(f"Error generating hash for {name}: {e}")
                         results[f'custom_{name}'] = None
                 else:
+                    # Packet doesn't have relevant data for this generator type
                     results[f'custom_{name}'] = None
-            return results
-        else:
-            # Fallback to existing system
-            fallback_results = custom_hash_manager.generate_hashes(packet, sni, custom_generators)
-            # Prefix fallback results too
-            prefixed_results = {}
-            for name, value in fallback_results.items():
-                prefixed_results[f'custom_{name}'] = value
-            return prefixed_results
+            else:
+                # Packet doesn't meet generator requirements
+                results[f'custom_{name}'] = None
+            
+        return results
             
     except Exception as e:
-        print(f"Error generating custom hashes: {e}")
+        # Handle any unexpected errors in the generation process
+        # Debug: Error generating custom hashes (commented out to avoid stdout pollution)
+        # print(f"Error generating custom hashes: {e}")
         return {}
 
 def remove_duplicities(data):
@@ -885,7 +1010,7 @@ if __name__ == '__main__':
                 ja3_hash = create_JA3_hash(packet)
                 ja4_hash = create_JA4_hash(packet, sni)
                 
-                # Generate custom hashes
+                # Generate custom hashes for TLS packets
                 custom_hashes = generate_custom_hashes(packet, sni, custom_generators)
 
                 key = (ip_src, port_src, ip_dest, port_dest)
@@ -898,9 +1023,14 @@ if __name__ == '__main__':
                         "ja3_hash": ja3_hash, "sni": sni, "ja3s_hash": None,
                         "ja4_hash": ja4_hash, "ja4s_hash": None, "ja4x_hash": []
                     }
+                    # Initialize custom hashes to None for all generators
+                    if custom_generators:
+                        for gen_name in custom_generators:
+                            result_entry[f"custom_{gen_name}"] = None
                     # Add custom hashes
                     for custom_name, custom_value in custom_hashes.items():
-                        result_entry[f"custom_{custom_name}"] = custom_value
+                        clean_name = custom_name.replace('custom_', '') if custom_name.startswith('custom_') else custom_name
+                        result_entry[f"custom_{clean_name}"] = custom_value
                     results[key] = result_entry
                 else:
                     results[key]["ja3_hash"] = ja3_hash
@@ -908,7 +1038,8 @@ if __name__ == '__main__':
                     results[key]["ja4_hash"] = ja4_hash
                     # Update custom hashes
                     for custom_name, custom_value in custom_hashes.items():
-                        results[key][f"custom_{custom_name}"] = custom_value
+                        clean_name = custom_name.replace('custom_', '') if custom_name.startswith('custom_') else custom_name
+                        results[key][f"custom_{clean_name}"] = custom_value
 
             # Process ServerHello packets
             if tls_layers.haslayer(TLSServerHello):
@@ -917,7 +1048,11 @@ if __name__ == '__main__':
                 ja4s_hash = create_JA4S_hash(packet)
                 
                 # Generate custom hashes for server hello
-                custom_hashes = generate_custom_hashes(packet, None, custom_generators)
+                # Use SNI from existing ClientHello entry if available, otherwise None
+                sni = None
+                if key in results and "sni" in results[key]:
+                    sni = results[key]["sni"]
+                custom_hashes = generate_custom_hashes(packet, sni, custom_generators)
 
                 key = (ip_dest, port_dest, ip_src, port_src)
 
@@ -931,14 +1066,21 @@ if __name__ == '__main__':
                     }
                     # Add custom hashes
                     for custom_name, custom_value in custom_hashes.items():
-                        result_entry[f"custom_{custom_name}"] = custom_value
+                        clean_name = custom_name.replace('custom_', '') if custom_name.startswith('custom_') else custom_name
+                        result_entry[f"custom_{clean_name}"] = custom_value
                     results[key] = result_entry
                 else:
                     results[key]["ja3s_hash"] = ja3s_hash
                     results[key]["ja4s_hash"] = ja4s_hash
-                    # Update custom hashes
+                    # Update custom hashes only if they are not None (don't overwrite valid ClientHello hashes)
                     for custom_name, custom_value in custom_hashes.items():
-                        results[key][f"custom_{custom_name}"] = custom_value
+                        clean_name = custom_name.replace('custom_', '') if custom_name.startswith('custom_') else custom_name
+                        # Only update if the new value is not None (don't overwrite valid hashes with None)
+                        if custom_value is not None:
+                            results[key][f"custom_{clean_name}"] = custom_value
+        
+        # Custom hashes are only generated for TLS packets (ClientHello/ServerHello)
+        # Non-TLS packets don't get custom hashes to avoid pollution
 
     # Add ja4x hashes to results
     results = get_results_with_ja4x(pcap_file, results)

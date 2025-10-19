@@ -62,12 +62,12 @@ const Files = () => {
 
     // Component body 
     return (
-        <div className="Hashes container-fluid">
-            <div className="row">
+        <div className="Dashboard container-fluid">
+            <div className="row d-flex">
                 <Sidebar sidebarType="admin" />
-                <div className="col-md-10 px-0">
+                <div className="col px-0" style={{flex: '1'}}>
                     <Navbar />
-                    <div className="container-fluid">
+                    <div className="page container-fluid pt-md-3 px-4">
                         <DeleteFile 
                             show={deleteModalShow} 
                             file={fileOnDelete}

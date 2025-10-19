@@ -78,6 +78,11 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
             $this->apk_clean_needed = true;
 
             $this->emulator = $this->get_free_emulator();
+            
+            if ($this->emulator === null) {
+                throw new \Exception('No free emulators available. Please check if emulators are running and not all are busy.');
+            }
+            
             $this->set_emulator_working_state($this->emulator, true);
 
             // Get information's about APK file
@@ -160,20 +165,54 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
      */
     private function downloadApkFile(string $package_name): string {
 
-        // old "https://d.apkpure.com/b/APK/".$package_name."?version=latest";
-        $url = "https://d.cdnpure.com/b/APK/".$package_name."?version=latest";
-
         $file_name = date('his')."_".$package_name.".apk";
         $download_dir = storage_path("app/public/uploads/apk_downloaded");
 
-        $command = "aria2c -x 2 -s 2 -d ".$download_dir." -o ".$file_name." ".$url;
+        // Try multiple download sources
+        $urls = [
+            "https://d.cdnpure.com/b/APK/".$package_name."?version=latest",
+            "https://d.apkpure.com/b/APK/".$package_name."?version=latest",
+            "https://apkpure.com/".$package_name."/download?from=details"
+        ];
 
-        $process = Process::fromShellCommandline($command);
-        $process->run();
+        foreach ($urls as $index => $url) {
+            try {
+                Log::channel('devlog')->info('Trying to download APK from URL {index}: {url}', [
+                    'index' => $index + 1,
+                    'url' => $url
+                ]);
 
-        if (!$process->isSuccessful())
-            throw new ApkDownloadException($process->getErrorOutput());
+                $command = "aria2c -x 2 -s 2 -d ".$download_dir." -o ".$file_name." ".$url;
 
-        return $file_name;
+                $process = Process::fromShellCommandline($command);
+                $process->setTimeout(300); // 5 minutes timeout
+                $process->run();
+
+                if ($process->isSuccessful()) {
+                    // Check if file was actually downloaded
+                    $file_path = $download_dir . '/' . $file_name;
+                    if (file_exists($file_path)) {
+                        Log::channel('devlog')->info('APK downloaded successfully from URL {index}: {file}', [
+                            'index' => $index + 1,
+                            'file' => $file_name
+                        ]);
+                        return $file_name;
+                    }
+                }
+
+                Log::channel('devlog')->warning('Download from URL {index} failed, trying next...', [
+                    'index' => $index + 1,
+                    'error' => $process->getErrorOutput()
+                ]);
+
+            } catch (Exception $e) {
+                Log::channel('devlog')->warning('Exception during download from URL {index}: {error}', [
+                    'index' => $index + 1,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        throw new ApkDownloadException('All download sources failed for package: ' . $package_name);
     }
 }

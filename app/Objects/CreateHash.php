@@ -133,6 +133,17 @@ class CreateHash {
         }
 
         $process = Process::fromShellCommandline($command);
+        
+        // Set environment variables for Python script
+        $process->setEnv([
+            'LARAVEL_BASE_URL' => 'http://localhost:8000',
+            'LARAVEL_API_KEY' => 'python_hash_generator_key_' . env('APP_KEY', 'default_key'),
+            'USE_MANUAL_CONFIG' => 'false'
+        ]);
+        
+        // Set timeout to 300 seconds (5 minutes) for Python script execution
+        $process->setTimeout(300);
+        
         $process->run();
 
         if (!$process->isSuccessful()) {
@@ -210,6 +221,8 @@ class CreateHash {
      * @throws CloseAppFailException
      */
     private function closeAppOnEmulator(Emulator $emulator, string $package_name) : void {
+        // First, check if ADB server is running and devices are available
+        $this->ensureAdbServerRunning($emulator);
 
         $command = 'adb shell pm clear '.$package_name;
 
@@ -217,10 +230,14 @@ class CreateHash {
             $command = 'docker exec '.$emulator->name.' '.$command;
         }
 
+        Log::channel('devlog')->info('ADB CLEAR APP command {command}', ['command' => $command]);
+
         $process = Process::fromShellCommandline($command);
+        $process->setTimeout(60);
         $process->run();
 
         if (!$process->isSuccessful()) {
+            Log::channel('devlog')->error('ADB CLEAR APP failed: {error}', ['error' => $process->getErrorOutput()]);
             throw new CloseAppFailException($process->getErrorOutput());
         }
     }
@@ -244,6 +261,51 @@ class CreateHash {
     }
 
     /**
+     * @brief Ensures ADB server is running and devices are available
+     * @param Emulator $emulator
+     * @return void
+     * @throws AppInstallationFailException
+     */
+    private function ensureAdbServerRunning(Emulator $emulator) : void {
+        // Start ADB server
+        $startCommand = 'adb start-server';
+        if (env("ENVIRONMENT", "local") == "server"){
+            $startCommand = 'docker exec '.$emulator->name.' '.$startCommand;
+        }
+        
+        $startProcess = Process::fromShellCommandline($startCommand);
+        $startProcess->setTimeout(30);
+        $startProcess->run();
+        
+        Log::channel('devlog')->info('ADB START-SERVER command {command}', ['command' => $startCommand]);
+        
+        // Wait a moment for ADB to initialize
+        sleep(3);
+        
+        // Check if devices are available
+        $devicesCommand = 'adb devices';
+        if (env("ENVIRONMENT", "local") == "server"){
+            $devicesCommand = 'docker exec '.$emulator->name.' '.$devicesCommand;
+        }
+        
+        $devicesProcess = Process::fromShellCommandline($devicesCommand);
+        $devicesProcess->setTimeout(30);
+        $devicesProcess->run();
+        
+        Log::channel('devlog')->info('ADB DEVICES command {command}', ['command' => $devicesCommand]);
+        Log::channel('devlog')->info('ADB DEVICES output: {output}', ['output' => $devicesProcess->getOutput()]);
+        
+        if (!$devicesProcess->isSuccessful()) {
+            throw new AppInstallationFailException('Failed to check ADB devices: ' . $devicesProcess->getErrorOutput());
+        }
+        
+        $output = $devicesProcess->getOutput();
+        if (strpos($output, 'device') === false && strpos($output, 'emulator') === false) {
+            throw new AppInstallationFailException('No devices/emulators found. ADB output: ' . $output);
+        }
+    }
+
+    /**
      * @brief TODO
      * @param Emulator $emulator
      * @param string $file_path Path to apk file intended for analysis
@@ -251,6 +313,9 @@ class CreateHash {
      * @throws AppInstallationFailException
      */
     private function installAPK(Emulator $emulator, string $file_path) : void {
+        // First, check if ADB server is running and devices are available
+        $this->ensureAdbServerRunning($emulator);
+        
         $command = 'adb install '.$file_path;
 
         if (env("ENVIRONMENT", "local") == "server"){
@@ -260,9 +325,11 @@ class CreateHash {
         Log::channel('devlog')->info('ADB INSTALL command {command}', ['command' => $command]);
 
         $process = Process::fromShellCommandline($command);
+        $process->setTimeout(300);
         $process->run();
 
         if (!$process->isSuccessful()) {
+            Log::channel('devlog')->error('ADB INSTALL failed: {error}', ['error' => $process->getErrorOutput()]);
             throw new AppInstallationFailException($process->getErrorOutput());
         }
     }
@@ -298,6 +365,8 @@ class CreateHash {
      * @throws AppInstallationFailException
      */
     private function installXAPK(Emulator $emulator, string $xapk_folder_path) : void {
+        // First, check if ADB server is running and devices are available
+        $this->ensureAdbServerRunning($emulator);
 
         // Ensure the folder path has a trailing slash
         $folder_path = rtrim($xapk_folder_path, '/') . '/';
@@ -320,9 +389,11 @@ class CreateHash {
         $static_part_command = ['docker', 'exec', $emulator->name, 'adb', 'install-multiple'];
         $command = array_merge($static_part_command, $apk_files);
         $process = new Process($command);
+        $process->setTimeout(300);
         $process->run();
 
         if (!$process->isSuccessful()) {
+            Log::channel('devlog')->error('XAPK INSTALL failed: {error}', ['error' => $process->getErrorOutput()]);
             throw new AppInstallationFailException('Failed to install APKs: ' . $process->getErrorOutput());
         }
     }
