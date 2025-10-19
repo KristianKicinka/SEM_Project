@@ -90,6 +90,73 @@ def should_filter(sni):
         return False
     return is_blacklisted(sni)
 
+def get_sni_flag(sni):
+    """
+    Get flag for SNI based on blacklist categories.
+    Returns flag string or None if not blacklisted.
+    """
+    if not sni:
+        return None
+    
+    sni_lower = sni.lower()
+    
+    # Load keywords from blacklist files for each category
+    ads_keywords = set()
+    analytics_keywords = set()
+    cdn_keywords = set()
+    shared_api_keywords = set()
+    
+    # Load ads keywords
+    ads_file = os.path.join(BLACKLIST_DIR, "ads.txt")
+    if os.path.exists(ads_file):
+        with open(ads_file, "r") as f:
+            ads_keywords = set(line.strip().lower() for line in f if line.strip())
+    
+    # Load analytics keywords
+    analytics_file = os.path.join(BLACKLIST_DIR, "analytics.txt")
+    if os.path.exists(analytics_file):
+        with open(analytics_file, "r") as f:
+            analytics_keywords = set(line.strip().lower() for line in f if line.strip())
+    
+    # Load CDN keywords
+    cdn_file = os.path.join(BLACKLIST_DIR, "cdn.txt")
+    if os.path.exists(cdn_file):
+        with open(cdn_file, "r") as f:
+            cdn_keywords = set(line.strip().lower() for line in f if line.strip())
+    
+    # Load shared API keywords
+    shared_api_file = os.path.join(BLACKLIST_DIR, "shared_api.txt")
+    if os.path.exists(shared_api_file):
+        with open(shared_api_file, "r") as f:
+            shared_api_keywords = set(line.strip().lower() for line in f if line.strip())
+    
+    # Check for shared API domains first (most specific)
+    if any(keyword in sni_lower for keyword in shared_api_keywords):
+        return "shared_api_communication"
+    
+    # Check for CDN domains
+    if any(keyword in sni_lower for keyword in cdn_keywords):
+        return "cdn_communication"
+    
+    # Check for advertisement domains
+    if any(keyword in sni_lower for keyword in ads_keywords):
+        return "advertisement_communication"
+    
+    # Check for analytics domains (least specific - contains 'google')
+    if any(keyword in sni_lower for keyword in analytics_keywords):
+        return "analytics_communication"
+    
+    # Check exact blacklist matches
+    if sni_lower in BLACKLIST_FULL:
+        return "blacklisted_communication"
+    
+    # Check regex patterns
+    for pattern in REGEX_PATTERNS:
+        if pattern.match(sni_lower):
+            return "pattern_matched_communication"
+    
+    return None
+
 def log_decision(sni, filtered, reason):
     """Log the reason why SNI was filtered or allowed."""
     with open(log_file_path, "a") as log:

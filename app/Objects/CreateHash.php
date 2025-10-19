@@ -592,6 +592,10 @@ class CreateHash {
         foreach($data["hashes"] as $hash){
 
             Log::channel('devlog')->info('Hashes : {name}', ['name' => $hash]);
+            Log::channel('devlog')->info('SNI Flag: {flag}, Is Flagged: {flagged}', [
+                'flag' => $hash->sni_flag ?? 'null',
+                'flagged' => $hash->is_flagged ?? 'null'
+            ]);
 
             // Extract custom hashes from the hash object
             $custom_hashes = [];
@@ -607,6 +611,8 @@ class CreateHash {
                 'ja3_hash' => $hash->ja3_hash,
                 'ja3s_hash' => $hash->ja3s_hash,
                 'sni' => $hash->sni,
+                'sni_flag' => isset($hash->sni_flag) ? $hash->sni_flag : null,
+                'is_flagged' => isset($hash->is_flagged) ? (bool)$hash->is_flagged : false,
                 'ja4_hash' => $hash->ja4_hash,
                 'ja4s_hash' => $hash->ja4s_hash,
                 'ja4x_hash' => json_encode($hash->ja4x_hash),
@@ -616,6 +622,11 @@ class CreateHash {
                 'ip_dest' => $hash->ip_dest,
                 'port_dest' => $hash->port_dest,
             ];
+            
+            Log::channel('devlog')->info('Saving hash with flag: {flag}, flagged: {flagged}', [
+                'flag' => $new_record['sni_flag'],
+                'flagged' => $new_record['is_flagged']
+            ]);
 
             $db_hash = Hash::create($new_record);
             $db_hash->save();

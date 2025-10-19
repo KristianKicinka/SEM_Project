@@ -26,6 +26,8 @@ class Hash extends Model {
         'ja3s_hash',
         'hash_type',
         'sni',
+        'sni_flag',
+        'is_flagged',
         'ja4_hash',
         'ja4s_hash',
         'ja4x_hash',

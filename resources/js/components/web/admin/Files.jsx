@@ -79,7 +79,7 @@ const Files = () => {
                             dataIndexes={dataIndexes} 
                             columnNames={columnNames} 
                             buttons={buttons}
-                            tableName={"Hashes"}
+                            tableName={"Files"}
                         />
                     </div>
                 </div>

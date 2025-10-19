@@ -454,7 +454,8 @@ class HashController extends Controller {
             ->select(
                 'applications.name as app_name','applications.package_name as package_name',
                 'applications.version as app_version','hashes.ja3_hash as ja3_hash',
-                'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash',
+                'hashes.sni as sni', 'hashes.sni_flag as sni_flag', 'hashes.is_flagged as is_flagged',
+                'hashes.ja3s_hash as ja3s_hash',
                 'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash', 'hashes.ja4x_hash as ja4x_hash',
                 'hashes.custom_hashes as custom_hashes'
             )
@@ -482,7 +483,7 @@ class HashController extends Controller {
 
         $data = DB::table('applications')
             ->join('hashes','applications.id','=','hashes.app_id')
-            ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash','ja4_hash','ja4s_hash', 'ja4x_hash',
+            ->select('hashes.id', 'ja3_hash','sni', 'sni_flag', 'is_flagged', 'ja3s_hash','ja4_hash','ja4s_hash', 'ja4x_hash',
                 'name AS app_name', 'package_name', 'version', 'is_dangerous', 'is_malware', 'ip_src',
                 'port_src', 'ip_dest', 'port_dest'
             )

@@ -145,6 +145,31 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, title, descr
                                                         </td>
                                                     );
                                                 }
+                                                if (name === 'sni_flag') {
+                                                    const sniFlag = item[name.toLowerCase()];
+                                                    const isFlagged = item['is_flagged'];
+                                                    return (
+                                                        <td key={key} className="text-nowrap">
+                                                            {isFlagged && sniFlag ? (
+                                                                <span 
+                                                                    className={`badge ${
+                                                                        sniFlag === 'advertisement_communication' ? 'bg-danger' :
+                                                                        sniFlag === 'analytics_communication' ? 'bg-info' :
+                                                                        sniFlag === 'cdn_communication' ? 'bg-primary' :
+                                                                        sniFlag === 'shared_api_communication' ? 'bg-secondary' :
+                                                                        sniFlag === 'blacklisted_communication' ? 'bg-dark' :
+                                                                        'bg-warning'
+                                                                    } text-white`} 
+                                                                    title={`Flagged as: ${sniFlag}`}
+                                                                >
+                                                                    {sniFlag.replace('_communication', '')}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-muted">-</span>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                }
                                                 return (<td key={key} className="text-nowrap" >{item[name.toLowerCase()]}</td>)
                                             })}
                                             <td>

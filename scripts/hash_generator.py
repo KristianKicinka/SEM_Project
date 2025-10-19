@@ -25,7 +25,7 @@ from cryptography import x509
 from cryptography.x509.oid import ExtensionOID, NameOID
 from hashlib import sha256
 
-from filter_manager import should_filter
+from filter_manager import should_filter, get_sni_flag
 from custom_hash_generators import custom_hash_manager
 from dynamic_hash_loader import load_custom_hash_types_from_database
 
@@ -1047,14 +1047,14 @@ if __name__ == '__main__':
                 ja3s_hash = create_JA3S_hash(packet)
                 ja4s_hash = create_JA4S_hash(packet)
                 
+                key = (ip_dest, port_dest, ip_src, port_src)
+                
                 # Generate custom hashes for server hello
                 # Use SNI from existing ClientHello entry if available, otherwise None
                 sni = None
                 if key in results and "sni" in results[key]:
                     sni = results[key]["sni"]
                 custom_hashes = generate_custom_hashes(packet, sni, custom_generators)
-
-                key = (ip_dest, port_dest, ip_src, port_src)
 
                 # Insert from server hello packets data to results
                 if key not in results:
@@ -1108,9 +1108,24 @@ if __name__ == '__main__':
         
         array_results.append(obj)
 
-    # Remove advertisements servers
-    # array_results = remove_adds(array_results)
-    array_results = [res for res in array_results if not should_filter(res.get("sni"))]
+    # Add SNI flags instead of filtering completely
+    for res in array_results:
+        sni = res.get("sni")
+        if sni:
+            # Get flag for this SNI
+            flag = get_sni_flag(sni)
+            if flag:
+                res["sni_flag"] = flag
+                res["is_flagged"] = True
+            else:
+                res["sni_flag"] = None
+                res["is_flagged"] = False
+        else:
+            res["sni_flag"] = None
+            res["is_flagged"] = False
+    
+    # Optional: Still filter if needed (can be controlled by environment variable)
+    # array_results = [res for res in array_results if not should_filter(res.get("sni"))]
 
     # Filter out duplicate dictionaries
     filtered_results = remove_duplicities(array_results)

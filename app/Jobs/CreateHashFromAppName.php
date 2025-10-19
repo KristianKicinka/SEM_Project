@@ -28,6 +28,16 @@ use Illuminate\Support\Facades\Log;
 class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    
+    /**
+     * The number of times the job may be attempted.
+     */
+    public $tries = 1;
+    
+    /**
+     * The maximum number of seconds the job can run.
+     */
+    public $timeout = 1800; // 30 minutes
 
     private string $package_name;
     private array $pre_installed_apps;
@@ -138,22 +148,30 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
             $this->hash_process_data->setFinished();
 
         } catch(Exception $e){
+            // Log the error for debugging
+            Log::channel('devlog')->error('CreateHashFromAppName failed for package {package}: {error}', [
+                'package' => $this->package_name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             // Process job exception
             $this->hash_process_data->setFailed();
 
             // Clear APK files if needed
-            if($this->apk_clean_needed)
+            if($this->apk_clean_needed && isset($this->apk_path))
                 $this->delete_apk_file($this->apk_path);
 
             // Uninstall app from emulator if process before uninstallation
-            if($this->apk_uninstall_needed && !in_array($this->package_name, $this->pre_installed_apps))
+            if($this->apk_uninstall_needed && !in_array($this->package_name, $this->pre_installed_apps) && $this->emulator)
                 $this->uninstallAppOnEmulator($this->emulator, $this->package_name);
 
             // Free emulator
             if($this->emulator)
                 $this->set_emulator_working_state($this->emulator, false);
 
-            throw new HashGenerationProcessFailed($e);
+            // Don't retry - fail immediately
+            $this->fail($e);
         }
     }
 
