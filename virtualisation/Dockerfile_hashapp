@@ -14,7 +14,12 @@ RUN chown -R www-data:www-data /var/www/
 
 # Copy React data
 USER www-data
-COPY ./ /var/www/sem_project/
+COPY package.json /var/www/sem_project/
+COPY package-lock.json /var/www/sem_project/
+COPY resources /var/www/sem_project/resources
+COPY public /var/www/sem_project/public
+COPY scripts /var/www/sem_project/scripts
+COPY vite.config.mjs /var/www/sem_project/
 
 # Change directory ownership
 USER root
@@ -30,11 +35,11 @@ RUN npm run build
 #############
 # WEB IMAGE #
 #############
-FROM sem_python_wireshark_php8.2:latest
+FROM sem_python_wireshark_php8.3:latest
 USER root
 
 # Set max file and post size limits
-COPY ./installationFiles/custom_php_settings.ini /usr/local/etc/php/conf.d/custom_php_settings.ini
+COPY installationFiles/custom_php_settings.ini /usr/local/etc/php/conf.d/custom_php_settings.ini
 
 # Install needed dependencies
 RUN apt-get update
@@ -88,7 +93,7 @@ EOF
 RUN sh /mnt/docker_install.sh
 
 # Changing docker group gid to gid of docker group in host system
-RUN groupmod -g $DOCKER_GROUP_ID docker
+# RUN groupmod -g $DOCKER_GROUP_ID docker
 
 USER www-data
 # Copy project directory
@@ -110,7 +115,7 @@ USER www-data
 RUN composer install
 
 # Copy built React applications
-COPY --from=ReactHashApp /var/www/sem_project/public /var/www/html/public
+COPY --from=reacthashapp /var/www/sem_project/public /var/www/html/public
 
 USER root
 # Install networking and database tools
@@ -138,7 +143,7 @@ USER root
 # Install supervisor
 RUN apt update
 RUN apt install -y supervisor
-COPY ./installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
+COPY installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
 
 USER root
 # Change folders permissions

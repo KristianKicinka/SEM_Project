@@ -1,0 +1,12 @@
+# Docker temporary files
+.dockerignore
+docker-compose.override.yml
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+

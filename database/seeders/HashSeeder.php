@@ -96,6 +96,8 @@ class HashSeeder extends Seeder
                 'ja3s_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
                 'hash_type' => 'ja3',
                 'sni' => 'whatsapp.com',
+                'sni_flag' => null,
+                'is_flagged' => false,
                 'ja4_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
                 'ja4s_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
                 'ja4x_hash' => ['tls_version' => 'TLS 1.3', 'cipher_suites' => ['TLS_AES_256_GCM_SHA384']],
@@ -119,6 +121,8 @@ class HashSeeder extends Seeder
                 'ja3s_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
                 'hash_type' => 'ja3',
                 'sni' => 'facebook.com',
+                'sni_flag' => null,
+                'is_flagged' => false,
                 'ja4_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
                 'ja4s_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
                 'ja4x_hash' => ['tls_version' => 'TLS 1.3', 'cipher_suites' => ['TLS_AES_256_GCM_SHA384']],
@@ -142,6 +146,8 @@ class HashSeeder extends Seeder
                 'ja3s_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
                 'hash_type' => 'ja3',
                 'sni' => 'suspicious-domain.com',
+                'sni_flag' => 'blacklisted_communication',
+                'is_flagged' => true,
                 'ja4_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
                 'ja4s_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
                 'ja4x_hash' => ['tls_version' => 'TLS 1.3', 'cipher_suites' => ['TLS_AES_256_GCM_SHA384']],
@@ -153,6 +159,101 @@ class HashSeeder extends Seeder
                 'ip_src' => '192.168.1.102',
                 'port_src' => 44302,
                 'ip_dest' => '10.0.0.1',
+                'port_dest' => 443,
+            ]);
+        }
+
+        // Pridaj ďalšie hashe s rôznymi flagmi
+        if ($whatsapp) {
+            // Advertisement hash
+            Hash::create([
+                'app_id' => $whatsapp->id,
+                'process_id' => $process1->id,
+                'ja3_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
+                'ja3s_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
+                'hash_type' => 'ja3',
+                'sni' => 'doubleclick.net',
+                'sni_flag' => 'advertisement_communication',
+                'is_flagged' => true,
+                'ja4_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
+                'ja4s_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
+                'ja4x_hash' => ['tls_version' => 'TLS 1.3', 'cipher_suites' => ['TLS_AES_256_GCM_SHA384']],
+                'custom_hashes' => [
+                    'ad_network_signature' => 'g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2'
+                ],
+                'custom_hash_type_id' => $customHashType1->id,
+                'ip_src' => '192.168.1.100',
+                'port_src' => 44303,
+                'ip_dest' => '172.217.16.1',
+                'port_dest' => 443,
+            ]);
+
+            // Analytics hash
+            Hash::create([
+                'app_id' => $whatsapp->id,
+                'process_id' => $process1->id,
+                'ja3_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
+                'ja3s_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
+                'hash_type' => 'ja3',
+                'sni' => 'analytics.google.com',
+                'sni_flag' => 'analytics_communication',
+                'is_flagged' => true,
+                'ja4_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
+                'ja4s_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
+                'ja4x_hash' => ['tls_version' => 'TLS 1.3', 'cipher_suites' => ['TLS_AES_256_GCM_SHA384']],
+                'custom_hashes' => [
+                    'analytics_tracking' => 'h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3'
+                ],
+                'custom_hash_type_id' => $customHashType2->id,
+                'ip_src' => '192.168.1.100',
+                'port_src' => 44304,
+                'ip_dest' => '142.250.191.1',
+                'port_dest' => 443,
+            ]);
+
+            // CDN hash
+            Hash::create([
+                'app_id' => $whatsapp->id,
+                'process_id' => $process1->id,
+                'ja3_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
+                'ja3s_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
+                'hash_type' => 'ja3',
+                'sni' => 'cloudfront.net',
+                'sni_flag' => 'cdn_communication',
+                'is_flagged' => true,
+                'ja4_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
+                'ja4s_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
+                'ja4x_hash' => ['tls_version' => 'TLS 1.3', 'cipher_suites' => ['TLS_AES_256_GCM_SHA384']],
+                'custom_hashes' => [
+                    'cdn_optimization' => 'i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4'
+                ],
+                'custom_hash_type_id' => $customHashType1->id,
+                'ip_src' => '192.168.1.100',
+                'port_src' => 44305,
+                'ip_dest' => '13.32.0.1',
+                'port_dest' => 443,
+            ]);
+
+            // Shared API hash
+            Hash::create([
+                'app_id' => $whatsapp->id,
+                'process_id' => $process1->id,
+                'ja3_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
+                'ja3s_hash' => '769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11-13-5,23-24-25,0',
+                'hash_type' => 'ja3',
+                'sni' => 'googleapis.com',
+                'sni_flag' => 'shared_api_communication',
+                'is_flagged' => true,
+                'ja4_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
+                'ja4s_hash' => 't13d1519h2_8daaf6152771_af3e0c77f',
+                'ja4x_hash' => ['tls_version' => 'TLS 1.3', 'cipher_suites' => ['TLS_AES_256_GCM_SHA384']],
+                'custom_hashes' => [
+                    'api_authentication' => 'j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5'
+                ],
+                'custom_hash_type_id' => $customHashType2->id,
+                'ip_src' => '192.168.1.100',
+                'port_src' => 44306,
+                'ip_dest' => '142.250.191.1',
                 'port_dest' => 443,
             ]);
         }
