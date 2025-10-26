@@ -1,5 +1,11 @@
 <?php
 
+// Set PHP settings for large file uploads
+ini_set('upload_max_filesize', '950M');
+ini_set('post_max_size', '950M');
+ini_set('max_execution_time', '300');
+ini_set('memory_limit', '512M');
+
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 

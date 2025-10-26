@@ -179,6 +179,7 @@ const DatabasePage = () => {
                                         <th>Package name</th>
                                         <th>Version</th>
                                         <th>SNI</th>
+                                        <th>Flag</th>
                                         <th>JA3 hash</th>
                                         <th>JA3S hash</th>
                                         <th>JA4 hash</th>
@@ -202,6 +203,25 @@ const DatabasePage = () => {
                                                     <td>{item?.package_name}</td>
                                                     <td>{item?.version}</td>
                                                     <td>{item?.sni}</td>
+                                                    <td>
+                                                        {item?.is_flagged && item?.sni_flag ? (
+                                                            <span 
+                                                                className={`badge ${
+                                                                    item.sni_flag === 'advertisement_communication' ? 'bg-danger' :
+                                                                    item.sni_flag === 'analytics_communication' ? 'bg-info' :
+                                                                    item.sni_flag === 'cdn_communication' ? 'bg-primary' :
+                                                                    item.sni_flag === 'shared_api_communication' ? 'bg-secondary' :
+                                                                    item.sni_flag === 'blacklisted_communication' ? 'bg-dark' :
+                                                                    'bg-warning'
+                                                                } text-white`} 
+                                                                title={`Flagged as: ${item.sni_flag}`}
+                                                            >
+                                                                {item.sni_flag.replace('_communication', '')}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-muted">-</span>
+                                                        )}
+                                                    </td>
                                                     <td><b>{item?.ja3_hash}</b></td>
                                                     <td><b>{item?.ja3s_hash}</b></td>
                                                     <td><b>{item?.ja4_hash}</b></td>

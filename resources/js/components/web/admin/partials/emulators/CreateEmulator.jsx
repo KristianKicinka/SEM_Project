@@ -45,7 +45,14 @@ const CreateEmulator = ({show, handleClose, setFetchDataState}) => {
             handleClose();
         } catch (error) {
             if (error.response.status === 400) {
-                setErrors(error.response.data.errors);
+                // Handle validation errors
+                if (error.response.data.errors) {
+                    setErrors(error.response.data.errors);
+                } else {
+                    // Handle Docker operation errors
+                    console.error('Docker operation failed:', error.response.data.error);
+                    setErrors({ general: [error.response.data.error || 'Unknown error occurred'] });
+                }
             }
             console.log(error);
         }
@@ -75,6 +82,11 @@ const CreateEmulator = ({show, handleClose, setFetchDataState}) => {
                     <div className="row">
                         <div className="col">
                             <form className="form" method="post" noValidate onSubmit={createNewEmulator} >
+                                {errors.general && (
+                                    <div className="alert alert-danger">
+                                        {errors.general[0]}
+                                    </div>
+                                )}
                                 <div className="form-group py-2">
                                     <label htmlFor="containerName" className="text-dark">Container name:</label><br/>
                                     <input 

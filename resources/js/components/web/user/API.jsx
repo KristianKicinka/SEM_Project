@@ -47,17 +47,19 @@ const API = () => {
     // Component body
     return (
         <div className="Dashboard container-fluid">
-            <div className="row">
+            <div className="row d-flex">
                 <Sidebar sidebarType="basic_user" />
-                <div className="col-md-10 px-0">
+                <div className="col px-0" style={{flex: '1'}}>
                     <Navbar />
-                    <div className="container-fluid">
+                    <div className="page container-fluid pt-md-3 px-4">
                         <TableComponent
                             data={apiRequests}
                             dataIndexes={dataIndexes}
                             columnNames={columnNames}
                             buttons={buttons}
                             tableName={"API Requests"}
+                            title={"API Requests"}
+                            description={"View and manage your API request history and usage statistics"}
                         />
                     </div>
                 </div>

@@ -91,7 +91,10 @@ class ApiRequestController extends Controller {
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         // Select all API request for requested user
@@ -118,33 +121,72 @@ class ApiRequestController extends Controller {
      */
     private function validateHashItems(Request $request): \Illuminate\Validation\Validator {
         $rules = [];
+        $inputType = $request->input("input_type");
 
-        // Create validator rules
-        if($request->input("input_type") == "JA3"){
-            $rules = ['hashes.*.ja3_hash' => 'required|string'];
-        }else if ($request->input("input_type") == "JA3_JA3S"){
-            $rules = ['hashes.*.ja3_hash' => 'required|string', 'hashes.*.ja3s_hash' => 'required|string'];
-        }else if ($request->input("input_type") == "JA3_JA3S_SNI"){
-            $rules = ['hashes.*.ja3_hash' => 'required|string', 'hashes.*.ja3s_hash' => 'required|string',
-                'hashes.*.sni' => 'required|string'
-            ];
-        }else if ($request->input("input_type") == "JA4"){
-            $rules = ['hashes.*.ja4_hash' => 'required|string'];
-        }else if ($request->input("input_type") == "JA4X"){
-            $rules = ['hashes.*.ja4x_hash' => 'required|string'];
-        }else if ($request->input("input_type") == "JA4X_SNI"){
-            $rules = ['hashes.*.ja4x_hash' => 'required|string', 'hashes.*.sni' => 'required|string'];
-        }else if ($request->input("input_type") == "JA4_JA4S"){
-            $rules = ['hashes.*.ja4_hash' => 'required|string', 'hashes.*.ja4s_hash' => 'required|string'];
-        }else if ($request->input("input_type") == "JA4_JA4S_SNI"){
-            $rules = ['hashes.*.ja4_hash' => 'required|string', 'hashes.*.ja4s_hash' => 'required|string',
-                'hashes.*.sni' => 'required|string'
-            ];
-        }else if ($request->input("input_type") == "JA3_JA3S_SNI_JA4_JA4S"){
-            $rules = ['hashes.*.ja3_hash' => 'required|string', 'hashes.*.ja3s_hash' => 'required|string',
-                'hashes.*.sni' => 'required|string', 'hashes.*.ja4_hash' => 'required|string',
-                'hashes.*.ja4s_hash' => 'required|string'
-            ];
+        // Validate input_type first
+        $validInputTypes = [
+            "JA3", "JA3_JA3S", "JA3_JA3S_SNI", "JA4", "JA4X", "JA4X_SNI", 
+            "JA4_JA4S", "JA4_JA4S_SNI", "JA3_JA3S_SNI_JA4_JA4S"
+        ];
+
+        if (!in_array($inputType, $validInputTypes)) {
+            return Validator::make($request->all(), [
+                'input_type' => 'required|in:' . implode(',', $validInputTypes)
+            ]);
+        }
+
+        // Create validator rules based on input type
+        switch ($inputType) {
+            case "JA3":
+                $rules = ['hashes.*.ja3_hash' => 'required|string'];
+                break;
+            case "JA3_JA3S":
+                $rules = [
+                    'hashes.*.ja3_hash' => 'required|string', 
+                    'hashes.*.ja3s_hash' => 'required|string'
+                ];
+                break;
+            case "JA3_JA3S_SNI":
+                $rules = [
+                    'hashes.*.ja3_hash' => 'required|string', 
+                    'hashes.*.ja3s_hash' => 'required|string',
+                    'hashes.*.sni' => 'required|string'
+                ];
+                break;
+            case "JA4":
+                $rules = ['hashes.*.ja4_hash' => 'required|string'];
+                break;
+            case "JA4X":
+                $rules = ['hashes.*.ja4x_hash' => 'required|string'];
+                break;
+            case "JA4X_SNI":
+                $rules = [
+                    'hashes.*.ja4x_hash' => 'required|string', 
+                    'hashes.*.sni' => 'required|string'
+                ];
+                break;
+            case "JA4_JA4S":
+                $rules = [
+                    'hashes.*.ja4_hash' => 'required|string', 
+                    'hashes.*.ja4s_hash' => 'required|string'
+                ];
+                break;
+            case "JA4_JA4S_SNI":
+                $rules = [
+                    'hashes.*.ja4_hash' => 'required|string', 
+                    'hashes.*.ja4s_hash' => 'required|string',
+                    'hashes.*.sni' => 'required|string'
+                ];
+                break;
+            case "JA3_JA3S_SNI_JA4_JA4S":
+                $rules = [
+                    'hashes.*.ja3_hash' => 'required|string', 
+                    'hashes.*.ja3s_hash' => 'required|string',
+                    'hashes.*.sni' => 'required|string', 
+                    'hashes.*.ja4_hash' => 'required|string',
+                    'hashes.*.ja4s_hash' => 'required|string'
+                ];
+                break;
         }
 
         return Validator::make($request->all(), $rules);
@@ -182,7 +224,10 @@ class ApiRequestController extends Controller {
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         // API request registration
@@ -221,7 +266,7 @@ class ApiRequestController extends Controller {
         $rules = [
             'auth_key' => 'required|string',
             'hashes' => 'required|array',
-            'input_type' => 'required|string',
+            'input_type' => 'required|string|in:JA3,JA3_JA3S,JA3_JA3S_SNI,JA4,JA4X,JA4X_SNI,JA4_JA4S,JA4_JA4S_SNI,JA3_JA3S_SNI_JA4_JA4S',
         ];
 
         // Validator error messages
@@ -234,14 +279,20 @@ class ApiRequestController extends Controller {
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         // Validator for hashes array items
         $hashes_validator = $this->validateHashItems($request);
 
         if ($hashes_validator->fails()) {
-            return response()->json(['errors' => $hashes_validator->errors()], 400);
+            return response()->json([
+                'error' => 'Hash validation failed',
+                'errors' => $hashes_validator->errors()
+            ], 400);
         }
 
         // API request registration
@@ -452,6 +503,8 @@ class ApiRequestController extends Controller {
         $rules = [
             'auth_key' => 'required|string',
             'apk_file' => 'required|file|mimes:apk,zip',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ];
 
         // Validator error messages
@@ -465,7 +518,10 @@ class ApiRequestController extends Controller {
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         // Getting file name from apk
@@ -479,6 +535,23 @@ class ApiRequestController extends Controller {
         $process_id = uniqid('ext_api_', true);
         $channel_id = null;
         $hash_types = ["JA3"];
+
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = User::where('api_auth_key', $request->input('auth_key'))->first();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
 
         // Dispatching queue job
         CreateHashFromAPK::dispatch(
@@ -515,6 +588,8 @@ class ApiRequestController extends Controller {
         $rules = [
             'auth_key' => 'required|string',
             'package_name' => 'required|string',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ];
 
         // Validator error messages
@@ -528,7 +603,10 @@ class ApiRequestController extends Controller {
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         // API request registration
@@ -539,6 +617,23 @@ class ApiRequestController extends Controller {
         $hash_types = ["JA3"];
         $channel_id = null;
 
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = User::where('api_auth_key', $request->input('auth_key'))->first();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
+
         // Dispatching queue job
         CreateHashFromAppName::dispatch(
             $request->input('package_name'), $hash_types,
@@ -548,6 +643,47 @@ class ApiRequestController extends Controller {
         $response = "Task for create hashes from package name (";
         $response = $response.$request->input("package_name").") was added to queue.";
         return response()->json($response, 200);
+    }
+
+    /**
+     * @brief Get available custom hash types for API user
+     * @param Request $request HTTP request data
+     * @return JsonResponse Available custom hash types
+     */
+    public function getCustomHashTypes(Request $request): JsonResponse {
+        // Validator rules
+        $rules = [
+            'auth_key' => 'required|string',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
+        }
+
+        // Get user by auth key
+        $user = User::where('api_auth_key', $request->input('auth_key'))->first();
+        
+        if (!$user) {
+            return response()->json(['error' => 'Invalid auth key'], 401);
+        }
+
+        // Get available custom hash types
+        $customHashTypes = \App\Models\CustomHashType::where(function($query) use ($user) {
+            $query->where('user_id', $user->id)
+                  ->orWhere('is_public', true);
+        })
+        ->where('is_active', true)
+        ->select('id', 'name', 'display_name', 'description', 'type', 'usage_count')
+        ->get();
+
+        return response()->json([
+            'custom_hash_types' => $customHashTypes
+        ]);
     }
 
     /**
@@ -575,7 +711,10 @@ class ApiRequestController extends Controller {
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         // Getting file name from apk
@@ -675,7 +814,10 @@ class ApiRequestController extends Controller {
         $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 400);
+            return response()->json([
+                'error' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         $netflow_original_file_name = $request->file('flowmon_file')->getClientOriginalName();

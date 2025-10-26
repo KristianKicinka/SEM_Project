@@ -21,6 +21,7 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+        \App\Http\Middleware\SetPhpSettings::class,
     ];
 
     /**
@@ -70,5 +71,6 @@ class Kernel extends HttpKernel
         'admin' => \App\Http\Middleware\AuthAdmin::class,
         'user' => \App\Http\Middleware\AuthBasicUser::class,
         'external' => \App\Http\Middleware\AuthExternalAPI::class,
+        'python' => \App\Http\Middleware\AuthPythonScript::class,
     ];
 }

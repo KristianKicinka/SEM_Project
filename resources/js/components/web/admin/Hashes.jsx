@@ -21,11 +21,11 @@ import Ja4xInfo from "../partials/Ja4xInfo";
 
 // Table headers
 const columnNames = [
-    "ID", "App Name", "Package name", "Version", "Src IP", "Src port", "Dest IP", "Dest port", "SNI", "JA3 hash",
+    "ID", "App Name", "Package name", "Version", "Src IP", "Src port", "Dest IP", "Dest port", "SNI", "Flag", "JA3 hash",
     "JA3S hash", "JA4 hash", "JA4S hash", "JA4X hash", "Is dangerous", "Is malware"
 ];
 const dataIndexes = [
-    "id", "app_name", "package_name", "version", "ip_src", "port_src", "ip_dest", "port_dest", "sni", "ja3_hash",
+    "id", "app_name", "package_name", "version", "ip_src", "port_src", "ip_dest", "port_dest", "sni", "sni_flag", "ja3_hash",
     "ja3s_hash", "ja4_hash", "ja4s_hash", "ja4x_hash", "is_dangerous", "is_malware"
 ];
 
@@ -94,12 +94,12 @@ const Hashes = () => {
 
     // Component body
     return (
-        <div className="Hashes container-fluid">
-            <div className="row">
+        <div className="Dashboard container-fluid">
+            <div className="row d-flex" >
                 <Sidebar sidebarType="admin" />
-                <div className="col-md-10 px-0">
+                <div className="col px-0" style={{flex: '1', minWidth: '0'}}>
                     <Navbar />
-                    <div className="container-fluid">
+                    <div className="page container-fluid pt-md-3 px-4">
                         <CreateHash
                             show={createModalShow}
                             setFetchDataState={setFetchDataState}

@@ -1,139 +1,165 @@
 ##
 # @file Dockerfile_hashapp
 # @author Kristián Kičinka (xkicin02)
-# @copyright 2024
-##
+#
+# @copyright Copyright (c) 2024
+#
 
-#########################
-# 1) FRONTEND (React)   #
-#########################
-FROM node:22-slim AS reacthashapp
+FROM node:21.6.2-slim as ReactHashApp
 
-# Pracovný adresár a práva
 USER root
-RUN mkdir -p /var/www/sem_project && chown -R www-data:www-data /var/www
+# Copy package.json
+RUN mkdir -p /var/www/sem_project/
+RUN chown -R www-data:www-data /var/www/
+
+# Copy React data
 USER www-data
-WORKDIR /var/www/sem_project
+COPY package.json /var/www/sem_project/
+COPY package-lock.json /var/www/sem_project/
+COPY resources /var/www/sem_project/resources
+COPY public /var/www/sem_project/public
+COPY scripts /var/www/sem_project/scripts
+COPY vite.config.mjs /var/www/sem_project/
 
-# Najprv len manifesty (lepšie cache) + správne vlastníctvo
-COPY --chown=www-data:www-data package*.json ./
+# Change directory ownership
+USER root
+RUN chown -R www-data:www-data /var/www/sem_project/
 
-# Repro inštalácia (ci ak existuje lock)
-RUN if [ -f ./package-lock.json ]; then npm ci; else npm install; fi
+USER www-data
+WORKDIR /var/www/sem_project/
 
-# Zvyšok zdrojákov s korektným vlastníctvom
-COPY --chown=www-data:www-data . .
-
-# Build
+# Build frontend
+RUN npm install
 RUN npm run build
 
-
-#########################
-# 2) WEB (PHP/Apache)   #
-#########################
-FROM sem_python_wireshark_php8.2:latest
-
+#############
+# WEB IMAGE #
+#############
+FROM sem_python_wireshark_php8.3:latest
 USER root
 
-# Vlastné PHP nastavenia
-COPY ./virtualisation/installationFiles/custom_php_settings.ini /usr/local/etc/php/conf.d/custom_php_settings.ini
+# Set max file and post size limits
+COPY installationFiles/custom_php_settings.ini /usr/local/etc/php/conf.d/custom_php_settings.ini
 
-# Apache DocumentRoot do /public a vlastný port
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public \
-    APACHE_HTTP_PORT=8081
+# Install needed dependencies
+RUN apt-get update
+RUN apt-get install -y curl wget build-essential autoconf automake cmake sudo aria2 libzip-dev
 
-# Apache & PHP extensions & prepísanie configov
-RUN set -eux; \
-    a2enmod rewrite; \
-    docker-php-ext-install pdo_mysql zip; \
-    sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf; \
-    sed -ri -e "s!/var/www/!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf; \
-    sed -i "s/Listen 80/Listen ${APACHE_HTTP_PORT}/" /etc/apache2/ports.conf; \
-    sed -i "s#<VirtualHost \*:80>#<VirtualHost *:${APACHE_HTTP_PORT}>#" /etc/apache2/sites-available/000-default.conf
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Systémové balíčky (jeden layer, bez recommendov)
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-      ca-certificates curl wget aria2 \
-      build-essential autoconf automake cmake \
-      sudo libzip-dev \
-      vim iproute2 net-tools iputils-ping mariadb-client \
-      supervisor; \
-    rm -rf /var/lib/apt/lists/*
+# Configure Laravel
+RUN a2enmod rewrite
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo_mysql zip
+
+# Add apache2 to public direcotry
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# Set custom port to web server
+ENV APACHE_HTTP_PORT=8081
+RUN sed -i "s/Listen 80/Listen $APACHE_HTTP_PORT/" /etc/apache2/ports.conf
+RUN sed -i "s/<VirtualHost \*:80>/<VirtualHost *:$APACHE_HTTP_PORT>/" /etc/apache2/sites-available/000-default.conf
 
 ##########
 # Docker #
 ##########
-# UPOZORNENIE: na runtime pripoj /var/run/docker.sock z hosta, inak docker CLI nebude fungovať.
+
 ARG DOCKER_GROUP_ID
 
-RUN set -eux; \
-    install -m 0755 -d /etc/apt/keyrings; \
-    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc; \
-    chmod a+r /etc/apt/keyrings/docker.asc; \
-    . /etc/os-release; \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian ${VERSION_CODENAME} stable" > /etc/apt/sources.list.d/docker.list; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; \
-    rm -rf /var/lib/apt/lists/*; \
-    # Ak je DOCKER_GROUP_ID zadané, zosúladíme GID skupiny 'docker' s hostom
-    if [ -n "${DOCKER_GROUP_ID:-}" ]; then groupmod -o -g "${DOCKER_GROUP_ID}" docker || true; fi; \
-    # Potom pridáme www-data do skupiny docker
+# Create docker installation file
+RUN cat > /mnt/docker_install.sh <<EOF
+# Add Docker's official GPG key:
+    apt-get update
+    apt-get install -y ca-certificates curl
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
+
+    # Add the repository to Apt sources:
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    apt-get update
+
+    apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
     usermod -aG docker www-data
+EOF
 
-# Projekt (Laravel + buildnutý frontend)
-RUN mkdir -p /var/www/html
-COPY . /var/www/html
-WORKDIR /var/www/html
+# Docker installation
+RUN sh /mnt/docker_install.sh
 
-# Práva pre Laravel dirs
-RUN chown -R www-data:www-data /var/www && \
-    chmod -R 0776 /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Changing docker group gid to gid of docker group in host system
+# RUN groupmod -g $DOCKER_GROUP_ID docker
 
 USER www-data
-RUN composer install --no-interaction --prefer-dist
+# Copy project directory
+RUN mkdir -p /var/www/html
+COPY . /var/www/html
 
-# Skopíruj buildnutý React do public
+WORKDIR /var/www/html
+USER root
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/
+RUN chmod -R 0776 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+USER www-data
+
+# Install composer dependencies
+RUN composer install
+
+# Copy built React applications
 COPY --from=reacthashapp /var/www/sem_project/public /var/www/html/public
 
-# Laravel: symlink na storage a adresárová štruktúra
-RUN php artisan storage:link && \
-    mkdir -p storage/app/public/pcaps \
-             storage/app/public/tmp_xapk \
-             storage/app/public/uploads/apk_inserted \
-             storage/app/public/uploads/apk_downloaded \
-             storage/app/public/uploads/text_inserted \
-             storage/app/public/uploads/pcap_inserted && \
-    mkdir -p storage/logs && \
-    touch storage/logs/default_worker.log
+USER root
+# Install networking and database tools
+RUN apt update
+RUN apt install -y vim iproute2 net-tools iputils-ping mariadb-client
+
+WORKDIR /var/www/html
+
+# Create sotrage simlink
+USER www-data
+RUN php artisan storage:link
+
+#Create file structure
+RUN mkdir -p storage/app/public/pcaps
+RUN mkdir -p storage/app/public/uploads/apk_inserted
+RUN mkdir -p storage/app/public/uploads/apk_downloaded
+RUN mkdir -p storage/app/public/uploads/text_inserted
+RUN mkdir -p storage/app/public/uploads/pcap_inserted
+
+# Create log files
+RUN mkdir -p storage/logs
+RUN touch storage/logs/default_worker.log
+USER root
+
+# Install supervisor
+RUN apt update
+RUN apt install -y supervisor
+COPY installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
 
 USER root
-# Práva na public storage (ak vznikli nové súbory)
-RUN chown -R www-data:www-data /var/www/html/storage/app/public && \
-    chmod -R 0776 /var/www/html/storage/app/public
-
-# Supervisor config
-COPY ./virtualisation/installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
+# Change folders permissions
+RUN chown -R www-data:www-data /var/www/html/storage/app/public/*
+RUN chmod -R 0776 /var/www/html/storage/app/public/*
 
 ############
-# Entrypoint
+#ENTRYPOINT#
 ############
-RUN cat > /usr/local/bin/entrypoint.sh <<'EOF' && chmod +x /usr/local/bin/entrypoint.sh
-#!/usr/bin/env bash
-set -euo pipefail
-
-if [ -S /var/run/docker.sock ]; then
-  chown root:docker /var/run/docker.sock || true
-fi
-
+# Start supervisor and apache in etntrypoint
+RUN cat > /mnt/entrypoint.sh <<EOF
+chown root:docker /var/run/docker.sock
+chown -R www-data:www-data /var/www/html/storage/app/public/*
 service supervisor start
-exec apache2-foreground
+apache2-foreground
 EOF
 
 USER root
-EXPOSE 8081
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/mnt/entrypoint.sh"]

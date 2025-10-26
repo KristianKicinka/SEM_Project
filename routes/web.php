@@ -10,6 +10,7 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\HashController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\CustomHashTypeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,3 +33,9 @@ Route::post('/save-app-list-file', [FileController::class, 'saveNamesListFile'])
 Route::post('/download-apk-file', [FileController::class, 'downloadApkFile']);
 Route::post('/get-app-data', [ApplicationController::class, 'getApplicationDataForWeb']);
 Route::post('/export-to-csv', [ApplicationController::class, 'exportAppDataToCSV']);
+
+// Custom Hash Types routes (protected by auth middleware)
+Route::middleware(['auth'])->group(function () {
+    Route::resource('custom-hash-types', CustomHashTypeController::class);
+    Route::post('custom-hash-types/{customHashType}/test', [CustomHashTypeController::class, 'test'])->name('custom-hash-types.test');
+});

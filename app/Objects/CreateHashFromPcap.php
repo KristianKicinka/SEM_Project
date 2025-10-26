@@ -111,6 +111,8 @@ class CreateHashFromPcap extends CreateHash {
                 'ja4s_hash' => $hash->ja4s_hash,
                 'ja4x_hash' => json_encode($hash->ja4x_hash),
                 'sni' => $hash->sni,
+                'sni_flag' => $hash->sni_flag ?? null,
+                'is_flagged' => $hash->is_flagged ?? false,
                 'ip_src' => $hash->ip_src,
                 'port_src' => $hash->port_src,
                 'ip_dest' => $hash->ip_dest,

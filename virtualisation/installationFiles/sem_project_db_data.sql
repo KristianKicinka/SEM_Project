@@ -670,9 +670,9 @@ INSERT INTO `processes` (`id`, `job_id`, `ip_address`, `status`, `progress`, `me
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `surname`, `email`, `phone`, `password`, `role`, `api_auth_key`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'User', 'admin@example.com', '+421911369367', '$2y$10$oaMWNLny.XekudYlEfSexO3chL62B.NP/s5ObA0lAWYSdIYXEwqx2', 'admin', 'YuPzeVpjb5pjQxpOP4DOATnRXFK99W', '2024-04-13 14:20:53', '2024-04-15 10:16:18'),
-(2, 'Basic', 'User', 'user@example.com', '+421911369365', '$2y$10$wX5kmSFlU5rTO61B8PP7oOKxWY5IVrGj/owqPG39OvbhqWlSg7sge', 'basic_user', 'ypqGlCRPr96HMz4oU5DE4OeqnxxZm1', '2024-04-13 14:21:48', '2024-04-15 10:45:25');
+INSERT INTO `users` (`id`, `name`, `surname`, `email`, `phone`, `password`, `role`, `api_auth_key`, `profile_photo`, `created_at`, `updated_at`) VALUES
+(1, 'Admin', 'User', 'admin@example.com', '+421911369367', '$2y$10$oaMWNLny.XekudYlEfSexO3chL62B.NP/s5ObA0lAWYSdIYXEwqx2', 'admin', 'YuPzeVpjb5pjQxpOP4DOATnRXFK99W', 'profile_photos/admin_default.svg', '2024-04-13 14:20:53', '2024-04-15 10:16:18'),
+(2, 'Basic', 'User', 'user@example.com', '+421911369365', '$2y$10$wX5kmSFlU5rTO61B8PP7oOKxWY5IVrGj/owqPG39OvbhqWlSg7sge', 'basic_user', 'ypqGlCRPr96HMz4oU5DE4OeqnxxZm1', 'profile_photos/user_default.svg', '2024-04-13 14:21:48', '2024-04-15 10:45:25');
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

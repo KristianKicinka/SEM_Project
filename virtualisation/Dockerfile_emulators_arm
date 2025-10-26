@@ -1,72 +1,60 @@
 ##
-# @file Dockerfile_emulators
-# @author Kristián Kičinka (xkicin02)
-#
-# @copyright Copyright (c) 2024
-#
+# Dockerfile for Android Emulator (Debian Bookworm)
+# Author: Kristián Kičinka (xkicin02)
+##
 
 FROM debian:bookworm-slim
 
-RUN apt-get update
+# Základné balíky a závislosti
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openjdk-17-jdk curl wget unzip zip bzip2 git \
+    libdrm-dev libxkbcommon-dev libgbm-dev libasound-dev \
+    libnss3 libxcursor1 libpulse-dev libxshmfence-dev \
+    xauth xvfb x11vnc fluxbox wmctrl libdbus-glib-1-2 aapt \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get install -y openjdk-17-jdk curl wget zip bzip2 libdrm-dev libxkbcommon-dev libgbm-dev libasound-dev libnss3 libxcursor1 libpulse-dev libxshmfence-dev xauth xvfb git x11vnc fluxbox wmctrl libdbus-glib-1-2 aapt
+# Premenné prostredia
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/emulator:$ANDROID_SDK_ROOT/platform-tools
 
+# Vytvor SDK adresáre
+RUN mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
 
-WORKDIR /tmp
-RUN mkdir android_emulator
-
+# Stiahni a rozbaľ command line tools
 WORKDIR /tmp/android_emulator
+RUN curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip && \
+    unzip cmdline-tools.zip -d cmdline-tools && \
+    mv cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest && \
+    rm -rf cmdline-tools cmdline-tools.zip
 
-RUN curl -o emulator.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+# Inicializuj repositories.cfg
+RUN mkdir -p ~/.android && touch ~/.android/repositories.cfg
 
-# will unzip and create cmdline-tools dir
-RUN unzip emulator.zip
+# Akceptuj licencie
+RUN yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
 
-RUN mkdir -p /opt/android-sdk/
+# Debug: zoznam dostupných balíkov (voliteľné)
+RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT --list || true
 
-WORKDIR /tmp/android_emulator/cmdline-tools
-
-RUN mkdir -p /tmp/android_emulator/cmdline-tools/tools
-
-RUN mv bin lib NOTICE.txt source.properties ./tools
-
-RUN cp -r /tmp/android_emulator/cmdline-tools/ /opt/android-sdk/
-
-RUN cat >> ~/.bashrc <<EOF
-PATH="\$PATH:/opt/android-sdk/cmdline-tools/tools/bin:/opt/android-sdk/emulator:/opt/android-sdk/platform-tools:/opt/android-sdk/tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
-ANDROID_SDK_ROOT="/opt/android-sdk"
-ANDROID_HOME="/opt/android-sdk"
-EOF
-
-ENV PATH "$PATH:/opt/android-sdk/cmdline-tools/tools/bin:/opt/android-sdk/emulator:/opt/android-sdk/platform-tools:/opt/android-sdk/tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
-ENV ANDROID_SDK_ROOT "/opt/android-sdk"
-ENV ANDROID_HOME "/opt/android-sdk"
-
-WORKDIR /opt/android-sdk/
-
-RUN yes | sdkmanager --licenses
-
-RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT --version
-
-RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT platform-tools
-
-RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT emulator
-
-
+# Inštalácia požadovaných komponentov
+RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools"
+RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "emulator"
 RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-30"
-
 RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "system-images;android-30;google_apis;arm64-v8a"
-
 RUN sdkmanager --sdk_root=$ANDROID_SDK_ROOT "build-tools;30.0.3"
 
-RUN echo no |avdmanager create avd --force -n android-30-arm64-v8a -k "system-images;android-30;google_apis;arm64-v8a"
+# Vytvor AVD
+RUN echo no | avdmanager create avd \
+    --name android-30-arm64-v8a \
+    --package "system-images;android-30;google_apis;arm64-v8a" \
+    --force
 
-RUN cat > /entry.sh <<EOF
-#!/usr/bin/sh
+# Spúšťací skript
+RUN echo '#!/bin/sh\n\
+adb start-server\n\
+emulator -avd android-30-arm64-v8a -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -nocache -wipe-data' \
+> /entry.sh && chmod +x /entry.sh
 
-#start adb server on port 5057 and start emulator
-adb start-server && \
-emulator -avd android-30-arm64-v8a -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -nocache -no-snapshot-load -wipe-data -qemu -cpu cortex-a76
-EOF
 ENTRYPOINT ["/usr/bin/sh"]
 CMD ["/entry.sh"]

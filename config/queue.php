@@ -44,7 +44,7 @@ return [
             'driver' => 'database',
             'table' => 'jobs',
             'queue' => 'default',
-            'retry_after' => 90,
+            'retry_after' => 600, // 10 minutes to allow for Python script execution
             'after_commit' => false,
         ],
 
@@ -80,7 +80,7 @@ return [
             'driver' => 'redis',
             'connection' => 'pusher',
             'queue' => env('PUSHER_QUEUE', 'pusher'),
-            'retry_after' => 90,
+            'retry_after' => 600, // 10 minutes to allow for Python script execution
             'block_for' => null,
         ],
 

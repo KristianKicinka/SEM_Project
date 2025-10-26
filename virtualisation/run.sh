@@ -1,88 +1,201 @@
-#!/bin/sh
-set -eu
-
-# -----------------------------------------------------------------------------
-# run.sh — start services, wait for DB, run migrations, import SQL
+#!/bin/bash
+##
+# @file build.sh
+# @author Kristián Kičinka (xkicin02)
 #
-# Simple and explicit:
-#  - We define DB_ROOT_PASS here (must match MYSQL_ROOT_PASSWORD in compose).
-#  - We wait for DB using the WEB container's mysql client (SELECT 1 as root).
-#  - Then we run Laravel migrations and import the seed SQL from the WEB container.
-# -----------------------------------------------------------------------------
+# @copyright Copyright (c) 2024
+#
 
-# --- Services (names from docker-compose.yml) --------------------------------
-WEB_SERVICE="web"      # Laravel/PHP container (php artisan + mysql client)
-DB_SERVICE="db"        # MariaDB container
+echo "Building and setting up SEM Project from git repository..."
 
-# --- Secrets / credentials ---------------------------------------------------
-# IMPORTANT: Keep this in sync with your docker-compose.yml (MYSQL_ROOT_PASSWORD)
-DB_ROOT_PASS="root"
+# Check if we're in the right directory
+if [ ! -f "docker-compose.yml" ]; then
+    echo "Error: docker-compose.yml not found. Please run this script from the virtualisation directory."
+    exit 1
+fi
 
-# --- Migration mode ----------------------------------------------------------
-# "true"  => php artisan migrate:fresh --force  (DROP & recreate schema; DEV only)
-# "false" => php artisan migrate --force        (safer; no drop)
-FRESH_MIGRATIONS="${FRESH_MIGRATIONS:-true}"
+# Go to project root
+cd ..
 
-# --- SQL seed file (path inside the WEB container) ---------------------------
-SQL_FILE_PATH="./virtualisation/installationFiles/sem_project_db_data.sql"
+echo "Step 1/5: Setting up environment..."
 
-# --- App DB connection used for the SQL import (from inside WEB container) ---
-DB_HOST="127.0.0.1"   # host networking => DB reachable on localhost
-DB_PORT="3306"
-DB_NAME="sem_project"
-DB_USER="sem_project"
-DB_PASS="password"
+# Check if .env exists, if not copy from .env.example
+if [ ! -f ".env" ]; then
+    echo "Creating .env file from .env.example..."
+    cp .env.example .env
+    
+    # Generate APP_KEY
+    echo "Generating APP_KEY..."
+    php artisan key:generate
+    
+    # Update database credentials for Docker
+    echo "Updating database configuration for Docker..."
+    sed -i 's/DB_HOST=127.0.0.1/DB_HOST=0.0.0.0/' .env
+    sed -i 's/DB_USERNAME=root/DB_USERNAME=sem_project/' .env
+    sed -i 's/DB_PASSWORD=/DB_PASSWORD=password/' .env
+    
+    # Update Redis configuration for Docker
+    sed -i 's/REDIS_HOST=127.0.0.1/REDIS_HOST=0.0.0.0/' .env
+    
+    # Update APP_URL for Docker
+    sed -i 's|APP_URL=http://localhost|APP_URL=http://localhost:8081|' .env
+    sed -i 's|VITE_APP_URL=http://localhost|VITE_APP_URL=http://localhost:8081|' .env
+    
+    echo ".env file created and configured for Docker"
+else
+    echo ".env file already exists"
+fi
 
-# --- Optional max wait for DB (seconds). 0 = wait indefinitely ---------------
-DB_WAIT_SECS="${DB_WAIT_SECS:-120}"
+# Create necessary directories
+echo "Creating necessary directories..."
+mkdir -p storage/app/public/profile_photos
+mkdir -p storage/logs
+mkdir -p storage/framework/cache
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
 
-die() { echo "ERROR: $*" >&2; exit 1; }
+# Set permissions
+echo "Setting permissions..."
+chmod -R 775 storage
+chmod -R 775 bootstrap/cache
 
-echo "==> Starting Docker Compose (detached)"
-docker compose up -d --remove-orphans
+# Create default profile photos if they don't exist
+if [ ! -f "public/profile_photos/admin_default.svg" ]; then
+    echo "Creating default profile photos..."
+    mkdir -p public/profile_photos
+    
+    cat > public/profile_photos/admin_default.svg << 'EOF'
+<svg width="150" height="150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="adminGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#357abd;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="75" cy="75" r="75" fill="url(#adminGrad)"/>
+  <circle cx="75" cy="60" r="25" fill="white" opacity="0.9"/>
+  <path d="M 30 120 Q 75 100 120 120 L 120 150 L 30 150 Z" fill="white" opacity="0.9"/>
+  <text x="75" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#357abd">ADMIN</text>
+</svg>
+EOF
 
-echo "==> Checking MySQL client & SQL file inside WEB container"
-docker compose exec -T --user www-data "$WEB_SERVICE" sh -lc 'command -v mysql >/dev/null 2>&1' \
-  || die "MySQL client not found in WEB container."
-docker compose exec -T --user www-data "$WEB_SERVICE" sh -lc "[ -f '$SQL_FILE_PATH' ]" \
-  || die "SQL file not found at $SQL_FILE_PATH inside WEB container."
+    cat > public/profile_photos/user_default.svg << 'EOF'
+<svg width="150" height="150" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="userGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#28a745;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e7e34;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <circle cx="75" cy="75" r="75" fill="url(#userGrad)"/>
+  <circle cx="75" cy="60" r="25" fill="white" opacity="0.9"/>
+  <path d="M 30 120 Q 75 100 120 120 L 120 150 L 30 150 Z" fill="white" opacity="0.9"/>
+  <text x="75" y="140" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e7e34">USER</text>
+</svg>
+EOF
+    
+    echo "Default profile photos created"
+else
+    echo "Default profile photos already exist"
+fi
 
-echo "==> Waiting for DB (from WEB container using root credentials)..."
-if [ "$DB_WAIT_SECS" -gt 0 ]; then
-  waited=0
-  while ! docker compose exec -T --user www-data "$WEB_SERVICE" sh -lc \
-    "mysql -h '$DB_HOST' -P '$DB_PORT' -u root -p'$DB_ROOT_PASS' -e 'SELECT 1' >/dev/null 2>&1"
-  do
-    sleep 2
-    waited=$((waited + 2))
-    if [ "$waited" -ge "$DB_WAIT_SECS" ]; then
-      echo "Last DB logs:"; docker compose logs "$DB_SERVICE" | tail -n 100 || true
-      die "DB did not become ready within ${DB_WAIT_SECS}s"
+echo ""
+echo "Step 2/5: Building Docker images..."
+
+# Go back to virtualisation directory
+cd virtualisation
+
+# Build base PHP/Python/Wireshark image
+echo "Building base PHP/Python/Wireshark image..."
+docker build -f Dockerfile_php_python_wireshark -t sem_python_wireshark_php8.3:latest .
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to build base image"
+    exit 1
+fi
+
+# Build emulator image for x86_64
+echo "Building emulator image for x86_64..."
+docker build -f Dockerfile_emulators_x86-64 -t sem_emulator_vm:latest .
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to build emulator image"
+    exit 1
+fi
+
+# Build main hashapp image
+echo "Building main hashapp image..."
+cd ..
+docker build -f virtualisation/Dockerfile_hashapp -t sem_hashapp:latest .
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to build hashapp image"
+    exit 1
+fi
+
+cd virtualisation
+
+echo ""
+echo "Step 3/5: Starting Docker containers..."
+
+# Start Docker Compose
+echo "Starting Docker Compose..."
+docker compose up -d
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to start Docker containers"
+    exit 1
+fi
+
+echo ""
+echo "Step 4/5: Setting up database..."
+
+# Wait for database to be ready
+echo "Waiting for database to be ready..."
+sleep 15
+
+# Wait for database connection to be available
+echo "Checking database connection..."
+for i in {1..30}; do
+    if docker exec hashapp_web bash -c "mysql -h 0.0.0.0 -P 3306 -u root --password=root --ssl=0 -e 'SELECT 1;'" >/dev/null 2>&1; then
+        echo "Database connection successful"
+        break
     fi
-  done
-else
-  docker compose exec -T --user www-data "$WEB_SERVICE" sh -lc \
-    "until mysql -h '$DB_HOST' -P '$DB_PORT' -u root -p'$DB_ROOT_PASS' -e 'SELECT 1' >/dev/null 2>&1; do sleep 2; done"
+    echo "Waiting for database... (attempt $i/30)"
+    sleep 2
+done
+
+# Create database structure
+echo "Creating database structure..."
+docker exec -it hashapp_web bash -c "sudo -u www-data bash -c \"php artisan migrate:fresh;\""
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to create database structure"
+    exit 1
 fi
-echo "✔ DB is ready."
 
-# --- Run Laravel migrations --------------------------------------------------
-if [ "$FRESH_MIGRATIONS" = "true" ]; then
-  echo "==> Running Laravel migrations: migrate:fresh --force (DESTRUCTIVE)"
-  docker compose exec -T --user www-data "$WEB_SERVICE" sh -lc 'php artisan migrate:fresh --force'
-else
-  echo "==> Running Laravel migrations: migrate --force"
-  docker compose exec -T --user www-data "$WEB_SERVICE" sh -lc 'php artisan migrate --force'
+# Import database data
+echo "Importing data to database..."
+docker exec -it hashapp_web bash -c "sudo -u www-data bash -c \"mysql -h 0.0.0.0 -P 3306 -u root --password=root -D sem_project --ssl=0 < ./installationFiles/sem_project_db_data.sql\""
+
+if [ $? -ne 0 ]; then
+    echo "Error: Failed to import database data"
+    exit 1
 fi
-echo "✔ Migrations completed."
 
-# --- Import SQL seed ---------------------------------------------------------
-echo "==> Importing SQL seed into database"
-docker compose exec -T --user www-data "$WEB_SERVICE" sh -lc \
-  "mysql -h '$DB_HOST' -P '$DB_PORT' -u '$DB_USER' -p'$DB_PASS' -D '$DB_NAME' < '$SQL_FILE_PATH'"
-echo "✔ SQL import completed."
-
-echo "==> Stack status"
-docker compose ps || true
-
-echo "✔ Done. Services are up, migrations ran, and seed data was imported."
+echo ""
+echo " Step 5/5: Build completed successfully!"
+echo ""
+echo " Application is now running at: http://localhost:8081"
+echo ""
+echo " Default login credentials:"
+echo "   Admin: admin@example.com / AdminPass123"
+echo "   User:  user@example.com / UserPass123"
+echo ""
+echo " Available services:"
+echo "   Web:    http://localhost:8081"
+echo "   DB:     localhost:3306"
+echo "   Redis:  localhost:6379"
+echo ""
+echo " To stop the application: docker compose down"
+echo " To restart: docker compose restart"

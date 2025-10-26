@@ -57,10 +57,15 @@ const Emulators = () => {
     const handleStopClick = async (emulatorData) => {
 
         try {
-            await http.post("/admin/emulator/stop", { container_name: emulatorData.name });
-            setFetchDataState((prevState) => !prevState); // Refresh data
+            const response = await http.post("/admin/emulator/stop", { container_name: emulatorData.name });
+            if (response.data.status === 'success') {
+                setFetchDataState((prevState) => !prevState); // Refresh data
+            }
         } catch (error) {
             console.log("Error stopping emulator:", error);
+            if (error.response && error.response.data && error.response.data.errors) {
+                console.error("Stop emulator error:", error.response.data.errors);
+            }
         }
     };
 
@@ -70,10 +75,15 @@ const Emulators = () => {
      */
     const handleStartClick = async (emulatorData) => {
         try {
-            await http.post("/admin/emulator/start", { container_name: emulatorData.name });
-            setFetchDataState((prevState) => !prevState); // Refresh data
+            const response = await http.post("/admin/emulator/start", { container_name: emulatorData.name });
+            if (response.data.status === 'success') {
+                setFetchDataState((prevState) => !prevState); // Refresh data
+            }
         } catch (error) {
             console.log("Error starting emulator:", error);
+            if (error.response && error.response.data && error.response.data.errors) {
+                console.error("Start emulator error:", error.response.data.errors);
+            }
         }
     };
 
@@ -128,12 +138,12 @@ const Emulators = () => {
 
     // Component body
     return (
-        <div className="Emulators container-fluid">
-            <div className="row">
+        <div className="Dashboard container-fluid">
+            <div className="row d-flex">
                 <Sidebar sidebarType="admin" />
-                <div className="col-md-10 px-0">
+                <div className="col px-0" style={{flex: '1'}}>
                     <Navbar />
-                    <div className="container-fluid">
+                    <div className="page container-fluid pt-md-3 px-4">
                         <CreateEmulator  
                             show={createModalShow}
                             setFetchDataState={setFetchDataState}

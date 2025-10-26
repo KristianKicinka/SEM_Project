@@ -12,16 +12,16 @@ import ApkInput from './ApkInput';
 import AppNamesInput from './AppNamesInput';
 
 
-const ImportSection = ({ hashTypes }) => {
+const ImportSection = ({ hashTypes, customHashTypes = [] }) => {
 
     // Component body
     return (
         <div className="row g-5 px-4">
             <div className='col-sm-12 col-md-6'>
-                <ApkInput hashTypes={hashTypes} />
+                <ApkInput hashTypes={hashTypes} customHashTypes={customHashTypes} />
             </div>
             <div className='col-sm-12 col-md-6'>
-                <AppNamesInput hashTypes={hashTypes} />
+                <AppNamesInput hashTypes={hashTypes} customHashTypes={customHashTypes} />
             </div>
         </div>
     );

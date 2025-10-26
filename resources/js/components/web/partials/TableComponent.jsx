@@ -10,13 +10,16 @@ import ReactDOM from "react-dom";
 
 import Table from "react-bootstrap/Table";
 import { PaginationControl } from 'react-bootstrap-pagination-control';
+import CustomHashesInfo from './CustomHashesInfo';
 
 
-const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) => {
+const TableComponent = ({columnNames, dataIndexes, data, tableName, title, description, buttons }) => {
 
     const [filter, setFilter] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [recordsPerPage] = useState(8);
+    const [recordsPerPage] = useState(10);
+    const [showCustomHashes, setShowCustomHashes] = useState(false);
+    const [selectedCustomHashes, setSelectedCustomHashes] = useState(null);
 
     // Search box data filtration
     let filteredData = data.filter(item => {
@@ -38,6 +41,23 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
         setCurrentPage(1);
     }
 
+    /**
+     * @brief The function ensures handling custom hashes show button on click event
+     * @param {*} customHashes Custom hashes object to show
+     */
+    const handleCustomHashesClick = (customHashes) => {
+        setSelectedCustomHashes(customHashes);
+        setShowCustomHashes(true);
+    }
+
+    /**
+     * @brief The function ensures close custom hashes modal box
+     */
+    const closeCustomHashesModal = () => {
+        setShowCustomHashes(false);
+        setSelectedCustomHashes(null);
+    }
+
     const indexOfLastRecord = currentPage * recordsPerPage;
     const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
     const nPages = Math.ceil(filteredData.length / recordsPerPage);
@@ -48,25 +68,45 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
 
     // Component body
     return (
-        <div className="TableComponent pt-md-3">
-            <div className="container-fluid px-2 shadow bg-white text-dark">
-                <div className="row p-3">
+        <div className="TableComponent">
+            <div className="container-fluid shadow bg-white text-dark p-3">
+                {/* Page Header - Title */}
+                {(title || description) && (
+                    <div className="row mb-3 mx-2 mt-3">
+                        <div className="col">
+                            <h2 className="text-dark mb-0">{title || tableName}</h2>
+                        </div>
+                    </div>
+                )}
+                
+                {/* Controls Row - Description, Search, Create Button */}
+                <div className="row mb-3 mx-2">
                     <div className="col-md-4">
-                        <h4 className="p-2">{tableName}</h4>
+                        {description && (
+                            <p className="text-muted mb-0">{description}</p>
+                        )}
+                        {!title && !description && (
+                            <h4 className="p-2 mb-0">{tableName}</h4>
+                        )}
                     </div>
                     <div className="col"/>
                     <div className="col-md-5">
-                        {buttons.has("createButton") ? (<button
-                            className="btn btn-search text-white float-end d-inline mx-3"
-                            onClick={() => buttons.get('createButton').funct_call()}
-                        >{buttons.get('createButton').name}</button>): null}
+                        {buttons.has("createButton") ? (
+                            <button
+                                className="btn btn-warning bg-orange text-white float-end d-inline mx-3"
+                                onClick={() => buttons.get('createButton').funct_call()}
+                            >
+                                {buttons.get('createButton').name}
+                            </button>
+                        ) : null}
 
                         <div className="input-group flex-nowrap w-50 float-end">
                             <input
-                            type="text"
-                            className="form-control d-inline float-end"
-                            placeholder="search"
-                            onChange={e=>handleSearch(e.target.value)}/>
+                                type="text"
+                                className="form-control d-inline float-end"
+                                placeholder="search"
+                                onChange={e=>handleSearch(e.target.value)}
+                            />
                             <span className="input-group-text bg-orange text-white">
                                 <i className="fa-solid fa-magnifying-glass"></i>
                             </span>
@@ -87,6 +127,49 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                                     return (
                                         <tr key={key}>
                                             {dataIndexes?.map((name, key) =>{
+                                                if (name === 'custom_hashes') {
+                                                    const customHashes = item[name.toLowerCase()];
+                                                    const hasCustomHashes = customHashes && Object.keys(customHashes).length > 0;
+                                                    return (
+                                                        <td key={key} className="text-nowrap">
+                                                            {hasCustomHashes ? (
+                                                                <button 
+                                                                    className="btn btn-sm btn-outline-primary"
+                                                                    onClick={() => handleCustomHashesClick(customHashes)}
+                                                                >
+                                                                    Show ({Object.keys(customHashes).length})
+                                                                </button>
+                                                            ) : (
+                                                                'None'
+                                                            )}
+                                                        </td>
+                                                    );
+                                                }
+                                                if (name === 'sni_flag') {
+                                                    const sniFlag = item[name.toLowerCase()];
+                                                    const isFlagged = item['is_flagged'];
+                                                    return (
+                                                        <td key={key} className="text-nowrap">
+                                                            {isFlagged && sniFlag ? (
+                                                                <span 
+                                                                    className={`badge ${
+                                                                        sniFlag === 'advertisement_communication' ? 'bg-danger' :
+                                                                        sniFlag === 'analytics_communication' ? 'bg-info' :
+                                                                        sniFlag === 'cdn_communication' ? 'bg-primary' :
+                                                                        sniFlag === 'shared_api_communication' ? 'bg-secondary' :
+                                                                        sniFlag === 'blacklisted_communication' ? 'bg-dark' :
+                                                                        'bg-warning'
+                                                                    } text-white`} 
+                                                                    title={`Flagged as: ${sniFlag}`}
+                                                                >
+                                                                    {sniFlag.replace('_communication', '')}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-muted">-</span>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                }
                                                 return (<td key={key} className="text-nowrap" >{item[name.toLowerCase()]}</td>)
                                             })}
                                             <td>
@@ -144,6 +227,12 @@ const TableComponent = ({columnNames, dataIndexes, data, tableName, buttons }) =
                     </div>
                 </div>
             </div>
+            {showCustomHashes && (
+                <CustomHashesInfo 
+                    customHashes={selectedCustomHashes} 
+                    onClose={closeCustomHashesModal} 
+                />
+            )}
         </div>
     );
 };

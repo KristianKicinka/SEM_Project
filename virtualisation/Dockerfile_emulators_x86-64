@@ -1,0 +1,103 @@
+##
+# @file Dockerfile_emulators
+# @author Kristián Kičinka (xkicin02)
+#
+# @copyright Copyright (c) 2024
+#
+
+FROM debian:bookworm-slim
+
+RUN apt-get update && \
+    apt-get install -y openjdk-17-jdk curl wget zip bzip2 libdrm-dev libxkbcommon-dev libgbm-dev libasound-dev libnss3 libxcursor1 libpulse-dev libxshmfence-dev xauth xvfb git x11vnc fluxbox wmctrl libdbus-glib-1-2 aapt && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+
+WORKDIR /tmp
+RUN mkdir -p android_emulator && \
+    cd android_emulator && \
+    curl -o emulator.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && \
+    unzip emulator.zip && \
+    mkdir -p /opt/android-sdk/ && \
+    cd cmdline-tools && \
+    mkdir -p tools && \
+    mv bin lib NOTICE.txt source.properties ./tools && \
+    cp -r /tmp/android_emulator/cmdline-tools/ /opt/android-sdk/ && \
+    cd / && \
+    rm -rf /tmp/android_emulator
+
+# Set environment variables
+ENV PATH="/opt/android-sdk/cmdline-tools/tools/bin:/opt/android-sdk/emulator:/opt/android-sdk/platform-tools:/opt/android-sdk/tools/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
+ENV ANDROID_SDK_ROOT="/opt/android-sdk"
+ENV ANDROID_HOME="/opt/android-sdk"
+
+WORKDIR /opt/android-sdk/
+
+# Install Android SDK components
+RUN yes | sdkmanager --licenses && \
+    sdkmanager --sdk_root=$ANDROID_SDK_ROOT --version && \
+    sdkmanager --sdk_root=$ANDROID_SDK_ROOT platform-tools && \
+    sdkmanager --sdk_root=$ANDROID_SDK_ROOT emulator && \
+    sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platforms;android-30" && \
+    sdkmanager --sdk_root=$ANDROID_SDK_ROOT "system-images;android-30;google_apis;x86_64" && \
+    sdkmanager --sdk_root=$ANDROID_SDK_ROOT "build-tools;30.0.3" && \
+    echo no |avdmanager create avd --force -n android-30-x86_64 -k "system-images;android-30;google_apis;x86_64"
+
+RUN cat > /entry.sh <<EOF
+#!/usr/bin/sh
+
+echo "Starting Android Emulator..."
+
+# Set up environment
+export ANDROID_SDK_ROOT="/opt/android-sdk"
+export ANDROID_HOME="/opt/android-sdk"
+export PATH="$PATH:/opt/android-sdk/cmdline-tools/tools/bin:/opt/android-sdk/emulator:/opt/android-sdk/platform-tools"
+
+# Kill any existing emulator processes
+echo "Cleaning up existing processes..."
+pkill -f emulator || true
+pkill -f adb || true
+
+# Wait a moment for processes to fully terminate
+sleep 3
+
+# Start adb server
+echo "Starting ADB server..."
+adb start-server
+
+# Wait for adb to be ready
+sleep 5
+
+# Check if AVD exists
+echo "Checking AVD availability..."
+avdmanager list avd
+
+# Start emulator with read-only flag to allow multiple instances
+echo "Starting emulator..."
+emulator -avd android-30-x86_64 -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -nocache -no-snapshot-load -wipe-data -read-only -no-metrics -verbose &
+
+# Wait for emulator to start
+echo "Waiting for emulator to start..."
+sleep 15
+
+# Check if emulator is running
+echo "Checking emulator status..."
+adb devices
+
+# Wait for emulator to be fully ready
+echo "Waiting for emulator to be ready..."
+timeout 60 bash -c 'until adb devices | grep -q "device$"; do sleep 2; done' || echo "Emulator may not be fully ready"
+
+# Final status check
+echo "Final emulator status:"
+adb devices
+
+# Keep the container running
+echo "Emulator started, keeping container alive..."
+wait
+EOF
+
+# Make entry script executable
+RUN chmod +x /entry.sh
+
+ENTRYPOINT ["/entry.sh"]

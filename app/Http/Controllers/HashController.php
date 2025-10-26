@@ -14,6 +14,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Str;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 use App\Jobs\CreateHashFromAPK;
@@ -42,6 +43,8 @@ class HashController extends Controller {
             'channel_id' => 'required|string',
             'files.*' => 'required',
             'processes' => 'required',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ]);
 
         if ($validator->fails()) {
@@ -52,6 +55,23 @@ class HashController extends Controller {
         $channel_id = $request->input('channel_id');
         $hash_types = json_decode($request->input('hash_types'));
         $processes = json_decode($request->input('processes'), true);
+
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = auth()->user();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
 
         $input_files = $request->file("files");
 
@@ -161,11 +181,25 @@ class HashController extends Controller {
      * @return JsonResponse Hash generator processes
      */
     public function createHashFromAppName(Request $request): JsonResponse {
+        Log::channel('devlog')->info('API createHashFromAppName called for package: {package}', ['package' => $request->package_name]);
+        
+        // Check for duplicate requests within last 5 seconds
+        $cacheKey = 'hash_request_' . $request->package_name . '_' . $request->channel_id;
+        if (cache()->has($cacheKey)) {
+            Log::channel('devlog')->info('Duplicate request ignored for package: {package}', ['package' => $request->package_name]);
+            return response()->json(['error' => 'Duplicate request ignored'], 429);
+        }
+        
+        // Cache the request for 5 seconds to prevent duplicates
+        cache()->put($cacheKey, true, 5);
+        
         // Request data validator
         $validator = Validator::make($request->all(), [
             'channel_id' => 'required|string',
             'package_name' => 'required|string',
             'hash_types' => 'required',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ]);
 
         if ($validator->fails()) {
@@ -175,10 +209,28 @@ class HashController extends Controller {
         $ip_address = $request->ip();
         $channel_id = $request->input('channel_id');
         $process_id = uniqid('int_api_', true);
+        $hash_types = $request->hash_types;
+
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = auth()->user();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
 
         CreateHashFromAppName::dispatch(
             $request->package_name,
-            $request->hash_types,
+            $hash_types,
             $ip_address,
             $channel_id,
             $process_id,
@@ -285,6 +337,8 @@ class HashController extends Controller {
             'text_file' => 'required|file|mimes:txt',
             'hash_types' => 'required',
             'channel_id' => 'required|string',
+            'custom_hash_types' => 'nullable|array',
+            'custom_hash_types.*' => 'integer|exists:custom_hash_types,id',
         ]);
 
         if ($validator->fails()) {
@@ -296,7 +350,30 @@ class HashController extends Controller {
         $channel_id = $request->input("channel_id");
         $text_file_path = $this->saveTextFile($request->file('text_file'));
 
+        // Add custom hash types if provided
+        if ($request->has('custom_hash_types')) {
+            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
+                ->where('is_active', true)
+                ->where(function($query) use ($request) {
+                    $user = auth()->user();
+                    if ($user) {
+                        $query->where('user_id', $user->id)
+                              ->orWhere('is_public', true);
+                    }
+                })
+                ->pluck('name')
+                ->toArray();
+            
+            $hash_types = array_merge($hash_types, $customHashTypes);
+        }
+
         $package_names = file($text_file_path);
+        
+        // Remove duplicates and empty lines
+        $package_names = array_unique(array_filter(array_map('trim', $package_names)));
+        
+        // Debug log to check for duplicates
+        Log::channel('devlog')->info('Package names after deduplication: {names}', ['names' => $package_names]);
 
         foreach($package_names as $package_name){
             $process_id = uniqid('int_api_', true);
@@ -377,13 +454,23 @@ class HashController extends Controller {
             ->select(
                 'applications.name as app_name','applications.package_name as package_name',
                 'applications.version as app_version','hashes.ja3_hash as ja3_hash',
-                'hashes.sni as sni', 'hashes.ja3s_hash as ja3s_hash',
-                'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash', 'hashes.ja4x_hash as ja4x_hash'
+                'hashes.sni as sni', 'hashes.sni_flag as sni_flag', 'hashes.is_flagged as is_flagged',
+                'hashes.ja3s_hash as ja3s_hash',
+                'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash', 'hashes.ja4x_hash as ja4x_hash',
+                'hashes.custom_hashes as custom_hashes'
             )
             ->join('hashes','processes.id','=','hashes.process_id')
             ->join('applications','applications.id','=','hashes.app_id')
             ->where('processes.job_id','=',$request->input("process_id"))
             ->get();
+
+        // Decode custom_hashes JSON strings to objects
+        $results->transform(function ($item) {
+            if ($item->custom_hashes) {
+                $item->custom_hashes = json_decode($item->custom_hashes, true);
+            }
+            return $item;
+        });
 
         return response()->json($results, 200);
     }
@@ -396,7 +483,7 @@ class HashController extends Controller {
 
         $data = DB::table('applications')
             ->join('hashes','applications.id','=','hashes.app_id')
-            ->select('hashes.id', 'ja3_hash','sni', 'ja3s_hash','ja4_hash','ja4s_hash', 'ja4x_hash',
+            ->select('hashes.id', 'ja3_hash','sni', 'sni_flag', 'is_flagged', 'ja3s_hash','ja4_hash','ja4s_hash', 'ja4x_hash',
                 'name AS app_name', 'package_name', 'version', 'is_dangerous', 'is_malware', 'ip_src',
                 'port_src', 'ip_dest', 'port_dest'
             )

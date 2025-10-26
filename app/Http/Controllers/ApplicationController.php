@@ -23,6 +23,13 @@ class ApplicationController extends Controller {
         $applications = DB::table('applications')
             ->distinct()
             ->join('hashes','applications.id','=','hashes.app_id')
+            ->select(
+                'applications.id', 'applications.name', 'applications.package_name', 'applications.version',
+                'hashes.ja3_hash', 'hashes.sni', 'hashes.sni_flag', 'hashes.is_flagged',
+                'hashes.ja3s_hash', 'hashes.ja4_hash', 'hashes.ja4s_hash', 'hashes.ja4x_hash',
+                'applications.is_dangerous', 'applications.is_malware',
+                'hashes.ip_src', 'hashes.port_src', 'hashes.ip_dest', 'hashes.port_dest', 'hashes.created_at'
+            )
             ->get();
 
         return response()->json($applications);
@@ -93,7 +100,7 @@ class ApplicationController extends Controller {
     public function exportAppDataToCSV() {
 
         $data = DB::table('applications')
-            ->select('hashes.id AS id','name','package_name','version','ja3_hash', 'sni', 'ja3s_hash',
+            ->select('hashes.id AS id','name','package_name','version','ja3_hash', 'sni', 'sni_flag', 'is_flagged', 'ja3s_hash',
             'ja4_hash', 'ja4s_hash', 'ja4x_hash', 'is_dangerous', 'is_malware',
             'ip_src', 'port_src', 'ip_dest', 'port_dest', 'hashes.created_at AS created_at')
             ->distinct()
@@ -106,7 +113,7 @@ class ApplicationController extends Controller {
 
             // Write the CSV column headers
             fputcsv($handle, [
-                'ID', 'Name', 'Package Name', 'Version', 'JA3 Hash', 'SNI', 
+                'ID', 'Name', 'Package Name', 'Version', 'JA3 Hash', 'SNI', 'SNI Flag', 'Is Flagged',
                 'JA3S Hash', 'JA4 Hash', 'JA4S Hash', 'JA4X Hash', 'Is Dangerous', 
                 'Is Malware', 'IP Source', 'Port Source', 'IP Destination', 'Port Destination', 'Created At'
             ]);
@@ -115,8 +122,9 @@ class ApplicationController extends Controller {
             foreach ($data as $row) {
                 fputcsv($handle, [
                     $row->id, $row->name, $row->package_name, $row->version, $row->ja3_hash, $row->sni, 
-                    $row->ja3s_hash, $row->ja4_hash, $row->ja4s_hash, $row->ja4x_hash, $row->is_dangerous, 
-                    $row->is_malware, $row->ip_src, $row->port_src, $row->ip_dest, $row->port_dest, $row->created_at
+                    $row->sni_flag, $row->is_flagged, $row->ja3s_hash, $row->ja4_hash, $row->ja4s_hash, 
+                    $row->ja4x_hash, $row->is_dangerous, $row->is_malware, $row->ip_src, $row->port_src, 
+                    $row->ip_dest, $row->port_dest, $row->created_at
                 ]);
             }
 

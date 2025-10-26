@@ -30,7 +30,8 @@ class User extends Authenticatable implements JWTSubject {
         'phone',
         'password',
         'role',
-        'api_auth_key'
+        'api_auth_key',
+        'profile_photo'
     ];
 
     /**
@@ -39,6 +40,15 @@ class User extends Authenticatable implements JWTSubject {
      */
     protected $hidden = [
         'password',
+    ];
+
+    /**
+     * @brief The attributes that should be cast
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
     ];
 
     /**

@@ -15,17 +15,21 @@ import axios from 'axios';
 import { setNewActiveChannel, setNewActiveProcess } from '../../../processManagement';
 import { toast } from 'react-toastify';
 import LoadingModal from './LoadingModal';
+import AuthUser from '../../../AuthUser';
 
 
-const ApkInput = ({ hashTypes }) => {
+const ApkInput = ({ hashTypes, customHashTypes = [] }) => {
 
     const [apkFiles, setApkFiles] = useState([]);
     const [showLoading, setShowLoading] = useState(false);
     const [channelID, setChannelID] = useState(false);
     const [processes, setProcesses] = useState([]);
+    const [selectedCustomTypes, setSelectedCustomTypes] = useState([]);
+    const { http, token } = AuthUser();
 
     // Max file size supported
     const maxFileSize = 950 * 1024 * 1024;
+
 
     /**
      * @brief The function ensures calling API request for hash generation from APK file
@@ -80,8 +84,28 @@ const ApkInput = ({ hashTypes }) => {
         data.append("hash_types", JSON.stringify(hashTypes));
         data.append("channel_id", channel_id);
 
+        // Add custom hash types if user is authenticated and has selected them
+        let filteredCustomTypes = [];
+        if (token && customHashTypes.length > 0) {
+            filteredCustomTypes = customHashTypes.filter(customType => 
+                hashTypes.includes(customType.name)
+            );
+            if (filteredCustomTypes.length > 0) {
+                // Append each custom hash type ID as a separate form field
+                filteredCustomTypes.forEach(type => {
+                    data.append("custom_hash_types[]", type.id);
+                });
+            }
+        }
+        
+        // Set selected custom types for LoadingModal
+        setSelectedCustomTypes(filteredCustomTypes);
         setProcesses(processes);
-        setShowLoading(true);
+        
+        // Wait for state to update before showing loading modal
+        setTimeout(() => {
+            setShowLoading(true);
+        }, 100);
 
         try {
             let results = await axios.post('/api/create-hash-apk', data, {
@@ -122,7 +146,7 @@ const ApkInput = ({ hashTypes }) => {
                 </Form.Group>
             </Form>
             {showLoading && (
-                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} />
+                <LoadingModal processes={processes} channel_id={channelID} onClose={closeLoading} hashTypes={hashTypes} customHashTypes={selectedCustomTypes} />
             )}
         </div>
     );

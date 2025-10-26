@@ -1,0 +1,7 @@
+ads.google.com
+analytics.facebook.com
+tracking.example.com
+cdn.cloudflare.com
+api.shared.com
+doubleclick.net
+googlesyndication.com
