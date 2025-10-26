@@ -563,7 +563,14 @@ class CreateHash {
      */
     protected function saveHashes(array $data) : void {
 
-        $process_id = ProcessModel::where('job_id', '=', $this->process_id)->first()->id;
+        $process = ProcessModel::where('job_id', '=', $this->process_id)->first();
+        
+        if (!$process) {
+            Log::channel('devlog')->error('Process not found for job_id: {job_id}', ['job_id' => $this->process_id]);
+            throw new Exception('Process not found for job_id: ' . $this->process_id);
+        }
+        
+        $process_id = $process->id;
 
         $identifier = [
             'name' => $data['app_name'],

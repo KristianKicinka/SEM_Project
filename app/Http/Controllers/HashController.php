@@ -54,7 +54,7 @@ class HashController extends Controller {
         $ip_address = $request->ip();
         $channel_id = $request->input('channel_id');
         $hash_types = json_decode($request->input('hash_types'));
-        $processes = json_decode($request->input('processes'), true);
+        $processes = json_decode($request->input('processes'), true) ?? [];
 
         // Add custom hash types if provided
         if ($request->has('custom_hash_types')) {
@@ -77,22 +77,33 @@ class HashController extends Controller {
 
         foreach ($input_files as $input_file){
             $process_name = $input_file->getClientOriginalName();
+            
+            // Generate process_id if not found in processes array
+            $process_id = collect($processes)->where('name', $process_name)->pluck('process_id')->first();
+            if (!$process_id) {
+                $process_id = uniqid('file_api_', true);
+            }
 
             if (Str::endsWith($input_file->getClientOriginalName(), '.xapk')){
                 $xapk_file_name = $this->saveXapkFile($input_file);
-                $process_id = collect($processes)->where('name', $process_name)->pluck('process_id')->first();
 
                 CreateHashFromXAPK::dispatch(
                     $xapk_file_name, $hash_types, $ip_address, $channel_id, $process_id, $process_name, null
                 )->onQueue('process_queue');
             } else {
                 $apk_file_name = $this->saveApkFile($input_file);
-                $process_id = collect($processes)->where('name', $process_name)->pluck('process_id')->first();
 
                 CreateHashFromAPK::dispatch(
                     $apk_file_name, $hash_types, $ip_address, $channel_id, $process_id, $process_name, null
                 )->onQueue('process_queue');
             }
+            
+            // Add process to processes array for response
+            $process = [
+                "process_id" => $process_id, "name" => $process_name,
+                "message" => "Waiting in queue", "progress" => 0, "status" => "in_queue"
+            ];
+            $processes[] = $process;
         }
 
         return response()->json([
