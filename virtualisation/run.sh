@@ -1,6 +1,6 @@
 #!/bin/bash
 ##
-# @file build.sh
+# @file run.sh
 # @author Kristián Kičinka (xkicin02)
 #
 # @copyright Copyright (c) 2024
