@@ -105,8 +105,8 @@ Route::group(['middleware' => ['python']], function () {
     Route::post('/custom-hash-types/python-generator', [CustomHashTypeController::class, 'getForPythonGenerator']);
 });
 
-// External API routes
-Route::group(['middleware' => ['external']], function () {
+// External API routes with rate limiting
+Route::group(['middleware' => ['external', 'throttle:60,1']], function () {
     Route::post('/get-app-hashes', [ApiRequestController::class, 'getAppHashes']);
     Route::post('/get-apps-from-hashes', [ApiRequestController::class, 'getAppsFromHashes']);
     Route::post('/create-hash-from-apk', [ApiRequestController::class, 'createHashFromAPK']);
