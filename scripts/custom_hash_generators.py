@@ -40,6 +40,7 @@
 
 import json
 import os
+import sys
 import hashlib
 from abc import ABC, abstractmethod
 from typing import Dict, List, Any, Optional
@@ -368,7 +369,7 @@ class SimpleTLSHashGenerator(CustomHashGenerator):
                 return None
                 
         except Exception as e:
-            print(f"Error extracting field {field}: {e}")
+            print(f"Error extracting field {field}: {e}", file=sys.stderr)
         
         return None
     
@@ -551,7 +552,7 @@ class CustomAlgorithmHashGenerator(CustomHashGenerator):
                 return len(packet.layers())
             
         except Exception as e:
-            print(f"Error extracting field {field}: {e}")
+            print(f"Error extracting field {field}: {e}", file=sys.stderr)
         
         return None
     

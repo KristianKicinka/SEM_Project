@@ -41,11 +41,12 @@ class DatabaseHashLoader:
             Dictionary with names and generators
         """
         if use_manual_config:
-            print("Using manual configuration mode...")
+            print("Using manual configuration mode...", file=sys.stderr)
             return self._load_from_manual_config(custom_hash_type_names)
         
         try:
             # Load from database via HTTP API
+            print(f"Attempting to load from database API: {self.base_url}", file=sys.stderr)
             db_config = self._load_from_database_api(custom_hash_type_names)
             
             generators = {}
@@ -55,11 +56,12 @@ class DatabaseHashLoader:
                     generators[generator.name] = generator
                     self.custom_hash_manager.register_generator(generator)
             
+            print(f"Successfully loaded {len(generators)} generators from database", file=sys.stderr)
             return generators
             
         except Exception as e:
-            print(f"Error loading custom hash types from database: {e}")
-            print("Falling back to manual configuration...")
+            print(f"Error loading custom hash types from database: {e}", file=sys.stderr)
+            print("Falling back to manual configuration...", file=sys.stderr)
             return self._load_from_manual_config(custom_hash_type_names)
     
     def _load_from_database_api(self, custom_hash_type_names: List[str] = None) -> List[Dict]:
@@ -74,6 +76,7 @@ class DatabaseHashLoader:
         """
         try:
             api_url = f"{self.base_url}/api/custom-hash-types/python-generator"
+            print(f"Making API request to: {api_url}", file=sys.stderr)
             
             # Prepare data for API
             data = {}
@@ -82,19 +85,22 @@ class DatabaseHashLoader:
             
             # Make HTTP POST request
             response = self.session.post(api_url, json=data, timeout=10)
+            print(f"API response status: {response.status_code}", file=sys.stderr)
             response.raise_for_status()
             
             result = response.json()
-            return result.get('generators', [])
+            generators = result.get('generators', [])
+            print(f"Received {len(generators)} generators from API", file=sys.stderr)
+            return generators
             
         except requests.exceptions.RequestException as e:
-            print(f"HTTP API request failed: {e}")
+            print(f"HTTP API request failed: {e}", file=sys.stderr)
             raise
         except json.JSONDecodeError as e:
-            print(f"Invalid JSON response: {e}")
+            print(f"Invalid JSON response: {e}", file=sys.stderr)
             raise
         except Exception as e:
-            print(f"Unexpected error in API call: {e}")
+            print(f"Unexpected error in API call: {e}", file=sys.stderr)
             raise
     
     def _load_from_manual_config(self, custom_hash_type_names: List[str] = None) -> Dict[str, CustomHashGenerator]:
@@ -110,7 +116,7 @@ class DatabaseHashLoader:
         config_file = os.path.join(os.path.dirname(__file__), 'custom_hash_config.json')
         
         if not os.path.exists(config_file):
-            print(f"Manual config file not found: {config_file}")
+            print(f"Manual config file not found: {config_file}", file=sys.stderr)
             return {}
         
         try:
@@ -133,7 +139,7 @@ class DatabaseHashLoader:
             return generators
             
         except Exception as e:
-            print(f"Error loading manual config file: {e}")
+            print(f"Error loading manual config file: {e}", file=sys.stderr)
             return {}
     
     def _create_generator_from_db_config(self, config: Dict) -> Optional[CustomHashGenerator]:
@@ -180,12 +186,12 @@ class DatabaseHashLoader:
                             script_path=full_script_path
                         )
                     else:
-                        print(f"Python script not found at: {full_script_path}")
+                        print(f"Python script not found at: {full_script_path}", file=sys.stderr)
             
             return None
             
         except Exception as e:
-            print(f"Error creating generator from config: {e}")
+            print(f"Error creating generator from config: {e}", file=sys.stderr)
             return None
 
 # Import classes from custom_hash_generators

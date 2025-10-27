@@ -88,8 +88,18 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
      * @param {*} ja4x_hash_data Hash object to update
      */
     const handleJA4XClick = (ja4x_hash_data) => {
-        setJa4xToShow(JSON.parse(ja4x_hash_data));
-        setShowJa4xModal(true);
+        try {
+            const parsedData = JSON.parse(ja4x_hash_data);
+            // Ensure parsed data is an array
+            const safeData = Array.isArray(parsedData) ? parsedData : [];
+            setJa4xToShow(safeData);
+            setShowJa4xModal(true);
+        } catch (error) {
+            console.error('Error parsing JA4X data:', error);
+            console.error('JA4X data:', ja4x_hash_data);
+            setJa4xToShow([]);
+            setShowJa4xModal(true);
+        }
     }
 
     /**

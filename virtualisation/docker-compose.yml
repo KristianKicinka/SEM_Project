@@ -19,6 +19,14 @@ services:
         volumes:
             -   /var/run/docker.sock:/var/run/docker.sock
             -   shared_dir:/var/www/html/storage
+        deploy:
+            resources:
+                limits:
+                    cpus: "8.0"
+                    memory: 8g
+                reservations:
+                    cpus: "2.0"
+                    memory: 2g
 
     # Database container
     db:
@@ -30,7 +38,10 @@ services:
             MYSQL_DATABASE: sem_project
             MYSQL_USER: sem_project
             MYSQL_PASSWORD: password
-        network_mode: host
+        ports:
+            - "3306:3306"
+        networks:
+            - app_network
 
     # Redis
     redis:
@@ -38,6 +49,24 @@ services:
         container_name: hashapp_redis
         command: redis-server --save 20 1 --loglevel warning
         network_mode: host
+
+    # phpMyAdmin
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:latest
+        container_name: hashapp_phpmyadmin
+        restart: always
+        environment:
+            PMA_HOST: hashapp_db
+            PMA_PORT: 3306
+            PMA_USER: root
+            PMA_PASSWORD: root
+            MYSQL_ROOT_PASSWORD: root
+        ports:
+            - "8082:80"
+        networks:
+            - app_network
+        depends_on:
+            - db
 
     # Android emulator container 01
     emulator_01:
@@ -75,6 +104,10 @@ services:
 
 # Network adapter for emulator 02
 networks:
+    # Main application network
+    app_network:
+        driver: bridge
+
     # Network adapter for emulator 01
     em_net_01:
         driver: bridge

@@ -13,9 +13,12 @@ import CopyClipboard from "./CopyClipboard";
 
 const Ja4xInfo = ({ data, onClose }) => {
 
-    const hasData = data && data.length > 0;
+    // Ensure data is always an array
+    const safeData = Array.isArray(data) ? data : [];
+    const hasData = safeData && safeData.length > 0;
 
-    console.log(data);
+    console.log('Ja4xInfo data:', data);
+    console.log('Ja4xInfo safeData:', safeData);
 
     /**
      * @brief The function ensures data item creation
@@ -51,7 +54,7 @@ const Ja4xInfo = ({ data, onClose }) => {
                         </tr>
                         </thead>
                         <tbody>
-                        {hasData ? data.map((row,key) => dataItem(row,key)):(
+                        {hasData ? safeData.map((row,key) => dataItem(row,key)):(
                             <tr>
                                 <td colSpan={3}>No JA4X hashes found</td>
                             </tr>

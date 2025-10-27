@@ -28,15 +28,6 @@ if [ ! -f ".env" ]; then
     echo "Generating APP_KEY..."
     php artisan key:generate
     
-    # Update database credentials for Docker
-    echo "Updating database configuration for Docker..."
-    sed -i 's/DB_HOST=127.0.0.1/DB_HOST=0.0.0.0/' .env
-    sed -i 's/DB_USERNAME=root/DB_USERNAME=sem_project/' .env
-    sed -i 's/DB_PASSWORD=/DB_PASSWORD=password/' .env
-    
-    # Update Redis configuration for Docker
-    sed -i 's/REDIS_HOST=127.0.0.1/REDIS_HOST=0.0.0.0/' .env
-    
     # Update APP_URL for Docker
     sed -i 's|APP_URL=http://localhost|APP_URL=http://localhost:8081|' .env
     sed -i 's|VITE_APP_URL=http://localhost|VITE_APP_URL=http://localhost:8081|' .env
@@ -176,7 +167,7 @@ fi
 
 # Import database data
 echo "Importing data to database..."
-docker exec -it hashapp_web bash -c "sudo -u www-data bash -c \"mysql -h 0.0.0.0 -P 3306 -u root --password=root -D sem_project --ssl=0 < ./installationFiles/sem_project_db_data.sql\""
+docker exec -it hashapp_web bash -c "sudo -u www-data bash -c \"mysql -h 0.0.0.0 -P 3306 -u root --password=root -D sem_project --ssl=0 < /var/www/html/virtualisation/installationFiles/sem_project_db_data.sql\""
 
 if [ $? -ne 0 ]; then
     echo "Error: Failed to import database data"
@@ -193,9 +184,10 @@ echo "   Admin: admin@example.com / AdminPass123"
 echo "   User:  user@example.com / UserPass123"
 echo ""
 echo " Available services:"
-echo "   Web:    http://localhost:8081"
-echo "   DB:     localhost:3306"
-echo "   Redis:  localhost:6379"
+echo "   Web:       http://localhost:8081"
+echo "   phpMyAdmin: http://localhost:8082"
+echo "   DB:        localhost:3306"
+echo "   Redis:     localhost:6379"
 echo ""
 echo " To stop the application: docker compose down"
 echo " To restart: docker compose restart"

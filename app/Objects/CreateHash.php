@@ -136,21 +136,44 @@ class CreateHash {
         
         // Set environment variables for Python script
         $process->setEnv([
-            'LARAVEL_BASE_URL' => 'http://localhost:8000',
+            'LARAVEL_BASE_URL' => config('app.url', 'http://localhost:8000'),
             'LARAVEL_API_KEY' => 'python_hash_generator_key_' . env('APP_KEY', 'default_key'),
-            'USE_MANUAL_CONFIG' => 'false'
+            'USE_MANUAL_CONFIG' => 'false', // Use database instead of manual config
+            'PYTHONUNBUFFERED' => '1',
+            'PYTHONIOENCODING' => 'utf-8',
+            'OMP_NUM_THREADS' => '4'
         ]);
         
         // Set timeout to 300 seconds (5 minutes) for Python script execution
         $process->setTimeout(300);
         
+        Log::channel('devlog')->info('Starting Python hash generation with command: {command}', ['command' => $command]);
+        
         $process->run();
 
         if (!$process->isSuccessful()) {
-            throw new HashGeneratorFailException($process->getErrorOutput());
+            $errorOutput = $process->getErrorOutput();
+            $exitCode = $process->getExitCode();
+            Log::channel('devlog')->error('Python hash generation failed with exit code {exit_code}: {error}', [
+                'exit_code' => $exitCode,
+                'error' => $errorOutput
+            ]);
+            throw new HashGeneratorFailException("Python script failed with exit code {$exitCode}: {$errorOutput}");
         }
 
-        return json_decode($process->getOutput());
+        $output = $process->getOutput();
+        Log::channel('devlog')->info('Python hash generation completed successfully');
+        
+        $decodedOutput = json_decode($output);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::channel('devlog')->error('Failed to decode Python output as JSON: {error}', [
+                'error' => json_last_error_msg(),
+                'output' => $output
+            ]);
+            throw new HashGeneratorFailException("Invalid JSON output from Python script: " . json_last_error_msg());
+        }
+
+        return $decodedOutput;
     }
 
     /**
@@ -563,14 +586,22 @@ class CreateHash {
      */
     protected function saveHashes(array $data) : void {
 
-        $process = ProcessModel::where('job_id', '=', $this->process_id)->first();
+        Log::channel('devlog')->info('Starting to save hashes to database for process: {process_id}', ['process_id' => $this->process_id]);
         
-        if (!$process) {
-            Log::channel('devlog')->error('Process not found for job_id: {job_id}', ['job_id' => $this->process_id]);
-            throw new Exception('Process not found for job_id: ' . $this->process_id);
+        try {
+            $process = ProcessModel::where('job_id', '=', $this->process_id)->first();
+            
+            if (!$process) {
+                Log::channel('devlog')->error('Process not found for job_id: {job_id}', ['job_id' => $this->process_id]);
+                throw new Exception('Process not found for job_id: ' . $this->process_id);
+            }
+            
+            $process_id = $process->id;
+            Log::channel('devlog')->info('Found process with ID: {process_id}', ['process_id' => $process_id]);
+        } catch (Exception $e) {
+            Log::channel('devlog')->error('Database error when finding process: {error}', ['error' => $e->getMessage()]);
+            throw $e;
         }
-        
-        $process_id = $process->id;
 
         $identifier = [
             'name' => $data['app_name'],
@@ -584,16 +615,28 @@ class CreateHash {
             'version' => $data['version'],
         ];
 
-        $application = Application::firstOrCreate($identifier, $new_application);
+        try {
+            $application = Application::firstOrCreate($identifier, $new_application);
+            Log::channel('devlog')->info('Application created/found with ID: {app_id}', ['app_id' => $application->id]);
+        } catch (Exception $e) {
+            Log::channel('devlog')->error('Database error when creating/finding application: {error}', ['error' => $e->getMessage()]);
+            throw $e;
+        }
 
         foreach($this->files as $file){
-           $db_file = File::create([
-                'name' => $file['name'],
-                'type' => $file['type'],
-                'path' => $file['path'],
-                'app_id' => $application->id,
-           ]);
-           $db_file->save();
+            try {
+                $db_file = File::create([
+                    'name' => $file['name'],
+                    'type' => $file['type'],
+                    'path' => $file['path'],
+                    'app_id' => $application->id,
+                ]);
+                $db_file->save();
+                Log::channel('devlog')->info('File saved with ID: {file_id}', ['file_id' => $db_file->id]);
+            } catch (Exception $e) {
+                Log::channel('devlog')->error('Database error when saving file: {error}', ['error' => $e->getMessage()]);
+                throw $e;
+            }
         }
 
         foreach($data["hashes"] as $hash){
@@ -635,8 +678,15 @@ class CreateHash {
                 'flagged' => $new_record['is_flagged']
             ]);
 
-            $db_hash = Hash::create($new_record);
-            $db_hash->save();
+            try {
+                $db_hash = Hash::create($new_record);
+                $db_hash->save();
+                Log::channel('devlog')->info('Hash saved with ID: {hash_id}', ['hash_id' => $db_hash->id]);
+            } catch (Exception $e) {
+                Log::channel('devlog')->error('Database error when saving hash: {error}', ['error' => $e->getMessage()]);
+                Log::channel('devlog')->error('Hash data that failed: {hash_data}', ['hash_data' => json_encode($new_record)]);
+                throw $e;
+            }
         }
     }
 

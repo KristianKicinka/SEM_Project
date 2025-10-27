@@ -772,7 +772,7 @@ def get_results_with_ja4x(pcap_file, results):
                     })
 
         except Exception as e:
-            print(f"Error extracting certificate: {e}")
+            print(f"Error extracting certificate: {e}", file=sys.stderr)
 
     return results
 
@@ -978,6 +978,9 @@ if __name__ == '__main__':
 
     pcap_file = sys.argv[1]
     
+    # Debug: Log start of processing
+    print(f"Starting hash generation for file: {pcap_file}", file=sys.stderr)
+    
     # Parse custom generators from command line arguments
     custom_generators = []
     if len(sys.argv) > 2:
@@ -986,14 +989,25 @@ if __name__ == '__main__':
         except (json.JSONDecodeError, IndexError):
             custom_generators = []
     
-    scapy_cap = rdpcap(pcap_file)
+    try:
+        scapy_cap = rdpcap(pcap_file)
+        print(f"Loaded {len(scapy_cap)} packets from PCAP file", file=sys.stderr)
+    except Exception as e:
+        print(f"Error loading PCAP file: {e}", file=sys.stderr)
+        sys.exit(1)
 
     results = {}
 
     # Process all packets in pcap file
+    packet_count = 0
+    tls_packet_count = 0
     for packet in scapy_cap:
+        packet_count += 1
+        if packet_count % 1000 == 0:
+            print(f"Processed {packet_count} packets, found {tls_packet_count} TLS packets", file=sys.stderr)
         # Process TLS layer
         if packet.haslayer(TLS) and packet.haslayer(TCP):
+            tls_packet_count += 1
             # Get source/destination port and IP address
             ip_src = packet[IP].src
             ip_dest = packet[IP].dst
@@ -1130,5 +1144,14 @@ if __name__ == '__main__':
     # Filter out duplicate dictionaries
     filtered_results = remove_duplicities(array_results)
 
-    # Send output
-    print(json.dumps(filtered_results))
+    # Debug: Log completion
+    print(f"Hash generation completed. Generated {len(filtered_results)} unique hashes", file=sys.stderr)
+    
+    # Send output with error handling
+    try:
+        output_json = json.dumps(filtered_results)
+        print(output_json)
+    except Exception as e:
+        print(f"Error serializing results to JSON: {e}", file=sys.stderr)
+        print("[]")  # Return empty array on error
+        sys.exit(1)

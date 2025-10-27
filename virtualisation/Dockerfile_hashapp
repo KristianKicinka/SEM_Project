@@ -5,7 +5,7 @@
 # @copyright Copyright (c) 2024
 #
 
-FROM node:21.6.2-slim as ReactHashApp
+FROM node:21.6.2-slim as reacthashapp
 
 USER root
 # Copy package.json
@@ -39,7 +39,7 @@ FROM sem_python_wireshark_php8.3:latest
 USER root
 
 # Set max file and post size limits
-COPY installationFiles/custom_php_settings.ini /usr/local/etc/php/conf.d/custom_php_settings.ini
+COPY ./virtualisation/installationFiles/custom_php_settings.ini /usr/local/etc/php/conf.d/custom_php_settings.ini
 
 # Install needed dependencies
 RUN apt-get update
@@ -143,7 +143,7 @@ USER root
 # Install supervisor
 RUN apt update
 RUN apt install -y supervisor
-COPY installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
+COPY ./virtualisation/installationFiles/laravel_workers_queue.conf /etc/supervisor/conf.d/laravel_workers_queue.conf
 
 USER root
 # Change folders permissions
