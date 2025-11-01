@@ -16,7 +16,6 @@
 
 
     <!-- Scripts -->
-    @viteReactRefresh
     <script src="https://kit.fontawesome.com/a2ea7766e8.js" crossorigin="anonymous"></script>
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
 </head>
