@@ -18,27 +18,43 @@
     <!-- Scripts -->
     <script src="https://kit.fontawesome.com/a2ea7766e8.js" crossorigin="anonymous"></script>
     
-    @if(app()->environment('local'))
+    @php
+        $useVite = Vite::isRunningHot();
+    @endphp
+    
+    @if($useVite)
         @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     @else
         @php
             $manifestPath = public_path('build/manifest.json');
+            $manifest = null;
             if (file_exists($manifestPath)) {
-                $manifest = json_decode(file_get_contents($manifestPath), true);
-                $appJs = $manifest['resources/js/app.js'] ?? null;
-                $appScss = $manifest['resources/sass/app.scss'] ?? null;
+                $manifestContent = @file_get_contents($manifestPath);
+                if ($manifestContent) {
+                    $manifest = @json_decode($manifestContent, true);
+                }
             }
         @endphp
-        @if(isset($appJs['css']))
-            @foreach($appJs['css'] as $css)
-                <link rel="stylesheet" href="{{ asset('build/' . $css) }}">
-            @endforeach
-        @endif
-        @if(isset($appScss['file']))
-            <link rel="stylesheet" href="{{ asset('build/' . $appScss['file']) }}">
-        @endif
-        @if(isset($appJs['file']))
-            <script type="module" src="{{ asset('build/' . $appJs['file']) }}"></script>
+        
+        @if($manifest)
+            @php
+                $appJsEntry = $manifest['resources/js/app.js'] ?? null;
+                $appScssEntry = $manifest['resources/sass/app.scss'] ?? null;
+            @endphp
+            
+            @if($appJsEntry && isset($appJsEntry['css']))
+                @foreach($appJsEntry['css'] as $cssFile)
+                    <link rel="stylesheet" href="/build/{{ $cssFile }}">
+                @endforeach
+            @endif
+            
+            @if($appScssEntry && isset($appScssEntry['file']))
+                <link rel="stylesheet" href="/build/{{ $appScssEntry['file'] }}">
+            @endif
+            
+            @if($appJsEntry && isset($appJsEntry['file']))
+                <script type="module" src="/build/{{ $appJsEntry['file'] }}"></script>
+            @endif
         @endif
     @endif
 </head>
