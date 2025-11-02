@@ -19,43 +19,40 @@
     <script src="https://kit.fontawesome.com/a2ea7766e8.js" crossorigin="anonymous"></script>
     
     @php
-        $useVite = Vite::isRunningHot();
+        $isHot = Vite::isRunningHot();
     @endphp
     
-    @if($useVite)
+    @if($isHot)
         @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     @else
         @php
             $manifestPath = public_path('build/manifest.json');
-            $manifest = null;
             if (file_exists($manifestPath)) {
-                $manifestContent = @file_get_contents($manifestPath);
-                if ($manifestContent) {
-                    $manifest = @json_decode($manifestContent, true);
+                $manifestContent = file_get_contents($manifestPath);
+                $manifest = json_decode($manifestContent, true);
+                
+                if ($manifest && isset($manifest['resources/js/app.js'])) {
+                    $appJs = $manifest['resources/js/app.js'];
+                    
+                    // CSS from app.js
+                    if (!empty($appJs['css']) && is_array($appJs['css'])) {
+                        foreach ($appJs['css'] as $css) {
+                            echo '<link rel="stylesheet" href="' . asset('build/' . $css) . '">' . "\n    ";
+                        }
+                    }
+                    
+                    // app.scss CSS
+                    if (isset($manifest['resources/sass/app.scss']['file'])) {
+                        echo '<link rel="stylesheet" href="' . asset('build/' . $manifest['resources/sass/app.scss']['file']) . '">' . "\n    ";
+                    }
+                    
+                    // app.js
+                    if (!empty($appJs['file'])) {
+                        echo '<script type="module" src="' . asset('build/' . $appJs['file']) . '"></script>' . "\n";
+                    }
                 }
             }
         @endphp
-        
-        @if($manifest)
-            @php
-                $appJsEntry = $manifest['resources/js/app.js'] ?? null;
-                $appScssEntry = $manifest['resources/sass/app.scss'] ?? null;
-            @endphp
-            
-            @if($appJsEntry && isset($appJsEntry['css']))
-                @foreach($appJsEntry['css'] as $cssFile)
-                    <link rel="stylesheet" href="/build/{{ $cssFile }}">
-                @endforeach
-            @endif
-            
-            @if($appScssEntry && isset($appScssEntry['file']))
-                <link rel="stylesheet" href="/build/{{ $appScssEntry['file'] }}">
-            @endif
-            
-            @if($appJsEntry && isset($appJsEntry['file']))
-                <script type="module" src="/build/{{ $appJsEntry['file'] }}"></script>
-            @endif
-        @endif
     @endif
 </head>
 <body>
