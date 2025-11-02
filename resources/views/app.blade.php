@@ -13,20 +13,10 @@
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
     
-    <!-- Hide content until React loads -->
-    <style>
-        body { visibility: hidden; opacity: 0; }
-        body.loaded { visibility: visible; opacity: 1; transition: opacity 0.05s; }
-    </style>
-
     <!-- Scripts -->
     <script src="https://kit.fontawesome.com/a2ea7766e8.js" crossorigin="anonymous"></script>
     
-    @php
-        $isHot = Vite::isRunningHot();
-    @endphp
-    
-    @if($isHot)
+    @if(Vite::isRunningHot())
         @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     @else
         @php
@@ -58,51 +48,6 @@
             }
         @endphp
     @endif
-    
-    <!-- Show body when React app is loaded -->
-    <script>
-        (function() {
-            var appElement = document.getElementById('Application');
-            if (!appElement) return;
-            
-            var showBody = function() {
-                document.body.classList.add('loaded');
-            };
-            
-            // Use MutationObserver for instant detection
-            if (window.MutationObserver) {
-                var observer = new MutationObserver(function(mutations) {
-                    if (appElement.children.length > 0) {
-                        observer.disconnect();
-                        showBody();
-                    }
-                });
-                
-                observer.observe(appElement, { childList: true, subtree: true });
-                
-                // Fallback timeout in case React takes too long
-                setTimeout(function() {
-                    observer.disconnect();
-                    showBody();
-                }, 100);
-            } else {
-                // Fallback for older browsers
-                var checkReactLoaded = function() {
-                    if (appElement.children.length > 0) {
-                        showBody();
-                    } else {
-                        setTimeout(checkReactLoaded, 10);
-                    }
-                };
-                checkReactLoaded();
-            }
-            
-            // Also check immediately in case React already loaded
-            if (appElement.children.length > 0) {
-                showBody();
-            }
-        })();
-    </script>
 </head>
 <body>
     <div id="Application">
