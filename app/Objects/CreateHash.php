@@ -89,22 +89,121 @@ class CreateHash {
     public function createPcapFile(Emulator $emulator, string $pcap_file_name, string $package_name) : string {
 
         $pcap_out_path = storage_path(PCAP_PATH).$pcap_file_name;
+        $analysis_count = (int) env("ANALYSIS_COUNT", 10);
+        $network_analysis_time = (int) env("NETWORK_ANALYSIS_TIME", 10);
+
+        Log::channel('devlog')->info('Starting PCAP file creation', [
+            'pcap_file_name' => $pcap_file_name,
+            'pcap_out_path' => $pcap_out_path,
+            'emulator' => $emulator->name,
+            'package_name' => $package_name,
+            'analysis_count' => $analysis_count,
+            'network_analysis_time' => $network_analysis_time,
+            'process_id' => $this->process_id
+        ]);
 
         $this->addFileToFiles($pcap_file_name, 'PCAP', $pcap_out_path);
 
         $command = "tshark -i ".$emulator->network_interface." -F pcap -w ".$pcap_out_path;
 
+        Log::channel('devlog')->info('Starting tshark capture', [
+            'command' => $command,
+            'network_interface' => $emulator->network_interface,
+            'process_id' => $this->process_id
+        ]);
+
+        $tshark_start_time = microtime(true);
         $process = Process::fromShellCommandline($command);
         $process->start();
+        Log::channel('devlog')->info('Tshark process started successfully', [
+            'process_id' => $this->process_id,
+            'pid' => $process->getPid()
+        ]);
 
-        for($index = 0; $index < env("ANALYSIS_COUNT", 10); $index ++){
+        $total_iteration_start_time = microtime(true);
+        for($index = 0; $index < $analysis_count; $index ++){
+            $iteration_start_time = microtime(true);
+            Log::channel('devlog')->info('Starting analysis iteration', [
+                'iteration' => $index + 1,
+                'total_iterations' => $analysis_count,
+                'package_name' => $package_name,
+                'emulator' => $emulator->name,
+                'process_id' => $this->process_id
+            ]);
+
+            // Run app
+            $run_app_start = microtime(true);
             $this->runAppOnEmulator($emulator, $package_name);
+            $run_app_duration = round(microtime(true) - $run_app_start, 2);
+            Log::channel('devlog')->info('App run completed', [
+                'iteration' => $index + 1,
+                'duration_seconds' => $run_app_duration,
+                'process_id' => $this->process_id
+            ]);
+
+            // Create communication
+            $comm_start = microtime(true);
             $this->createCommunicationOnEmulator($emulator, $package_name);
-            sleep(env("NETWORK_ANALYSIS_TIME", 10));
+            $comm_duration = round(microtime(true) - $comm_start, 2);
+            Log::channel('devlog')->info('Communication generation completed', [
+                'iteration' => $index + 1,
+                'duration_seconds' => $comm_duration,
+                'process_id' => $this->process_id
+            ]);
+
+            // Sleep for network analysis
+            Log::channel('devlog')->info('Sleeping for network analysis', [
+                'iteration' => $index + 1,
+                'sleep_seconds' => $network_analysis_time,
+                'process_id' => $this->process_id
+            ]);
+            sleep($network_analysis_time);
+
+            // Close app
+            $close_app_start = microtime(true);
             $this->closeAppOnEmulator($emulator, $package_name);
+            $close_app_duration = round(microtime(true) - $close_app_start, 2);
+            Log::channel('devlog')->info('App close completed', [
+                'iteration' => $index + 1,
+                'duration_seconds' => $close_app_duration,
+                'process_id' => $this->process_id
+            ]);
+
+            $iteration_duration = round(microtime(true) - $iteration_start_time, 2);
+            Log::channel('devlog')->info('Analysis iteration completed', [
+                'iteration' => $index + 1,
+                'total_duration_seconds' => $iteration_duration,
+                'breakdown' => [
+                    'run_app' => $run_app_duration,
+                    'communication' => $comm_duration,
+                    'sleep' => $network_analysis_time,
+                    'close_app' => $close_app_duration
+                ],
+                'process_id' => $this->process_id
+            ]);
         }
 
+        $total_iteration_duration = round(microtime(true) - $total_iteration_start_time, 2);
+        Log::channel('devlog')->info('All analysis iterations completed', [
+            'total_iterations' => $analysis_count,
+            'total_duration_seconds' => $total_iteration_duration,
+            'average_per_iteration' => round($total_iteration_duration / $analysis_count, 2),
+            'process_id' => $this->process_id
+        ]);
+
+        $tshark_duration = round(microtime(true) - $tshark_start_time, 2);
+        Log::channel('devlog')->info('Stopping tshark capture', [
+            'tshark_duration_seconds' => $tshark_duration,
+            'process_id' => $this->process_id
+        ]);
         $process->stop(0.2);
+
+        Log::channel('devlog')->info('PCAP file creation completed successfully', [
+            'pcap_file_name' => $pcap_file_name,
+            'pcap_out_path' => $pcap_out_path,
+            'total_duration_seconds' => round(microtime(true) - $tshark_start_time, 2),
+            'process_id' => $this->process_id
+        ]);
 
         return $pcap_out_path;
     }
@@ -118,10 +217,18 @@ class CreateHash {
      */
     public function createHashes(string $pcap_file_name, string $pcap_file_path): array {
 
+        Log::channel('devlog')->info('Starting hash generation from PCAP file', [
+            'pcap_file_name' => $pcap_file_name,
+            'pcap_file_path' => $pcap_file_path,
+            'hash_types' => $this->hash_types,
+            'process_id' => $this->process_id
+        ]);
+
         $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH);
         $command = $command." ".$pcap_file_path;
         
         // Add custom generators as second argument if any are specified
+        $custom_generators = [];
         if (!empty($this->hash_types)) {
             $custom_generators = array_filter($this->hash_types, function($type) {
                 return strpos($type, 'CUSTOM_') === 0;
@@ -129,9 +236,21 @@ class CreateHash {
             
             if (!empty($custom_generators)) {
                 $command = $command." ".escapeshellarg(json_encode($custom_generators));
+                Log::channel('devlog')->info('Custom hash generators included', [
+                    'custom_generators' => $custom_generators,
+                    'process_id' => $this->process_id
+                ]);
             }
         }
 
+        Log::channel('devlog')->info('Python hash generation command prepared', [
+            'command' => $command,
+            'hash_types_count' => count($this->hash_types),
+            'custom_generators_count' => count($custom_generators),
+            'process_id' => $this->process_id
+        ]);
+
+        $start_time = microtime(true);
         $process = Process::fromShellCommandline($command);
         
         // Set environment variables for Python script
@@ -145,33 +264,62 @@ class CreateHash {
         ]);
         
         // Set timeout to 300 seconds (5 minutes) for Python script execution
-        $process->setTimeout(300);
+        $timeout = 300;
+        $process->setTimeout($timeout);
         
-        Log::channel('devlog')->info('Starting Python hash generation with command: {command}', ['command' => $command]);
+        Log::channel('devlog')->info('Starting Python hash generation process', [
+            'command' => $command,
+            'timeout_seconds' => $timeout,
+            'pcap_file_size_bytes' => file_exists($pcap_file_path) ? filesize($pcap_file_path) : 0,
+            'process_id' => $this->process_id
+        ]);
         
         $process->run();
+        $duration = round(microtime(true) - $start_time, 2);
 
         if (!$process->isSuccessful()) {
             $errorOutput = $process->getErrorOutput();
             $exitCode = $process->getExitCode();
-            Log::channel('devlog')->error('Python hash generation failed with exit code {exit_code}: {error}', [
+            Log::channel('devlog')->error('Python hash generation failed', [
                 'exit_code' => $exitCode,
-                'error' => $errorOutput
+                'error_output' => $errorOutput,
+                'output' => $process->getOutput(),
+                'duration_seconds' => $duration,
+                'timeout_seconds' => $timeout,
+                'command' => $command,
+                'process_id' => $this->process_id
             ]);
             throw new HashGeneratorFailException("Python script failed with exit code {$exitCode}: {$errorOutput}");
         }
 
         $output = $process->getOutput();
-        Log::channel('devlog')->info('Python hash generation completed successfully');
+        Log::channel('devlog')->info('Python hash generation process completed', [
+            'duration_seconds' => $duration,
+            'timeout_seconds' => $timeout,
+            'time_remaining' => round($timeout - $duration, 2),
+            'output_length' => strlen($output),
+            'exit_code' => $process->getExitCode(),
+            'process_id' => $this->process_id
+        ]);
         
         $decodedOutput = json_decode($output);
         if (json_last_error() !== JSON_ERROR_NONE) {
-            Log::channel('devlog')->error('Failed to decode Python output as JSON: {error}', [
-                'error' => json_last_error_msg(),
-                'output' => $output
+            Log::channel('devlog')->error('Failed to decode Python output as JSON', [
+                'json_error' => json_last_error_msg(),
+                'json_error_code' => json_last_error(),
+                'output_preview' => substr($output, 0, 500),
+                'output_length' => strlen($output),
+                'process_id' => $this->process_id
             ]);
             throw new HashGeneratorFailException("Invalid JSON output from Python script: " . json_last_error_msg());
         }
+
+        $hashes_count = is_array($decodedOutput) ? count($decodedOutput) : (is_object($decodedOutput) && isset($decodedOutput->hashes) ? count($decodedOutput->hashes) : 0);
+        Log::channel('devlog')->info('Hash generation completed successfully', [
+            'hashes_count' => $hashes_count,
+            'total_duration_seconds' => $duration,
+            'process_id' => $this->process_id
+        ]);
 
         return $decodedOutput;
     }
@@ -191,14 +339,37 @@ class CreateHash {
             $command = 'docker exec '.$emulator->name.' '.$command;
         }
 
-        Log::channel('devlog')->info('Run app command: {command}', ['command' => $command]);
+        Log::channel('devlog')->info('Running app on emulator', [
+            'command' => $command,
+            'emulator' => $emulator->name,
+            'package_name' => $package_name,
+            'process_id' => $this->process_id
+        ]);
 
+        $start_time = microtime(true);
         $process = Process::fromShellCommandline($command);
+        $process->setTimeout(30); // 30 seconds should be enough for app launch
         $process->run();
+        $duration = round(microtime(true) - $start_time, 2);
 
         if (!$process->isSuccessful()) {
+            Log::channel('devlog')->error('Run app command failed', [
+                'command' => $command,
+                'exit_code' => $process->getExitCode(),
+                'error_output' => $process->getErrorOutput(),
+                'output' => $process->getOutput(),
+                'duration_seconds' => $duration,
+                'process_id' => $this->process_id
+            ]);
             throw new RunAppFailException($process->getErrorOutput());
         }
+
+        Log::channel('devlog')->info('Run app command completed successfully', [
+            'command' => $command,
+            'duration_seconds' => $duration,
+            'output' => $process->getOutput(),
+            'process_id' => $this->process_id
+        ]);
     }
 
     /**
@@ -226,14 +397,77 @@ class CreateHash {
             $command = 'docker exec '.$emulator->name.' '.$command;
         }
 
-        Log::channel('devlog')->info('Run app command: {command}', ['command' => $command]);
+        Log::channel('devlog')->info('Starting monkey command to generate communication', [
+            'command' => $command,
+            'emulator' => $emulator->name,
+            'package_name' => $package_name,
+            'process_id' => $this->process_id
+        ]);
 
+        $start_time = microtime(true);
         $process = Process::fromShellCommandline($command);
-        $process->run();
+        // Set timeout for monkey command - configurable via environment variable
+        // Default is 90 seconds for monkey command with 500 events
+        // On production servers, Docker operations can be slower, so this timeout can be adjusted via env
+        $timeout = (int) env('MONKEY_COMMAND_TIMEOUT', 90);
+        $process->setTimeout($timeout);
+        Log::channel('devlog')->info('Monkey command configuration', [
+            'timeout_seconds' => $timeout,
+            'command' => $command,
+            'process_id' => $this->process_id
+        ]);
+        
+        try {
+            $process->run();
+            $duration = round(microtime(true) - $start_time, 2);
+            
+            Log::channel('devlog')->info('Monkey command execution completed', [
+                'duration_seconds' => $duration,
+                'timeout_seconds' => $timeout,
+                'time_remaining' => round($timeout - $duration, 2),
+                'process_id' => $this->process_id
+            ]);
+        } catch (\Symfony\Component\Process\Exception\ProcessTimedOutException $e) {
+            $duration = round(microtime(true) - $start_time, 2);
+            Log::channel('devlog')->error('Monkey command timed out', [
+                'timeout_seconds' => $timeout,
+                'actual_duration_seconds' => $duration,
+                'command' => $command,
+                'emulator' => $emulator->name,
+                'package_name' => $package_name,
+                'error' => $e->getMessage(),
+                'process_id' => $this->process_id
+            ]);
+            throw new CreateCommunicationOnEmulatorException(
+                "Monkey command timed out after {$timeout} seconds. Command: {$command}. " .
+                "This may indicate that the emulator is slow or overloaded. " .
+                "Consider increasing MONKEY_COMMAND_TIMEOUT environment variable."
+            );
+        }
 
         if (!$process->isSuccessful()) {
-            throw new CreateCommunicationOnEmulatorException($process->getErrorOutput());
+            $duration = round(microtime(true) - $start_time, 2);
+            Log::channel('devlog')->error('Monkey command failed', [
+                'exit_code' => $process->getExitCode(),
+                'error_output' => $process->getErrorOutput(),
+                'output' => $process->getOutput(),
+                'command' => $command,
+                'duration_seconds' => $duration,
+                'emulator' => $emulator->name,
+                'package_name' => $package_name,
+                'process_id' => $this->process_id
+            ]);
+            throw new CreateCommunicationOnEmulatorException(
+                "Monkey command failed: " . $process->getErrorOutput()
+            );
         }
+
+        Log::channel('devlog')->info('Monkey command succeeded', [
+            'duration_seconds' => $duration ?? round(microtime(true) - $start_time, 2),
+            'exit_code' => $process->getExitCode(),
+            'output_length' => strlen($process->getOutput()),
+            'process_id' => $this->process_id
+        ]);
     }
 
     /**
@@ -244,8 +478,20 @@ class CreateHash {
      * @throws CloseAppFailException
      */
     private function closeAppOnEmulator(Emulator $emulator, string $package_name) : void {
+        Log::channel('devlog')->info('Starting app close/clear process', [
+            'emulator' => $emulator->name,
+            'package_name' => $package_name,
+            'process_id' => $this->process_id
+        ]);
+
+        $ensure_adb_start = microtime(true);
         // First, check if ADB server is running and devices are available
         $this->ensureAdbServerRunning($emulator);
+        $ensure_adb_duration = round(microtime(true) - $ensure_adb_start, 2);
+        Log::channel('devlog')->info('ADB server check completed', [
+            'duration_seconds' => $ensure_adb_duration,
+            'process_id' => $this->process_id
+        ]);
 
         $command = 'adb shell pm clear '.$package_name;
 
@@ -253,16 +499,52 @@ class CreateHash {
             $command = 'docker exec '.$emulator->name.' '.$command;
         }
 
-        Log::channel('devlog')->info('ADB CLEAR APP command {command}', ['command' => $command]);
+        Log::channel('devlog')->info('Executing ADB CLEAR APP command', [
+            'command' => $command,
+            'emulator' => $emulator->name,
+            'package_name' => $package_name,
+            'process_id' => $this->process_id
+        ]);
 
+        $clear_start_time = microtime(true);
         $process = Process::fromShellCommandline($command);
-        $process->setTimeout(60);
+        // Set timeout for ADB clear command - configurable via environment variable
+        // Default is 90 seconds, can be adjusted for slower production servers
+        $timeout = (int) env('ADB_CLEAR_COMMAND_TIMEOUT', 90);
+        $process->setTimeout($timeout);
+        Log::channel('devlog')->info('ADB CLEAR command configuration', [
+            'timeout_seconds' => $timeout,
+            'command' => $command,
+            'process_id' => $this->process_id
+        ]);
+        
         $process->run();
+        $clear_duration = round(microtime(true) - $clear_start_time, 2);
 
         if (!$process->isSuccessful()) {
-            Log::channel('devlog')->error('ADB CLEAR APP failed: {error}', ['error' => $process->getErrorOutput()]);
+            Log::channel('devlog')->error('ADB CLEAR APP command failed', [
+                'command' => $command,
+                'exit_code' => $process->getExitCode(),
+                'error_output' => $process->getErrorOutput(),
+                'output' => $process->getOutput(),
+                'duration_seconds' => $clear_duration,
+                'timeout_seconds' => $timeout,
+                'emulator' => $emulator->name,
+                'package_name' => $package_name,
+                'process_id' => $this->process_id
+            ]);
             throw new CloseAppFailException($process->getErrorOutput());
         }
+
+        Log::channel('devlog')->info('ADB CLEAR APP command completed successfully', [
+            'command' => $command,
+            'duration_seconds' => $clear_duration,
+            'timeout_seconds' => $timeout,
+            'time_remaining' => round($timeout - $clear_duration, 2),
+            'exit_code' => $process->getExitCode(),
+            'output' => $process->getOutput(),
+            'process_id' => $this->process_id
+        ]);
     }
 
     /**
@@ -290,19 +572,44 @@ class CreateHash {
      * @throws AppInstallationFailException
      */
     private function ensureAdbServerRunning(Emulator $emulator) : void {
+        Log::channel('devlog')->info('Ensuring ADB server is running', [
+            'emulator' => $emulator->name,
+            'process_id' => $this->process_id
+        ]);
+
         // Start ADB server
         $startCommand = 'adb start-server';
         if (env("ENVIRONMENT", "local") == "server"){
             $startCommand = 'docker exec '.$emulator->name.' '.$startCommand;
         }
         
+        Log::channel('devlog')->info('Starting ADB server', [
+            'command' => $startCommand,
+            'emulator' => $emulator->name,
+            'process_id' => $this->process_id
+        ]);
+
+        $start_time = microtime(true);
         $startProcess = Process::fromShellCommandline($startCommand);
         $startProcess->setTimeout(30);
         $startProcess->run();
+        $start_duration = round(microtime(true) - $start_time, 2);
         
-        Log::channel('devlog')->info('ADB START-SERVER command {command}', ['command' => $startCommand]);
+        Log::channel('devlog')->info('ADB START-SERVER command completed', [
+            'command' => $startCommand,
+            'duration_seconds' => $start_duration,
+            'exit_code' => $startProcess->getExitCode(),
+            'success' => $startProcess->isSuccessful(),
+            'output' => $startProcess->getOutput(),
+            'error_output' => $startProcess->getErrorOutput(),
+            'process_id' => $this->process_id
+        ]);
         
         // Wait a moment for ADB to initialize
+        Log::channel('devlog')->info('Waiting for ADB to initialize', [
+            'sleep_seconds' => 3,
+            'process_id' => $this->process_id
+        ]);
         sleep(3);
         
         // Check if devices are available
@@ -311,21 +618,60 @@ class CreateHash {
             $devicesCommand = 'docker exec '.$emulator->name.' '.$devicesCommand;
         }
         
+        Log::channel('devlog')->info('Checking ADB devices', [
+            'command' => $devicesCommand,
+            'emulator' => $emulator->name,
+            'process_id' => $this->process_id
+        ]);
+
+        $devices_start_time = microtime(true);
         $devicesProcess = Process::fromShellCommandline($devicesCommand);
         $devicesProcess->setTimeout(30);
         $devicesProcess->run();
+        $devices_duration = round(microtime(true) - $devices_start_time, 2);
         
-        Log::channel('devlog')->info('ADB DEVICES command {command}', ['command' => $devicesCommand]);
-        Log::channel('devlog')->info('ADB DEVICES output: {output}', ['output' => $devicesProcess->getOutput()]);
+        Log::channel('devlog')->info('ADB DEVICES command completed', [
+            'command' => $devicesCommand,
+            'duration_seconds' => $devices_duration,
+            'exit_code' => $devicesProcess->getExitCode(),
+            'success' => $devicesProcess->isSuccessful(),
+            'output' => $devicesProcess->getOutput(),
+            'error_output' => $devicesProcess->getErrorOutput(),
+            'process_id' => $this->process_id
+        ]);
         
         if (!$devicesProcess->isSuccessful()) {
+            Log::channel('devlog')->error('ADB devices check failed', [
+                'command' => $devicesCommand,
+                'error_output' => $devicesProcess->getErrorOutput(),
+                'process_id' => $this->process_id
+            ]);
             throw new AppInstallationFailException('Failed to check ADB devices: ' . $devicesProcess->getErrorOutput());
         }
         
         $output = $devicesProcess->getOutput();
-        if (strpos($output, 'device') === false && strpos($output, 'emulator') === false) {
+        $has_device = strpos($output, 'device') !== false;
+        $has_emulator = strpos($output, 'emulator') !== false;
+        
+        Log::channel('devlog')->info('ADB devices check result', [
+            'has_device' => $has_device,
+            'has_emulator' => $has_emulator,
+            'output' => $output,
+            'process_id' => $this->process_id
+        ]);
+
+        if (!$has_device && !$has_emulator) {
+            Log::channel('devlog')->error('No ADB devices/emulators found', [
+                'output' => $output,
+                'process_id' => $this->process_id
+            ]);
             throw new AppInstallationFailException('No devices/emulators found. ADB output: ' . $output);
         }
+
+        Log::channel('devlog')->info('ADB server check completed successfully', [
+            'total_duration_seconds' => round(microtime(true) - $start_time, 2),
+            'process_id' => $this->process_id
+        ]);
     }
 
     /**

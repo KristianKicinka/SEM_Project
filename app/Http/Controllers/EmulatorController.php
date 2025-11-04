@@ -7,6 +7,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 use Docker\Docker;
 use Docker\API\Model\NetworksCreatePostBody;
@@ -182,24 +183,86 @@ class EmulatorController extends Controller
         $containerName = $request->input('container_name');
         $networkName = substr($request->input('network_name'), 3);
 
-        // Step 1: Stop the container (if running)
-        $containerDetails = $this->docker->containerInspect($containerName);
-        if ($containerDetails->getState()->getRunning()) {
-            $this->docker->containerStop($containerName);
+        try {
+            // Step 1: Stop the container (if running)
+            try {
+                $containerDetails = $this->docker->containerInspect($containerName);
+                if ($containerDetails->getState()->getRunning()) {
+                    $this->docker->containerStop($containerName);
+                    Log::channel('devlog')->info('Emulator container stopped', ['container_name' => $containerName]);
+                }
+            } catch (\Exception $e) {
+                // Container might not exist or already stopped, continue with deletion
+                Log::channel('devlog')->warning('Could not stop container (might not exist)', [
+                    'container_name' => $containerName,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // Step 2: Remove the container
+            try {
+                $this->docker->containerDelete($containerName, ['force' => true]);
+                Log::channel('devlog')->info('Emulator container deleted', ['container_name' => $containerName]);
+            } catch (\Exception $e) {
+                // Container might not exist, log but continue
+                Log::channel('devlog')->warning('Could not delete container (might not exist)', [
+                    'container_name' => $containerName,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
+            // Step 3: Remove the network (if provided)
+            if ($networkName) {
+                try {
+                    $this->docker->networkDelete($networkName);
+                    Log::channel('devlog')->info('Emulator network deleted', ['network_name' => $networkName]);
+                } catch (\Exception $e) {
+                    // Network might not exist or be in use, log but continue
+                    Log::channel('devlog')->warning('Could not delete network (might not exist or be in use)', [
+                        'network_name' => $networkName,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
+            // Step 4: Delete data from database (always try to delete, even if Docker operations failed)
+            $deleted = DB::table('emulators')->where('name', '=', $containerName)->delete();
+            
+            if ($deleted > 0) {
+                Log::channel('devlog')->info('Emulator deleted from database', [
+                    'container_name' => $containerName,
+                    'rows_deleted' => $deleted
+                ]);
+            } else {
+                Log::channel('devlog')->warning('Emulator not found in database', ['container_name' => $containerName]);
+            }
+
+            return response()->json(['status' => 'success', 'message' => 'Emulator deleted successfully'], 200);
+
+        } catch (\Exception $e) {
+            Log::channel('devlog')->error('Error deleting emulator', [
+                'container_name' => $containerName,
+                'network_name' => $networkName,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Try to delete from database even if Docker operations failed
+            try {
+                DB::table('emulators')->where('name', '=', $containerName)->delete();
+                Log::channel('devlog')->info('Emulator deleted from database after error', ['container_name' => $containerName]);
+            } catch (\Exception $dbError) {
+                Log::channel('devlog')->error('Failed to delete emulator from database', [
+                    'container_name' => $containerName,
+                    'error' => $dbError->getMessage()
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error deleting emulator: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Step 2: Remove the container
-        $this->docker->containerDelete($containerName, ['force' => true]);
-
-        // Step 3: Remove the network (if provided)
-        if ($networkName) {
-            $this->docker->networkDelete($networkName);
-        }
-
-        // Delete data from database
-        DB::table('emulators')->where('name','=', $containerName)->delete();
-
-        return response()->json(['status' => 'success'], 200);
     }
 
     /**
