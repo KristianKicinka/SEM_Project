@@ -457,7 +457,7 @@ class HashController extends Controller {
                 'hashes.sni as sni', 'hashes.sni_flag as sni_flag', 'hashes.is_flagged as is_flagged',
                 'hashes.ja3s_hash as ja3s_hash',
                 'hashes.ja4_hash as ja4_hash', 'hashes.ja4s_hash as ja4s_hash', 'hashes.ja4x_hash as ja4x_hash',
-                'hashes.custom_hashes as custom_hashes'
+                'hashes.custom_hashes as custom_hashes', 'hashes.created_at as created_at'
             )
             ->join('hashes','processes.id','=','hashes.process_id')
             ->join('applications','applications.id','=','hashes.app_id')
