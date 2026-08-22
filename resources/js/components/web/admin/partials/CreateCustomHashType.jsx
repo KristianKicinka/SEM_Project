@@ -22,16 +22,66 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
     const [errors, setErrors] = useState({});
     const [configurationFields, setConfigurationFields] = useState([]);
 
+    const parseBoolean = (value, defaultValue = false) => {
+        if (value === undefined || value === null) {
+            return defaultValue;
+        }
+        if (typeof value === 'boolean') {
+            return value;
+        }
+        if (typeof value === 'number') {
+            return value === 1;
+        }
+        if (typeof value === 'string') {
+            return ['1', 'true', 'on', 'yes'].includes(value.toLowerCase());
+        }
+        return defaultValue;
+    };
+
+    const normalizeConfiguration = (config) => {
+        if (!config) {
+            return {};
+        }
+
+        let parsed = config;
+        if (typeof parsed === 'string') {
+            try {
+                parsed = JSON.parse(parsed);
+            } catch (error) {
+                return {};
+            }
+        }
+
+        if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return {};
+        }
+
+        if (typeof parsed.fields === 'string') {
+            try {
+                const decodedFields = JSON.parse(parsed.fields);
+                parsed = { ...parsed, fields: Array.isArray(decodedFields) ? decodedFields : [] };
+            } catch (error) {
+                parsed = { ...parsed, fields: [] };
+            }
+        }
+
+        if (parsed.fields && !Array.isArray(parsed.fields)) {
+            parsed = { ...parsed, fields: [] };
+        }
+
+        return parsed;
+    };
+
     useEffect(() => {
         if (editingHashType) {
             setFormData({
-                name: editingHashType.name,
-                display_name: editingHashType.display_name,
+                name: editingHashType.name || '',
+                display_name: editingHashType.display_name || '',
                 description: editingHashType.description || '',
-                type: editingHashType.type,
-                configuration: editingHashType.configuration || {},
-                is_public: editingHashType.is_public,
-                is_active: editingHashType.is_active
+                type: editingHashType.type || 'simple_tls',
+                configuration: normalizeConfiguration(editingHashType.configuration),
+                is_public: parseBoolean(editingHashType.is_public, false),
+                is_active: parseBoolean(editingHashType.is_active, true)
             });
         } else {
             setFormData({
@@ -173,9 +223,9 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
             display_name: formData.display_name,
             description: formData.description,
             type: formData.type,
-            configuration: formData.configuration,
-            is_public: formData.is_public || false,
-            is_active: formData.is_active !== undefined ? formData.is_active : true
+            configuration: normalizeConfiguration(formData.configuration),
+            is_public: parseBoolean(formData.is_public, false),
+            is_active: parseBoolean(formData.is_active, true)
         };
 
         // Handle script file upload separately if needed

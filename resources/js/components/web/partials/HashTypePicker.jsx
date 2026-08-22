@@ -75,8 +75,8 @@ const HashTypePicker = ({hashTypes, setHashTypes}) => {
                                 <div className="text-center">
                                     <small className="text-muted">Loading...</small>
                                 </div>
-                            ) : customHashTypes.length > 0 ? (
-                                customHashTypes.map((hashType) => (
+                            ) : customHashTypes.filter(hashType => hashType.is_active !== false).length > 0 ? (
+                                customHashTypes.filter(hashType => hashType.is_active !== false).map((hashType) => (
                                     <Form.Check 
                                         key={hashType.id}
                                         onChange={checkboxChange} 

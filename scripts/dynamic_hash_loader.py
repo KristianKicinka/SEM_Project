@@ -81,7 +81,9 @@ class DatabaseHashLoader:
             # Prepare data for API
             data = {}
             if custom_hash_type_names:
-                data['names'] = custom_hash_type_names
+                if isinstance(custom_hash_type_names, dict):
+                    custom_hash_type_names = list(custom_hash_type_names.values())
+                data['names'] = list(custom_hash_type_names)
             
             # Make HTTP POST request
             response = self.session.post(api_url, json=data, timeout=10)
@@ -157,22 +159,39 @@ class DatabaseHashLoader:
             name = config.get("name")
             description = config.get("description", "")
             configuration = config.get("configuration", {})
+            if isinstance(configuration, str):
+                try:
+                    configuration = json.loads(configuration)
+                except (json.JSONDecodeError, TypeError):
+                    configuration = {}
+            if not isinstance(configuration, dict):
+                configuration = {}
             
             if generator_type == "simple_tls":
                 fields = configuration.get("fields", [])
+                if isinstance(fields, str):
+                    try:
+                        fields = json.loads(fields)
+                    except (json.JSONDecodeError, TypeError):
+                        fields = []
                 return SimpleTLSHashGenerator(
                     name=name,
                     description=description,
-                    fields=fields
+                    fields=fields or []
                 )
             elif generator_type == "custom_algorithm":
                 algorithm = configuration.get("algorithm", "md5")
                 fields = configuration.get("fields", [])
+                if isinstance(fields, str):
+                    try:
+                        fields = json.loads(fields)
+                    except (json.JSONDecodeError, TypeError):
+                        fields = []
                 return CustomAlgorithmHashGenerator(
                     name=name,
                     description=description,
                     algorithm=algorithm,
-                    fields=fields
+                    fields=fields or []
                 )
             elif generator_type == "python_script":
                 script_path = config.get("script_path")

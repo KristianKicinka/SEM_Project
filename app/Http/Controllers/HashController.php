@@ -24,6 +24,7 @@ use App\Models\Process as ProcessModel;
 
 use App\Models\Application;
 use App\Models\Hash;
+use App\Models\CustomHashType;
 use \App\Exceptions\HashGeneratorFailException;
 use App\Jobs\CreateHashFromXAPK;
 
@@ -58,19 +59,10 @@ class HashController extends Controller {
 
         // Add custom hash types if provided
         if ($request->has('custom_hash_types')) {
-            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
-                ->where('is_active', true)
-                ->where(function($query) use ($request) {
-                    $user = auth()->user();
-                    if ($user) {
-                        $query->where('user_id', $user->id)
-                              ->orWhere('is_public', true);
-                    }
-                })
-                ->pluck('name')
-                ->toArray();
-            
-            $hash_types = array_merge($hash_types, $customHashTypes);
+            $hash_types = array_values(array_unique(array_merge(
+                (array) $hash_types,
+                $this->resolveCustomHashTypeNames($request)
+            )));
         }
 
         $input_files = $request->file("files");
@@ -224,19 +216,10 @@ class HashController extends Controller {
 
         // Add custom hash types if provided
         if ($request->has('custom_hash_types')) {
-            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
-                ->where('is_active', true)
-                ->where(function($query) use ($request) {
-                    $user = auth()->user();
-                    if ($user) {
-                        $query->where('user_id', $user->id)
-                              ->orWhere('is_public', true);
-                    }
-                })
-                ->pluck('name')
-                ->toArray();
-            
-            $hash_types = array_merge($hash_types, $customHashTypes);
+            $hash_types = array_values(array_unique(array_merge(
+                (array) $hash_types,
+                $this->resolveCustomHashTypeNames($request)
+            )));
         }
 
         CreateHashFromAppName::dispatch(
@@ -363,19 +346,10 @@ class HashController extends Controller {
 
         // Add custom hash types if provided
         if ($request->has('custom_hash_types')) {
-            $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
-                ->where('is_active', true)
-                ->where(function($query) use ($request) {
-                    $user = auth()->user();
-                    if ($user) {
-                        $query->where('user_id', $user->id)
-                              ->orWhere('is_public', true);
-                    }
-                })
-                ->pluck('name')
-                ->toArray();
-            
-            $hash_types = array_merge($hash_types, $customHashTypes);
+            $hash_types = array_values(array_unique(array_merge(
+                (array) $hash_types,
+                $this->resolveCustomHashTypeNames($request)
+            )));
         }
 
         $package_names = file($text_file_path);
@@ -478,7 +452,13 @@ class HashController extends Controller {
         // Decode custom_hashes JSON strings to objects
         $results->transform(function ($item) {
             if ($item->custom_hashes) {
-                $item->custom_hashes = json_decode($item->custom_hashes, true);
+                if (is_string($item->custom_hashes)) {
+                    $decoded = json_decode($item->custom_hashes, true);
+                    if (is_string($decoded)) {
+                        $decoded = json_decode($decoded, true);
+                    }
+                    $item->custom_hashes = $decoded;
+                }
             }
             return $item;
         });
@@ -566,5 +546,30 @@ class HashController extends Controller {
         ]);
 
         return response()->json(['status' => 'success'], 200);
+    }
+
+    /**
+     * @brief Resolve active custom hash type names from request IDs
+     * @param Request $request
+     * @return array
+     */
+    private function resolveCustomHashTypeNames(Request $request): array
+    {
+        $ids = $request->input('custom_hash_types', []);
+        if (empty($ids) || !is_array($ids)) {
+            return [];
+        }
+
+        $query = CustomHashType::whereIn('id', $ids)->where('is_active', true);
+
+        $user = auth()->user();
+        if ($user) {
+            $query->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('is_public', true);
+            });
+        }
+
+        return $query->pluck('name')->toArray();
     }
 }
