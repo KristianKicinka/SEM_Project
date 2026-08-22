@@ -126,7 +126,8 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
             ...(hashTypes.includes("JA4") ? ['JA4 Hash'] : []),
             ...(hashTypes.includes("JA4S") ? ['JA4S Hash'] : []),
             ...(hashTypes.includes("JA4X") ? ['JA4X Hash'] : []),
-            ...selectedCustomTypes.map(type => type.display_name)
+            ...selectedCustomTypes.map(type => type.display_name),
+            'Created At'
         ];
 
         const csvData = results.map(row => [
@@ -143,7 +144,8 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
             ...selectedCustomTypes.map(customType => {
                 const parsed = typeof row.custom_hashes === 'string' ? JSON.parse(row.custom_hashes) : row.custom_hashes;
                 return parsed?.[`custom_${customType.name}`] ?? parsed?.[customType.name] ?? '';
-            })
+            }),
+            row.created_at || ''
         ]);
 
         // Convert to CSV string
