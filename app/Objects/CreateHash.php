@@ -45,8 +45,8 @@ class CreateHash {
     protected array $files = [];
     protected array $hashes = [];
     protected array $hash_types = [];
-    protected string $process_id;
-    protected string $ip_address;
+    protected string $process_id = '';
+    protected string $ip_address = '';
     protected HashProcessData $hash_process_data;
 
     public function __construct($hash_types, $input_type, $process_id, $ip_address, $channel_id, $process_name, $api_id) {
@@ -225,7 +225,7 @@ class CreateHash {
         ]);
 
         $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH);
-        $command = $command." ".$pcap_file_path;
+        $command = $command." ".escapeshellarg($pcap_file_path);
         
         // Add custom generators as second argument if any are specified
         $custom_generators = [];

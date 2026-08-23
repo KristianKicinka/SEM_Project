@@ -135,10 +135,12 @@ class HashController extends Controller {
      * @throws HashGeneratorFailException Hash generator exception
      */
     public function createHashFromPcap(Request $request): JsonResponse {
-        // Request data validator
+        set_time_limit(330);
+
         $validator = Validator::make($request->all(), [
             'app_name_pcap' => 'required|string',
             'package_name_pcap' => 'required|string',
+            'app_version_pcap' => 'nullable|string',
             'pcap_file' => 'required|file',
             'is_malware_pcap' => 'required',
             'is_dangerous_pcap' => 'required',
@@ -151,18 +153,34 @@ class HashController extends Controller {
         $app_data = [
             'app_name' => $request->input('app_name_pcap'),
             'package_name' => $request->input('package_name_pcap'),
-            'app_version' => $request->input('app_version_pcap'),
-            'is_malware' => $request->input('is_malware_pcap'),
-            'is_dangerous' => $request->input('is_dangerous_pcap')
+            'app_version' => $request->input('app_version_pcap', ''),
+            'is_malware' => filter_var($request->input('is_malware_pcap'), FILTER_VALIDATE_BOOLEAN),
+            'is_dangerous' => filter_var($request->input('is_dangerous_pcap'), FILTER_VALIDATE_BOOLEAN),
         ];
 
         $pcap_file_name = $this->savePcapFile($request->file('pcap_file'));
-        $hash_types = ["JA3"];
+        $hash_types = array_values(array_unique(array_merge(
+            ['JA3', 'JA3S', 'JA4', 'JA4S', 'JA4X'],
+            $this->getUsableCustomHashTypeNames()
+        )));
 
         $pcap_hash = new CreateHashFromPcap($pcap_file_name, $hash_types);
-        $hashes = $pcap_hash->createAndSave($app_data);
 
-        return response()->json(['hashes' => $hashes], 200);
+        try {
+            $hashes = $pcap_hash->createAndSave($app_data);
+        } catch (HashGeneratorFailException $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            Log::channel('devlog')->error('PCAP hash generation failed: {error}', [
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['error' => 'Hash generation from PCAP failed.'], 500);
+        }
+
+        return response()->json([
+            'hashes' => $hashes,
+            'count' => count($hashes),
+        ], 200);
     }
 
     /**
@@ -172,8 +190,8 @@ class HashController extends Controller {
      */
     private function savePcapFile(UploadedFile $file): string {
         $file_name = $file->getClientOriginalName();
-        $final_name = date('his') .'_'. $file_name;
-        $file->storeAs('uploads/pcap_inserted',$final_name,'public');
+        $final_name = date('His') . '_' . uniqid() . '_' . $file_name;
+        $file->storeAs('uploads/pcap_inserted', $final_name, 'public');
 
         return $final_name;
     }
@@ -290,7 +308,7 @@ class HashController extends Controller {
         $hash_identifier = [
             'app_id' => $application->id,
             'ja3_hash' => $request->ja3_hash,
-            'ja3s_hash' => $request->ja3_hash,
+            'ja3s_hash' => $request->ja3s_hash,
             'sni' => $request->sni,
             'ja4_hash' => $request->ja4_hash,
             'ja4s_hash' => $request->ja4s_hash,
@@ -304,7 +322,7 @@ class HashController extends Controller {
         $new_record = [
             'app_id' => $application->id,
             'ja3_hash' => $request->ja3_hash,
-            'ja3s_hash' => $request->ja3_hash,
+            'ja3s_hash' => $request->ja3s_hash,
             'sni' => $request->sni,
             'ja4_hash' => $request->ja4_hash,
             'ja4s_hash' => $request->ja4s_hash,
@@ -562,6 +580,26 @@ class HashController extends Controller {
 
         $query = CustomHashType::whereIn('id', $ids)
             ->where('is_active', true)
+            ->where('type', '!=', 'python_script');
+
+        $user = auth()->user();
+        if ($user) {
+            $query->where(function ($q) use ($user) {
+                $q->where('user_id', $user->id)
+                  ->orWhere('is_public', true);
+            });
+        }
+
+        return $query->pluck('name')->toArray();
+    }
+
+    /**
+     * @brief Get usable custom hash type names for the authenticated admin
+     * @return array
+     */
+    private function getUsableCustomHashTypeNames(): array
+    {
+        $query = CustomHashType::where('is_active', true)
             ->where('type', '!=', 'python_script');
 
         $user = auth()->user();
