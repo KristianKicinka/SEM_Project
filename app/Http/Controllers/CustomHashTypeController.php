@@ -77,6 +77,14 @@ class CustomHashTypeController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
+        if ($request->input('type') === 'python_script') {
+            $message = 'Python script hash types are temporarily disabled until support is finished.';
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $message], 422);
+            }
+            return redirect()->back()->withErrors(['type' => $message])->withInput();
+        }
+
         $user = Auth::user();
         $data = $request->only(['name', 'display_name', 'description', 'type']);
         $data['configuration'] = $this->normalizeConfiguration($request->input('configuration'));
@@ -173,6 +181,14 @@ class CustomHashTypeController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
+        if ($request->input('type') === 'python_script') {
+            $message = 'Python script hash types are temporarily disabled until support is finished.';
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $message], 422);
+            }
+            return redirect()->back()->withErrors(['type' => $message])->withInput();
+        }
+
         $data = $request->only(['name', 'display_name', 'description', 'type']);
         $data['configuration'] = $this->normalizeConfiguration($request->input('configuration'));
         $data['is_public'] = $this->booleanInput($request, 'is_public', (bool) $customHashType->is_public);
@@ -246,6 +262,12 @@ class CustomHashTypeController extends Controller
     public function test(Request $request, CustomHashType $customHashType)
     {
         $this->authorize('view', $customHashType);
+
+        if ($customHashType->type === 'python_script') {
+            return response()->json([
+                'error' => 'Python script hash types are temporarily disabled until support is finished.'
+            ], 422);
+        }
 
         $validator = Validator::make($request->all(), [
             'apk_files' => 'nullable|array',
@@ -343,7 +365,8 @@ class CustomHashTypeController extends Controller
 
         $requestedNames = $request->input('names', []);
         
-        $query = CustomHashType::where('is_active', true);
+        $query = CustomHashType::where('is_active', true)
+            ->where('type', '!=', 'python_script');
         
         // Ak sú zadané konkrétne názvy, filtruj podľa nich
         if (!empty($requestedNames)) {

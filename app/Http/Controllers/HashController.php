@@ -560,7 +560,9 @@ class HashController extends Controller {
             return [];
         }
 
-        $query = CustomHashType::whereIn('id', $ids)->where('is_active', true);
+        $query = CustomHashType::whereIn('id', $ids)
+            ->where('is_active', true)
+            ->where('type', '!=', 'python_script');
 
         $user = auth()->user();
         if ($user) {

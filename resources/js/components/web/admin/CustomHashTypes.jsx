@@ -62,6 +62,7 @@ const CustomHashTypes = () => {
             const message = error.response?.data?.error
                 || error.response?.data?.errors?.configuration?.[0]
                 || error.response?.data?.errors?.name?.[0]
+                || error.response?.data?.errors?.type?.[0]
                 || 'Failed to create custom hash type';
             toast.error(message);
         }
@@ -81,6 +82,7 @@ const CustomHashTypes = () => {
             console.error('Error updating custom hash type:', error);
             const message = error.response?.data?.error
                 || error.response?.data?.errors?.configuration?.[0]
+                || error.response?.data?.errors?.type?.[0]
                 || 'Failed to update custom hash type';
             toast.error(message);
         }
@@ -126,6 +128,10 @@ const CustomHashTypes = () => {
     ]);
 
     const handleTest = (hashType) => {
+        if (hashType.type === 'python_script') {
+            toast.info('Python Script Hash is temporarily unavailable until support is finished.');
+            return;
+        }
         setSelectedHashType(hashType);
         setShowTestModal(true);
     };
