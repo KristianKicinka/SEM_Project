@@ -33,6 +33,7 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
 
         return (
             <tr key={index}>
+                <td>{row.created_at || row.createdAt || '-'}</td>
                 <td>{row.app_name}</td>
                 <td>{row.package_name}</td>
                 <td>{row.app_version}</td>
@@ -118,19 +119,31 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
             return;
         }
 
+        const formatTimestamp = (value) => {
+            if (!value) {
+                return '';
+            }
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) {
+                return String(value);
+            }
+            return date.toISOString().replace('T', ' ').slice(0, 19);
+        };
+
         // Prepare CSV data
         const csvHeaders = [
-            'App Name', 'Package Name', 'Version', 'SNI', 'Flag', 
+            'Timestamp',
+            'App Name', 'Package Name', 'Version', 'SNI', 'Flag',
             ...(hashTypes.includes("JA3") ? ['JA3 Hash'] : []),
             ...(hashTypes.includes("JA3S") ? ['JA3S Hash'] : []),
             ...(hashTypes.includes("JA4") ? ['JA4 Hash'] : []),
             ...(hashTypes.includes("JA4S") ? ['JA4S Hash'] : []),
             ...(hashTypes.includes("JA4X") ? ['JA4X Hash'] : []),
-            ...selectedCustomTypes.map(type => type.display_name),
-            'Created At'
+            ...selectedCustomTypes.map(type => type.display_name)
         ];
 
         const csvData = results.map(row => [
+            formatTimestamp(row.created_at || row.createdAt),
             row.app_name || '',
             row.package_name || '',
             row.app_version || '',
@@ -144,8 +157,7 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
             ...selectedCustomTypes.map(customType => {
                 const parsed = typeof row.custom_hashes === 'string' ? JSON.parse(row.custom_hashes) : row.custom_hashes;
                 return parsed?.[`custom_${customType.name}`] ?? parsed?.[customType.name] ?? '';
-            }),
-            row.created_at || ''
+            })
         ]);
 
         // Convert to CSV string
@@ -182,6 +194,7 @@ const Results = ({ results, onClose, hashTypes, customHashTypes = [] }) => {
                     <table className="table table-sm table-responsive">
                         <thead>
                             <tr>
+                                <th>Timestamp</th>
                                 <th>Name</th>
                                 <th>Package name</th>
                                 <th>Version</th>

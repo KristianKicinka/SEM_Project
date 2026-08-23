@@ -113,18 +113,18 @@ class ApplicationController extends Controller {
 
             // Write the CSV column headers
             fputcsv($handle, [
-                'ID', 'Name', 'Package Name', 'Version', 'JA3 Hash', 'SNI', 'SNI Flag', 'Is Flagged',
-                'JA3S Hash', 'JA4 Hash', 'JA4S Hash', 'JA4X Hash', 'Is Dangerous', 
-                'Is Malware', 'IP Source', 'Port Source', 'IP Destination', 'Port Destination', 'Created At'
+                'Timestamp', 'ID', 'Name', 'Package Name', 'Version', 'JA3 Hash', 'SNI', 'SNI Flag', 'Is Flagged',
+                'JA3S Hash', 'JA4 Hash', 'JA4S Hash', 'JA4X Hash', 'Is Dangerous',
+                'Is Malware', 'IP Source', 'Port Source', 'IP Destination', 'Port Destination'
             ]);
 
             // Write each row of data
             foreach ($data as $row) {
                 fputcsv($handle, [
-                    $row->id, $row->name, $row->package_name, $row->version, $row->ja3_hash, $row->sni, 
-                    $row->sni_flag, $row->is_flagged, $row->ja3s_hash, $row->ja4_hash, $row->ja4s_hash, 
-                    $row->ja4x_hash, $row->is_dangerous, $row->is_malware, $row->ip_src, $row->port_src, 
-                    $row->ip_dest, $row->port_dest, $row->created_at
+                    $row->created_at, $row->id, $row->name, $row->package_name, $row->version, $row->ja3_hash, $row->sni,
+                    $row->sni_flag, $row->is_flagged, $row->ja3s_hash, $row->ja4_hash, $row->ja4s_hash,
+                    $row->ja4x_hash, $row->is_dangerous, $row->is_malware, $row->ip_src, $row->port_src,
+                    $row->ip_dest, $row->port_dest
                 ]);
             }
 
