@@ -5,11 +5,11 @@
  * @copyright Copyright (c) 2024
  */
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 
 import AuthUser from "../../../../../AuthUser";
-import { Modal, Button, Form } from 'react-bootstrap';
+import { Modal, Button, Form, Alert } from 'react-bootstrap';
 
 
 const CreateUser = ({show, handleClose, setFetchDataState}) => {
@@ -41,8 +41,28 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const {http, http_file} = AuthUser();
 
     const [isProcessing, setIsProcessing] = useState(false);
+    const [pcapHashes, setPcapHashes] = useState([]);
+    const [pcapMessage, setPcapMessage] = useState('');
+    const [pcapError, setPcapError] = useState('');
 
-    console.log(isProcessing);
+    const closeModal = () => {
+        setIsProcessing(false);
+        setPcapHashes([]);
+        setPcapMessage('');
+        setPcapError('');
+        setErrors({});
+        handleClose();
+    };
+
+    useEffect(() => {
+        if (!show) {
+            setIsProcessing(false);
+            setPcapHashes([]);
+            setPcapMessage('');
+            setPcapError('');
+            setErrors({});
+        }
+    }, [show]);
 
     /**
      * @brief The function ensures creating hash from text input
@@ -89,6 +109,10 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
     const createHashFromPcapFile = async (e) => {
         e.preventDefault();
         setIsProcessing(true);
+        setPcapError('');
+        setPcapMessage('');
+        setPcapHashes([]);
+        setErrors({});
 
         const data = new FormData();
         data.append("app_name_pcap", appNamePcap);
@@ -99,22 +123,125 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
         data.append("pcap_file", pcapFile);
 
         try {
-            let resp = await http_file.post('/admin/hash/create/pcap-file', data);
+            let resp = await http_file.post('/admin/hash/create/pcap-file', data, { timeout: 330000 });
+            const hashes = resp.data.hashes || [];
+            setPcapHashes(hashes);
+            setPcapMessage(hashes.length
+                ? `Successfully created ${hashes.length} fingerprint(s). You can export them as CSV.`
+                : 'PCAP was processed, but no TLS fingerprints were found.');
             setFetchDataState(prevState => !prevState);
-            setIsProcessing(false);
-            //clearInputs();
-            handleClose();
         } catch (error) {
-            if (error.response.status === 400) {
-                setErrors(error.response.data.errors);
+            if (error.response?.status === 400) {
+                setErrors(error.response.data.errors || {});
+                setPcapError(error.response.data.error || 'Failed to create hashes from the PCAP file.');
+            } else {
+                setPcapError(error.response?.data?.error || 'Failed to create hashes from the PCAP file.');
             }
             console.log(error);
+        } finally {
+            setIsProcessing(false);
         }
     }
 
+    const formatCsvTimestamp = (value) => {
+        if (!value) {
+            return '';
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+            return String(value);
+        }
+        return date.toISOString().replace('T', ' ').slice(0, 19);
+    };
+
+    const stringifyCsvValue = (value) => {
+        if (value === null || value === undefined || value === '') {
+            return '';
+        }
+        if (typeof value === 'object') {
+            return JSON.stringify(value);
+        }
+        return String(value);
+    };
+
+    /**
+     * @brief Export created PCAP fingerprints as CSV, same format as Results
+     */
+    const exportPcapCsv = () => {
+        if (!pcapHashes.length) {
+            return;
+        }
+
+        const customHeaders = [];
+        pcapHashes.forEach((row) => {
+            const parsed = typeof row.custom_hashes === 'string'
+                ? (() => { try { return JSON.parse(row.custom_hashes); } catch { return {}; } })()
+                : (row.custom_hashes || {});
+            Object.keys(parsed).forEach((key) => {
+                if (!customHeaders.includes(key)) {
+                    customHeaders.push(key);
+                }
+            });
+        });
+
+        const csvHeaders = [
+            'Timestamp',
+            'App Name', 'Package Name', 'Version',
+            'Src IP', 'Src Port', 'Dest IP', 'Dest Port',
+            'SNI', 'Flag',
+            'JA3 Hash', 'JA3S Hash', 'JA4 Hash', 'JA4S Hash', 'JA4X Hash',
+            ...customHeaders
+        ];
+
+        const csvData = pcapHashes.map(row => {
+            const parsed = typeof row.custom_hashes === 'string'
+                ? (() => { try { return JSON.parse(row.custom_hashes); } catch { return {}; } })()
+                : (row.custom_hashes || {});
+
+            return [
+                formatCsvTimestamp(row.created_at),
+                row.app_name || '',
+                row.package_name || '',
+                row.app_version || '',
+                row.ip_src || '',
+                row.port_src || '',
+                row.ip_dest || '',
+                row.port_dest || '',
+                row.sni || '',
+                row.is_flagged && row.sni_flag ? row.sni_flag : '',
+                row.ja3_hash || '',
+                row.ja3s_hash || '',
+                row.ja4_hash || '',
+                row.ja4s_hash || '',
+                stringifyCsvValue(row.ja4x_hash),
+                ...customHeaders.map((key) => stringifyCsvValue(parsed[key]))
+            ];
+        });
+
+        const csvContent = [
+            csvHeaders.join(','),
+            ...csvData.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        ].join('\n');
+
+        const packageName = pcapHashes[0]?.package_name || 'unknown';
+        const cleanPackageName = packageName.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const date = new Date().toISOString().split('T')[0];
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `hash-pcap-${cleanPackageName}_${date}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     // Component body
     return (
-        <Modal show={show} onHide={handleClose} dialogClassName="modal-80w" >
+        <Modal show={show} onHide={closeModal} dialogClassName="modal-80w" >
             <Modal.Header closeButton>
                 <Modal.Title>Create new hash</Modal.Title>
             </Modal.Header>
@@ -400,9 +527,22 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                 <div className="form-group py-2">
                                     <label htmlFor="hash" className="text-dark">Pcap file:</label><br/>
                                     <Form.Control type="file" className='col'
-                                        onChange={e=>{setPcapFile(e.target.files[0])}} accept='.pcap' required />
+                                        onChange={e=>{setPcapFile(e.target.files[0])}} accept='.pcap,.pcapng' required />
                                     {errors.pcap_file && <span className="error text-danger">{errors.pcap_file[0]}</span>}
                                 </div>
+                                <Form.Text className="text-muted">
+                                    Generates JA3, JA3S, JA4, JA4S, JA4X and active custom hash types.
+                                </Form.Text>
+                                {pcapError && (
+                                    <Alert variant="danger" className="mt-3 mb-0">
+                                        {pcapError}
+                                    </Alert>
+                                )}
+                                {pcapMessage && (
+                                    <Alert variant={pcapHashes.length ? 'success' : 'warning'} className="mt-3 mb-0">
+                                        {pcapMessage}
+                                    </Alert>
+                                )}
                                 <div className="form-group pt-3 text-center">
                                     <input
                                         type="submit"
@@ -413,6 +553,14 @@ const CreateUser = ({show, handleClose, setFetchDataState}) => {
                                     />
                                     {isProcessing && <span className="spinner-border spinner-border-sm mx-3" role="status" aria-hidden="true"></span>}
                                 </div>
+                                {pcapHashes.length > 0 && (
+                                    <div className="form-group pt-2 text-center">
+                                        <Button className="btn-search text-light col-md-10" onClick={exportPcapCsv}>
+                                            <i className="fa-solid fa-file-export me-2"></i>
+                                            Export CSV
+                                        </Button>
+                                    </div>
+                                )}
                             </form>
                         </div>
                     </div>

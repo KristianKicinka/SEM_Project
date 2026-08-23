@@ -540,6 +540,7 @@ class ApiRequestController extends Controller {
         if ($request->has('custom_hash_types')) {
             $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
                 ->where('is_active', true)
+                ->where('type', '!=', 'python_script')
                 ->where(function($query) use ($request) {
                     $user = User::where('api_auth_key', $request->input('auth_key'))->first();
                     if ($user) {
@@ -621,6 +622,7 @@ class ApiRequestController extends Controller {
         if ($request->has('custom_hash_types')) {
             $customHashTypes = \App\Models\CustomHashType::whereIn('id', $request->input('custom_hash_types'))
                 ->where('is_active', true)
+                ->where('type', '!=', 'python_script')
                 ->where(function($query) use ($request) {
                     $user = User::where('api_auth_key', $request->input('auth_key'))->first();
                     if ($user) {
@@ -678,6 +680,7 @@ class ApiRequestController extends Controller {
                   ->orWhere('is_public', true);
         })
         ->where('is_active', true)
+        ->where('type', '!=', 'python_script')
         ->select('id', 'name', 'display_name', 'description', 'type', 'usage_count')
         ->get();
 

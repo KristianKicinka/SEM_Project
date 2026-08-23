@@ -180,18 +180,44 @@ class CustomHashManager:
         
         if generator_type == "simple_tls":
             configuration = config.get("configuration", {})
+            if isinstance(configuration, str):
+                try:
+                    configuration = json.loads(configuration)
+                except (json.JSONDecodeError, TypeError):
+                    configuration = {}
+            if not isinstance(configuration, dict):
+                configuration = {}
+            fields = configuration.get("fields", [])
+            if isinstance(fields, str):
+                try:
+                    fields = json.loads(fields)
+                except (json.JSONDecodeError, TypeError):
+                    fields = []
             return SimpleTLSHashGenerator(
                 name=config["name"],
                 description=config.get("description", ""),
-                fields=configuration.get("fields", [])
+                fields=fields or []
             )
         elif generator_type == "custom_algorithm":
             configuration = config.get("configuration", {})
+            if isinstance(configuration, str):
+                try:
+                    configuration = json.loads(configuration)
+                except (json.JSONDecodeError, TypeError):
+                    configuration = {}
+            if not isinstance(configuration, dict):
+                configuration = {}
+            fields = configuration.get("fields", [])
+            if isinstance(fields, str):
+                try:
+                    fields = json.loads(fields)
+                except (json.JSONDecodeError, TypeError):
+                    fields = []
             return CustomAlgorithmHashGenerator(
                 name=config["name"],
                 description=config.get("description", ""),
                 algorithm=configuration.get("algorithm", "md5"),
-                fields=configuration.get("fields", [])
+                fields=fields or []
             )
         elif generator_type == "python_script":
             return PythonScriptHashGenerator(

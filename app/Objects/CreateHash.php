@@ -45,8 +45,8 @@ class CreateHash {
     protected array $files = [];
     protected array $hashes = [];
     protected array $hash_types = [];
-    protected string $process_id;
-    protected string $ip_address;
+    protected string $process_id = '';
+    protected string $ip_address = '';
     protected HashProcessData $hash_process_data;
 
     public function __construct($hash_types, $input_type, $process_id, $ip_address, $channel_id, $process_name, $api_id) {
@@ -225,14 +225,15 @@ class CreateHash {
         ]);
 
         $command = env("PYTHON_COMMAND", "python3")." ".base_path(HASH_SCRIPT_PATH);
-        $command = $command." ".$pcap_file_path;
+        $command = $command." ".escapeshellarg($pcap_file_path);
         
         // Add custom generators as second argument if any are specified
         $custom_generators = [];
         if (!empty($this->hash_types)) {
-            $custom_generators = array_filter($this->hash_types, function($type) {
-                return strpos($type, 'CUSTOM_') === 0;
-            });
+            $standardTypes = ['JA3', 'JA3S', 'JA4', 'JA4S', 'JA4X'];
+            $custom_generators = array_values(array_filter($this->hash_types, function ($type) use ($standardTypes) {
+                return is_string($type) && !in_array($type, $standardTypes, true);
+            }));
             
             if (!empty($custom_generators)) {
                 $command = $command." ".escapeshellarg(json_encode($custom_generators));
@@ -1011,8 +1012,8 @@ class CreateHash {
                 'is_flagged' => isset($hash->is_flagged) ? (bool)$hash->is_flagged : false,
                 'ja4_hash' => $hash->ja4_hash,
                 'ja4s_hash' => $hash->ja4s_hash,
-                'ja4x_hash' => json_encode($hash->ja4x_hash),
-                'custom_hashes' => !empty($custom_hashes) ? json_encode($custom_hashes) : null,
+                'ja4x_hash' => $hash->ja4x_hash,
+                'custom_hashes' => !empty($custom_hashes) ? $custom_hashes : null,
                 'ip_src' => $hash->ip_src,
                 'port_src' => $hash->port_src,
                 'ip_dest' => $hash->ip_dest,

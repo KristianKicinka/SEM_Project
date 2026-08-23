@@ -125,8 +125,8 @@ class CustomHashType extends Model
             return false;
         }
 
-        if ($this->type === 'python_script' && $this->script_path) {
-            return file_exists($this->getFullScriptPathAttribute());
+        if ($this->type === 'python_script') {
+            return false;
         }
 
         return true;

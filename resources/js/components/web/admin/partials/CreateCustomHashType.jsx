@@ -18,20 +18,69 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
         is_public: false,
         is_active: true
     });
-    const [scriptFile, setScriptFile] = useState(null);
     const [errors, setErrors] = useState({});
     const [configurationFields, setConfigurationFields] = useState([]);
+
+    const parseBoolean = (value, defaultValue = false) => {
+        if (value === undefined || value === null) {
+            return defaultValue;
+        }
+        if (typeof value === 'boolean') {
+            return value;
+        }
+        if (typeof value === 'number') {
+            return value === 1;
+        }
+        if (typeof value === 'string') {
+            return ['1', 'true', 'on', 'yes'].includes(value.toLowerCase());
+        }
+        return defaultValue;
+    };
+
+    const normalizeConfiguration = (config) => {
+        if (!config) {
+            return {};
+        }
+
+        let parsed = config;
+        if (typeof parsed === 'string') {
+            try {
+                parsed = JSON.parse(parsed);
+            } catch (error) {
+                return {};
+            }
+        }
+
+        if (typeof parsed !== 'object' || Array.isArray(parsed)) {
+            return {};
+        }
+
+        if (typeof parsed.fields === 'string') {
+            try {
+                const decodedFields = JSON.parse(parsed.fields);
+                parsed = { ...parsed, fields: Array.isArray(decodedFields) ? decodedFields : [] };
+            } catch (error) {
+                parsed = { ...parsed, fields: [] };
+            }
+        }
+
+        if (parsed.fields && !Array.isArray(parsed.fields)) {
+            parsed = { ...parsed, fields: [] };
+        }
+
+        return parsed;
+    };
 
     useEffect(() => {
         if (editingHashType) {
             setFormData({
-                name: editingHashType.name,
-                display_name: editingHashType.display_name,
+                name: editingHashType.name || '',
+                display_name: editingHashType.display_name || '',
                 description: editingHashType.description || '',
-                type: editingHashType.type,
-                configuration: editingHashType.configuration || {},
-                is_public: editingHashType.is_public,
-                is_active: editingHashType.is_active
+                type: editingHashType.type || 'simple_tls',
+                configuration: normalizeConfiguration(editingHashType.configuration),
+                is_public: parseBoolean(editingHashType.is_public, false),
+                is_active: parseBoolean(editingHashType.is_active, true)
             });
         } else {
             setFormData({
@@ -44,7 +93,6 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
                 is_active: true
             });
         }
-        setScriptFile(null);
         setErrors({});
     }, [show, editingHashType]);
 
@@ -122,10 +170,6 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
         handleConfigurationChange(key, values);
     };
 
-    const handleFileChange = (e) => {
-        setScriptFile(e.target.files[0]);
-    };
-
     const validateForm = () => {
         const newErrors = {};
 
@@ -139,8 +183,8 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
             newErrors.display_name = 'Display name is required';
         }
 
-        if (formData.type === 'python_script' && !scriptFile && !editingHashType) {
-            newErrors.script_file = 'Python script file is required';
+        if (formData.type === 'python_script') {
+            newErrors.type = 'Python script hash types are temporarily disabled until support is finished';
         }
 
         // Validate configuration based on type
@@ -173,17 +217,10 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
             display_name: formData.display_name,
             description: formData.description,
             type: formData.type,
-            configuration: formData.configuration,
-            is_public: formData.is_public || false,
-            is_active: formData.is_active !== undefined ? formData.is_active : true
+            configuration: normalizeConfiguration(formData.configuration),
+            is_public: parseBoolean(formData.is_public, false),
+            is_active: parseBoolean(formData.is_active, true)
         };
-
-        // Handle script file upload separately if needed
-        if (scriptFile) {
-            // For now, we'll handle this in the parent component
-            // or we can create a separate endpoint for file uploads
-            console.warn('Script file upload not yet implemented for JSON requests');
-        }
 
         onSubmit(submitData);
     };
@@ -302,29 +339,24 @@ const CreateCustomHashType = ({ show, onHide, onSubmit, editingHashType }) => {
                             name="type"
                             value={formData.type}
                             onChange={handleInputChange}
+                            isInvalid={!!errors.type}
                         >
                             <option value="simple_tls">Simple TLS Hash</option>
                             <option value="custom_algorithm">Custom Algorithm Hash</option>
-                            <option value="python_script">Python Script Hash</option>
+                            <option value="python_script" disabled>Python Script Hash (temporarily unavailable)</option>
                         </Form.Select>
+                        <Form.Control.Feedback type="invalid">
+                            {errors.type}
+                        </Form.Control.Feedback>
+                        <Form.Text className="text-muted">
+                            Python Script Hash is visible but disabled until support is finished.
+                        </Form.Text>
                     </Form.Group>
 
                     {formData.type === 'python_script' && (
-                        <Form.Group className="mb-3">
-                            <Form.Label>Python Script File {!editingHashType && '*'}</Form.Label>
-                            <Form.Control
-                                type="file"
-                                accept=".py"
-                                onChange={handleFileChange}
-                                isInvalid={!!errors.script_file}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                                {errors.script_file}
-                            </Form.Control.Feedback>
-                            <Form.Text className="text-muted">
-                                Upload a Python script that implements generate_hash(packet, sni, **kwargs) function
-                            </Form.Text>
-                        </Form.Group>
+                        <Alert variant="warning">
+                            This hash type uses a Python script, which is temporarily disabled until support is finished. Change the type to Simple TLS or Custom Algorithm to keep editing.
+                        </Alert>
                     )}
 
                     {configurationFields.length > 0 && (

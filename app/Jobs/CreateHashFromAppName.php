@@ -23,7 +23,6 @@ use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Log;
 
     const PACKAGE_NAME_INPUT_TYPE = 'APP_NAME';
-    const APK_DOWNLOADED_DIR = '/mnt/storage/app/public/uploads/apk_downloaded/';
 
 class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 
@@ -80,7 +79,8 @@ class CreateHashFromAppName extends CreateHash implements ShouldQueue {
 
             $pcap_file_name = str_replace('.apk', '.pcap', $apk_file_name);
 
-            $this->apk_path = APK_DOWNLOADED_DIR.$apk_file_name;
+            $this->apk_path = rtrim(env('EMULATOR_DIR', '/mnt/storage'), '/')
+                . '/app/public/uploads/apk_downloaded/' . $apk_file_name;
 
             Log::channel('devlog')->info('APK path: {path} ', ['path' => $this->apk_path]);
 

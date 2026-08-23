@@ -56,9 +56,15 @@ const CustomHashTypes = () => {
             setCustomHashTypes(prev => [response.data, ...prev]);
             setShowCreateModal(false);
             toast.success('Custom hash type created successfully');
+            await fetchCustomHashTypes();
         } catch (error) {
             console.error('Error creating custom hash type:', error);
-            toast.error('Failed to create custom hash type');
+            const message = error.response?.data?.error
+                || error.response?.data?.errors?.configuration?.[0]
+                || error.response?.data?.errors?.name?.[0]
+                || error.response?.data?.errors?.type?.[0]
+                || 'Failed to create custom hash type';
+            toast.error(message);
         }
     };
 
@@ -71,9 +77,14 @@ const CustomHashTypes = () => {
             setShowEditModal(false);
             setEditingHashType(null);
             toast.success('Custom hash type updated successfully');
+            await fetchCustomHashTypes();
         } catch (error) {
             console.error('Error updating custom hash type:', error);
-            toast.error('Failed to update custom hash type');
+            const message = error.response?.data?.error
+                || error.response?.data?.errors?.configuration?.[0]
+                || error.response?.data?.errors?.type?.[0]
+                || 'Failed to update custom hash type';
+            toast.error(message);
         }
     };
 
@@ -117,13 +128,23 @@ const CustomHashTypes = () => {
     ]);
 
     const handleTest = (hashType) => {
+        if (hashType.type === 'python_script') {
+            toast.info('Python Script Hash is temporarily unavailable until support is finished.');
+            return;
+        }
         setSelectedHashType(hashType);
         setShowTestModal(true);
     };
 
-    const handleEdit = (hashType) => {
-        setEditingHashType(hashType);
-        setShowEditModal(true);
+    const handleEdit = async (hashType) => {
+        try {
+            const response = await http.get(`/custom-hash-types/${hashType.id}`);
+            setEditingHashType(response.data);
+            setShowEditModal(true);
+        } catch (error) {
+            console.error('Error loading custom hash type:', error);
+            toast.error('Failed to load custom hash type for editing');
+        }
     };
 
     const getTypeBadgeColor = (type) => {

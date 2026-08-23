@@ -65,9 +65,9 @@ class CustomHashTypeController extends Controller
             'display_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:simple_tls,custom_algorithm,python_script',
-            'configuration' => 'required|array',
+            'configuration' => 'required',
             'script_file' => 'nullable|file|mimes:py|max:1024',
-            'is_public' => 'boolean',
+            'is_public' => 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -77,8 +77,18 @@ class CustomHashTypeController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
+        if ($request->input('type') === 'python_script') {
+            $message = 'Python script hash types are temporarily disabled until support is finished.';
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $message], 422);
+            }
+            return redirect()->back()->withErrors(['type' => $message])->withInput();
+        }
+
         $user = Auth::user();
-        $data = $request->only(['name', 'display_name', 'description', 'type', 'configuration', 'is_public']);
+        $data = $request->only(['name', 'display_name', 'description', 'type']);
+        $data['configuration'] = $this->normalizeConfiguration($request->input('configuration'));
+        $data['is_public'] = $this->booleanInput($request, 'is_public', false);
         $data['user_id'] = $user->id;
         $data['is_active'] = true;
         $data['usage_count'] = 0;
@@ -103,6 +113,7 @@ class CustomHashTypeController extends Controller
         }
 
         $customHashType = CustomHashType::create($data);
+        $customHashType->configuration = $this->normalizeConfiguration($customHashType->configuration);
 
         if ($request->expectsJson()) {
             return response()->json($customHashType, 201);
@@ -120,6 +131,8 @@ class CustomHashTypeController extends Controller
     public function show(CustomHashType $customHashType)
     {
         $this->authorize('view', $customHashType);
+
+        $customHashType->configuration = $this->normalizeConfiguration($customHashType->configuration);
 
         if (request()->expectsJson()) {
             return response()->json($customHashType);
@@ -155,10 +168,10 @@ class CustomHashTypeController extends Controller
             'display_name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:simple_tls,custom_algorithm,python_script',
-            'configuration' => 'required|array',
+            'configuration' => 'required',
             'script_file' => 'nullable|file|mimes:py|max:1024',
-            'is_public' => 'boolean',
-            'is_active' => 'boolean',
+            'is_public' => 'nullable',
+            'is_active' => 'nullable',
         ]);
 
         if ($validator->fails()) {
@@ -168,7 +181,18 @@ class CustomHashTypeController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $data = $request->only(['name', 'display_name', 'description', 'type', 'configuration', 'is_public', 'is_active']);
+        if ($request->input('type') === 'python_script') {
+            $message = 'Python script hash types are temporarily disabled until support is finished.';
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $message], 422);
+            }
+            return redirect()->back()->withErrors(['type' => $message])->withInput();
+        }
+
+        $data = $request->only(['name', 'display_name', 'description', 'type']);
+        $data['configuration'] = $this->normalizeConfiguration($request->input('configuration'));
+        $data['is_public'] = $this->booleanInput($request, 'is_public', (bool) $customHashType->is_public);
+        $data['is_active'] = $this->booleanInput($request, 'is_active', (bool) $customHashType->is_active);
 
         // Handle script file upload
         if ($request->hasFile('script_file') && $data['type'] === 'python_script') {
@@ -194,6 +218,8 @@ class CustomHashTypeController extends Controller
         }
 
         $customHashType->update($data);
+        $customHashType->refresh();
+        $customHashType->configuration = $this->normalizeConfiguration($customHashType->configuration);
 
         if ($request->expectsJson()) {
             return response()->json($customHashType);
@@ -236,6 +262,12 @@ class CustomHashTypeController extends Controller
     public function test(Request $request, CustomHashType $customHashType)
     {
         $this->authorize('view', $customHashType);
+
+        if ($customHashType->type === 'python_script') {
+            return response()->json([
+                'error' => 'Python script hash types are temporarily disabled until support is finished.'
+            ], 422);
+        }
 
         $validator = Validator::make($request->all(), [
             'apk_files' => 'nullable|array',
@@ -295,14 +327,22 @@ class CustomHashTypeController extends Controller
     public function apiIndex()
     {
         $user = Auth::user();
-        
-        $customHashTypes = CustomHashType::where(function($query) use ($user) {
+
+        // Owners see all of their types (including inactive) so the edit form can
+        // reload configuration/flags. Public types from other users stay active-only.
+        $customHashTypes = CustomHashType::where(function ($query) use ($user) {
             $query->where('user_id', $user->id)
-                  ->orWhere('is_public', true);
+                  ->orWhere(function ($public) {
+                      $public->where('is_public', true)->where('is_active', true);
+                  });
         })
-        ->active()
-        ->select('id', 'name', 'display_name', 'description', 'type', 'usage_count')
+        ->orderBy('created_at', 'desc')
         ->get();
+
+        $customHashTypes->transform(function (CustomHashType $hashType) {
+            $hashType->configuration = $this->normalizeConfiguration($hashType->configuration);
+            return $hashType;
+        });
 
         return response()->json($customHashTypes);
     }
@@ -325,7 +365,8 @@ class CustomHashTypeController extends Controller
 
         $requestedNames = $request->input('names', []);
         
-        $query = CustomHashType::where('is_active', true);
+        $query = CustomHashType::where('is_active', true)
+            ->where('type', '!=', 'python_script');
         
         // Ak sú zadané konkrétne názvy, filtruj podľa nich
         if (!empty($requestedNames)) {
@@ -349,7 +390,7 @@ class CustomHashTypeController extends Controller
                 'display_name' => $hashType->display_name,
                 'description' => $hashType->description,
                 'type' => $hashType->type,
-                'configuration' => $hashType->configuration,
+                'configuration' => $this->normalizeConfiguration($hashType->configuration),
             ];
             
             // Pre Python script pridaj script_path
@@ -376,15 +417,63 @@ class CustomHashTypeController extends Controller
     {
         switch ($type) {
             case 'simple_tls':
-                return isset($configuration['fields']) && is_array($configuration['fields']);
+                return isset($configuration['fields']) && is_array($configuration['fields']) && count($configuration['fields']) > 0;
             case 'custom_algorithm':
-                return isset($configuration['algorithm']) && isset($configuration['fields']) && 
-                       is_array($configuration['fields']);
+                return isset($configuration['algorithm']) && is_string($configuration['algorithm']) && $configuration['algorithm'] !== ''
+                    && isset($configuration['fields']) && is_array($configuration['fields']) && count($configuration['fields']) > 0;
             case 'python_script':
                 return true; // Python script validation is done by file upload
             default:
                 return false;
         }
+    }
+
+    /**
+     * @brief Decode configuration that may arrive as a JSON string or PHP array
+     * @param mixed $configuration
+     * @return array
+     */
+    private function normalizeConfiguration($configuration): array
+    {
+        if (is_array($configuration)) {
+            if (isset($configuration['fields']) && is_string($configuration['fields'])) {
+                $decodedFields = json_decode($configuration['fields'], true);
+                if (is_array($decodedFields)) {
+                    $configuration['fields'] = $decodedFields;
+                }
+            }
+            return $configuration;
+        }
+
+        if (is_string($configuration) && $configuration !== '') {
+            $decoded = json_decode($configuration, true);
+            if (is_array($decoded)) {
+                return $this->normalizeConfiguration($decoded);
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * @brief Parse JSON/form boolean values without dropping false
+     * @param Request $request
+     * @param string $key
+     * @param bool $default
+     * @return bool
+     */
+    private function booleanInput(Request $request, string $key, bool $default): bool
+    {
+        if (!$request->exists($key)) {
+            return $default;
+        }
+
+        $value = $request->input($key);
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**

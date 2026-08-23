@@ -22,6 +22,10 @@ const HashTypePicker = ({hashTypes, setHashTypes}) => {
      * @param {*} e OnChange event
      */
     const checkboxChange = (e) =>{
+        const selectedCustom = customHashTypes.find(hashType => hashType.name === e.target.id);
+        if (selectedCustom?.type === 'python_script') {
+            return;
+        }
 
         let newHashesTypes = [...hashTypes, e.target.id];
 
@@ -75,13 +79,15 @@ const HashTypePicker = ({hashTypes, setHashTypes}) => {
                                 <div className="text-center">
                                     <small className="text-muted">Loading...</small>
                                 </div>
-                            ) : customHashTypes.length > 0 ? (
-                                customHashTypes.map((hashType) => (
+                            ) : customHashTypes.filter(hashType => hashType.is_active !== false).length > 0 ? (
+                                customHashTypes.filter(hashType => hashType.is_active !== false).map((hashType) => (
                                     <Form.Check 
                                         key={hashType.id}
                                         onChange={checkboxChange} 
                                         inline 
-                                        label={hashType.display_name} 
+                                        disabled={hashType.type === 'python_script'}
+                                        title={hashType.type === 'python_script' ? 'Python Script Hash is temporarily unavailable' : undefined}
+                                        label={hashType.type === 'python_script' ? `${hashType.display_name} (unavailable)` : hashType.display_name} 
                                         name={`${hashType.name}_checkbox`} 
                                         type='checkbox' 
                                         id={hashType.name} 

@@ -811,7 +811,12 @@ def load_custom_generators_once(custom_generators, use_manual_config):
     """
     # Create unique cache key based on config mode and generator names
     # Sorting ensures consistent cache keys regardless of input order
-    cache_key = f"{use_manual_config}_{','.join(sorted(custom_generators))}"
+    if isinstance(custom_generators, dict):
+        custom_generators = list(custom_generators.values())
+    if not isinstance(custom_generators, (list, tuple)):
+        custom_generators = [custom_generators]
+
+    cache_key = f"{use_manual_config}_{','.join(sorted(str(name) for name in custom_generators))}"
     
     # Check if generators are already cached
     if cache_key not in _custom_generators_cache:
@@ -896,6 +901,11 @@ def generate_custom_hashes(packet, sni=None, custom_generators=None):
     # Early return for empty generator list
     if not custom_generators:
         return {}
+
+    if isinstance(custom_generators, dict):
+        custom_generators = list(custom_generators.values())
+    if not isinstance(custom_generators, (list, tuple)):
+        custom_generators = [custom_generators]
     
     try:
         # Determine configuration mode from environment variable
